@@ -17,11 +17,11 @@ code {
     margin-right: 10px;
 }
 
-.cg_shapes {
+.cg-shapes {
+  z-index: 10000;
   position: absolute;
-  height: 392px;
-  width: 392px;
+  height: 388px;
+  width: 388px;
   float: left;
-  left: 0px;
 }
 
