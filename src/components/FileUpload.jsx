@@ -2,72 +2,83 @@ import {Chess} from 'chess.js'
 
 import {useEffect} from 'react';
 
-const FileUpload = ({setRepertoire}) => {
-    useEffect(() => {
-        function handleFile(event) {
-            const fileInput = event.target;
-            const file = fileInput.files[0];
+const FileUpload = ({repertoire, setRepertoire, newRepertoireNameField, setNewRepertoireNameField, repertoireList, setRepertoireList}) => {
+    function handleFile(event) {
+        const fileInput = event.target;
+        const file = fileInput.files[0];
 
-            if (file) {
-                const reader = new FileReader();
+        if (file) {
+            const reader = new FileReader();
 
-                reader.onload = function (e) {
-                    const fileContents = e.target.result;
-                    //console.log("File Contents as String:", fileContents);
+            reader.onload = function (e) {
+                const fileContents = e.target.result;
+                //console.log("File Contents as String:", fileContents);
 
-                    const lines = fileContents.split('\n');
-
-
-                    // { [fen]: [ line, line, line, line ] }
-                    let fenRepo = {};
+                const lines = fileContents.split('\n');
 
 
-                    // Process each line in a for loop
-                    for (let i = 0; i < lines.length; i++) {
-                        const currentLine = lines[i].trim();
+                // { [fen]: [ line, line, line, line ] }
+                let fenRepo = {};
 
-                        console.log(`Processing line ${i + 1}: ${currentLine}`);
 
-                        let this_chess = new Chess();
-                        this_chess.loadPgn(currentLine);
+                // Process each line in a for loop
+                for (let i = 0; i < lines.length; i++) {
+                    const currentLine = lines[i].trim();
 
-                        console.log(this_chess);
+                    // console.log(`Processing line ${i + 1}: ${currentLine}`);
 
-                        let history = this_chess.history();
+                    let this_chess = new Chess();
+                    this_chess.loadPgn(currentLine);
 
-                        let step_by_step_history = new Chess();
+                    // console.log(this_chess);
 
-                        for (let j = 0; j < history.length; j++) {
+                    let history = this_chess.history();
 
-                            step_by_step_history.move(history[j]);
+                    let step_by_step_history = new Chess();
 
-                            if (fenRepo[step_by_step_history.fen()]) {
-                                fenRepo[step_by_step_history.fen()].push(currentLine);
-                            } else {
-                                fenRepo[step_by_step_history.fen()] = [currentLine];
-                            }
+                    for (let j = 0; j < history.length; j++) {
+
+                        step_by_step_history.move(history[j]);
+
+                        if (fenRepo[step_by_step_history.fen()]) {
+                            fenRepo[step_by_step_history.fen()].push(currentLine);
+                        } else {
+                            fenRepo[step_by_step_history.fen()] = [currentLine];
                         }
-
-
                     }
 
-                    console.log("Setting repertoire");
-                    setRepertoire(fenRepo);
-                    localStorage.setItem('repertoire', JSON.stringify(fenRepo));
 
-                };
+                }
+                console.log("new repertoire name field is ", newRepertoireNameField);
+                console.log("Setting current repertoire");
 
-                // Read the file as a text
-                reader.readAsText(file);
-            }
+                const newRepertoire = {
+                    ...repertoire,
+                    [newRepertoireNameField]: fenRepo
+                }
+                setRepertoire(newRepertoire);
+                localStorage.setItem('repertoire', JSON.stringify(newRepertoire));
+
+                const newRepertoireList = [
+                    ...repertoireList,
+                    newRepertoireNameField
+                ]
+
+                setRepertoireList(newRepertoireList);
+                localStorage.setItem('repertoireList', JSON.stringify(newRepertoireList));
+
+                // setNewRepertoireNameField("");
+            };
+
+            // Read the file as a text
+            reader.readAsText(file);
         }
-
-        document.getElementById('fileInput').addEventListener('change', handleFile);
-    }, [])
+    }
 
     return <form>
-        <label for="fileInput">Choose a file:</label>
-        <input type="file" id="fileInput" name="fileInput"></input>
+        <label for="fileInput">Choose a file below.</label>
+        <br></br>
+        <input type="file" id="fileInput" name="fileInput" onChange={handleFile}></input>
     </form>
 }
 

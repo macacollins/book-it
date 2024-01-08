@@ -24,28 +24,39 @@ import calculateAnalysis from './analysis/calculateAnalysis';
 import refreshGames from './integrations/chess.com'
 import loadCachedData from './loadCachedData';
 
+import defaultLines from './integrations/default-lines';
 
-function App() {
+function App({
+                 analysisDatabaseStorage,
+                 repertoireStorage,
+                 gamesStorage,
+                 playerNameStorage,
+                 repertoireListStorage,
+                 matchingMovesStorage,
+                 userLeftBookOnlyStorage,
+                 repertoireChoiceStorage
+             }) {
 
-    const [games, setGames] = useState([]);
-    const [repertoire, setRepertoire] = useState([]);
-    const [analysisDatabase, setAnalysisDatabase] = useState({});
-    const [userLeftBookOnly, setUserLeftBookOnly] = useState(true);
+    const [games, setGames] = useState(gamesStorage || []);
+    const [repertoire, setRepertoire] = useState(repertoireStorage || {"Default Lines": defaultLines});
+    const [analysisDatabase, setAnalysisDatabase] = useState(analysisDatabaseStorage || {});
+
+    const [userLeftBookOnly, setUserLeftBookOnly] = useState(userLeftBookOnlyStorage || true);
+    const [repertoireChoice, setRepertoireChoice] = useState(repertoireChoiceStorage || "Default Lines");
+    const [repertoireList, setRepertoireList] = useState(repertoireListStorage || ["Default Lines"]);
+    const [newRepertoireNameField, setNewRepertoireNameField] = useState("");
+    const [playerName, setPlayerName] = useState(playerNameStorage || "")
+    const [matchingMoves, setMatchingMoves] = useState(matchingMovesStorage || 3)
 
     // tab navigation
     const [activeTab, setActiveTab] = useState(0);
-
-    useEffect(() => {
-        loadCachedData(setAnalysisDatabase, setRepertoire, setGames)
-    }, []);
-
 
     useEffect(() => {
             console.log("Calculating analysis")
 
             // put on the queue
             setTimeout(() => {
-                setAnalysisDatabase(calculateAnalysis(analysisDatabase, repertoire, games));
+                calculateAnalysis(analysisDatabase, repertoire, games, setAnalysisDatabase);
             }, 0);
         }, [repertoire, games]
     )
@@ -63,61 +74,122 @@ function App() {
     const resultsPage = <>
         <h2>Results</h2>
         <p>This is a list of games at the position where they left the book.</p>
+        <md-filled-button onClick={() => refreshGames(setGames)}>Refresh games</md-filled-button>
+
         <p>Found {listItems.length} results.</p>
         <md-list>
             {listItems}
         </md-list>
     </>;
 
+    const leftBookCheckbox = userLeftBookOnly ?
+        <md-checkbox
+            checked={userLeftBookOnly}
+            onClick={() => {
+                setUserLeftBookOnly(!userLeftBookOnly)
+                localStorage.setItem("userLeftBookOnly", JSON.stringify(!userLeftBookOnly));
+            }}>
+        </md-checkbox>
+        :
+        <md-checkbox
+            onClick={() => {
+                setUserLeftBookOnly(!userLeftBookOnly)
+                localStorage.setItem("userLeftBookOnly", JSON.stringify(!userLeftBookOnly));
+            }}>
+        </md-checkbox>
+
+    const checkboxItems =
+        repertoireList.map(repertoireName => {
+            const kebabed = repertoireName;
+
+            const props = repertoireName === repertoireChoice ? ({
+                "checked" : true,
+                "touch-target": "wrapper"
+            }) : {
+                "touch-target": "wrapper"
+            };
+
+            return <div class="radio-label">
+                <md-radio
+                    aria-label={repertoireName}
+                    onClick={() => {
+
+                        setRepertoireChoice(repertoireName);
+                        localStorage.setItem("repertoireChoice", repertoireName);
+                    }}
+                    id="default-lines-radio"
+                    name="with-labels"
+                    {... props}>
+                </md-radio>
+                <label for="default-lines-radio">{repertoireName}</label>
+            </div>
+        })
+
+    console.log("new repertoire name field is ", newRepertoireNameField);
+
     const configPage = <>
         <h2>Configuration</h2>
 
+        <h3>User</h3>
+        <p>Please enter your chess.com username.</p>
+
+        <md-outlined-text-field
+            label="chess.com Username"
+            value={playerName}
+            onInput={e => {
+                setPlayerName(e.target.value);
+                localStorage.setItem("playerName", e.target.value);
+            }}>
+        </md-outlined-text-field>
+
         <h3>Repertoire</h3>
         <div class="column" role="radiogroup" aria-label="Repertoire">
-            <div class="radio-label">
-                <md-radio
-                    aria-label="Default lines"
-                    id="default-lines-radio"
-                    name="with-labels"
-                    {... { "touch-target": "wrapper" } }>
-                </md-radio>
-                <label for="default-lines-radio">Default Lines</label>
-            </div>
-            <div class="radio-label">
-                <md-radio
-                    aria-label="Custom Lines"
-                    id="custom-lines-radio"
-                    name="with-labels"
-                    {... { "touch-target": "wrapper" } }>
-                </md-radio>
-                <label for="custom-lines-radio">Custom Lines Already Uploaded</label>
-            </div>
-            <div class="radio-label">
-                <md-radio
-                    aria-label="Upload New Lines"
-                    id="dogs-radio"
-                    name="with-labels"
-                    {... { "touch-target": "wrapper" } }>
-                </md-radio>
-                <label for="dogs-radio">Upload New Lines</label>
-            </div>
+            {checkboxItems}
         </div>
-        {'Upload your lines here as a file'}
-        <FileUpload setRepertoire={setRepertoire}> </FileUpload>
 
+        <h3>Upload New Lines</h3>
+
+        <md-outlined-text-field
+            label="Repertoire Name"
+            value={newRepertoireNameField}
+            onInput={e => {
+                setNewRepertoireNameField(e.target.value);
+                console.log("set it to ", e.target.value);
+
+            }}>
+        </md-outlined-text-field>
+        <br></br>
+        <FileUpload
+            newRepertoireNameField={newRepertoireNameField}
+                    {...{
+            repertoire,
+            setRepertoire,
+            setNewRepertoireNameField,
+            repertoireList,
+            setRepertoireList
+        }}> </FileUpload>
+
+        <h3>Settings</h3>
         <label>
             Show only lines where you left book first
-            <md-checkbox
-                checked={userLeftBookOnly}
-                onClick={() => {
-                    setUserLeftBookOnly(!userLeftBookOnly)
-                }}>
-            </md-checkbox>
+            {leftBookCheckbox}
         </label>
-
         <br></br>
 
-        <md-filled-button onClick={() => refreshGames(setGames)}>Refresh games</md-filled-button>
+        <label>
+            Show lines that have at least this many matching moves
+        </label>
+        <md-outlined-text-field
+            label="Matching Moves"
+            value={matchingMoves}
+            type="number"
+            onInput={e => {
+                setMatchingMoves(e.target.value);
+                localStorage.setItem("matchingMoves", e.target.value);
+            }}>
+        </md-outlined-text-field>
+
+        <br></br>
     </>
 
     const drillPage = <>This functionality is still in active development.</>
@@ -153,7 +225,9 @@ function App() {
                 aria-label="A custom themed tab bar"
                 class="custom"
                 activeTabIndex={activeTab}
-                onChange={(e) => { console.log("Change triggered", e)}}>
+                onChange={(e) => {
+                    console.log("Change triggered", e)
+                }}>
                 <md-primary-tab id="tab-one" aria-controls="panel-one">
                     Configuration
                 </md-primary-tab>

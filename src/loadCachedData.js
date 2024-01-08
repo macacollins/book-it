@@ -1,21 +1,35 @@
 import refreshGames from './integrations/chess.com';
 
-function loadCachedData(setAnalysisDatabase, setRepertoire, setGames) {
 
-    if (localStorage.getItem('analysisDatabase')) {
-        setAnalysisDatabase(JSON.parse(localStorage.getItem('analysisDatabase')))
-    }
+function loadCachedData() {
 
-    if (localStorage.getItem('repertoire')) {
-        setRepertoire(JSON.parse(localStorage.getItem('repertoire')))
-    }
+    const properties =
+        [ "analysisDatabase",
+            "repertoire",
+            "games",
+            "playerName",
+            "repertoireList",
+            "matchingMoves",
+            "userLeftBookOnly",
+            "repertoireChoice"
+        ];
 
-    if (localStorage.getItem('games')) {
-        // use local games
-        setGames(JSON.parse(localStorage.getItem('games')));
-    } else {
-        refreshGames(setGames);
-    }
+    const justStrings = [ "repertoireChoice", "playerName"];
+
+    let returnObject = {};
+    properties.forEach(property => {
+        console.log("attempting to process", property)
+        if (localStorage.getItem(property)) {
+            if (justStrings.indexOf(property) === -1) {
+                console.log("attempting to process", property)
+                returnObject[property + "Storage"] = JSON.parse(localStorage.getItem(property));
+            } else {
+                returnObject[property + "Storage"] = localStorage.getItem(property);
+            }
+        }
+    });
+
+    return returnObject;
 }
 
 export default loadCachedData;
