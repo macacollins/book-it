@@ -2,6 +2,8 @@ import {Chess} from 'chess.js'
 
 import {useEffect} from 'react';
 
+import { setItemGZIP } from '../storage';
+
 const FileUpload = ({repertoire, setRepertoire, newRepertoireNameField, setNewRepertoireNameField, repertoireList, setRepertoireList}) => {
     function handleFile(event) {
         const fileInput = event.target;
@@ -57,7 +59,7 @@ const FileUpload = ({repertoire, setRepertoire, newRepertoireNameField, setNewRe
                     [newRepertoireNameField]: fenRepo
                 }
                 setRepertoire(newRepertoire);
-                localStorage.setItem('repertoire', JSON.stringify(newRepertoire));
+                setItemGZIP('repertoire', JSON.stringify(newRepertoire));
 
                 const newRepertoireList = [
                     ...repertoireList,

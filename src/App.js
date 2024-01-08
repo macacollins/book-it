@@ -56,7 +56,7 @@ function App({
 
             // put on the queue
             setTimeout(() => {
-                calculateAnalysis(analysisDatabase, repertoire, games, setAnalysisDatabase);
+                calculateAnalysis(analysisDatabase, repertoire, games, setAnalysisDatabase, playerName);
             }, 0);
         }, [repertoire, games]
     )
@@ -73,8 +73,9 @@ function App({
 
     const resultsPage = <>
         <h2>Results</h2>
+        <p>Reviewing lines from repertoire "{repertoireChoice}" as {playerName}</p>
         <p>This is a list of games at the position where they left the book.</p>
-        <md-filled-button onClick={() => refreshGames(setGames)}>Refresh games</md-filled-button>
+        <md-filled-button onClick={() => { refreshGames(games, setGames, playerName) }}>Refresh games</md-filled-button>
 
         <p>Found {listItems.length} results.</p>
         <md-list>

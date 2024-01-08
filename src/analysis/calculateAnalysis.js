@@ -1,6 +1,6 @@
 import {Chess} from 'chess.js'
 
-function calculateAnalysis(current_analysis, repertoire, games, setAnalysisDatabase) {
+function calculateAnalysis(current_analysis, repertoire, games, setAnalysisDatabase, playerName) {
 
     let analysisDatabase = JSON.parse(localStorage.getItem("analysisDatabase")) || {};
 
@@ -28,7 +28,7 @@ function calculateAnalysis(current_analysis, repertoire, games, setAnalysisDatab
         chess_game.loadPgn(game.pgn);
 
         // TODO unhardcode
-        let invert_board = chess_game.header().Black === '***REMOVED***';
+        let invert_board = chess_game.header().Black === playerName;
 
         let foundIntersection = false;
 
@@ -186,7 +186,7 @@ function calculateAnalysis(current_analysis, repertoire, games, setAnalysisDatab
         if (games && games.length > 0) {
 
             if (analysisDatabase[games[0].url]) {
-                return calculateAnalysis(current_analysis, repertoire, games.slice(1), setAnalysisDatabase);
+                return calculateAnalysis(current_analysis, repertoire, games.slice(1), setAnalysisDatabase, playerName);
             } else {
                 processSingleGame(games[0]);
 
@@ -200,8 +200,8 @@ function calculateAnalysis(current_analysis, repertoire, games, setAnalysisDatab
                     // the timeout ensures that we don't lock the top thread as badly
                     // however, it may be better to do this in a web worker or similar
                     setTimeout(() => {
-                        calculateAnalysis(current_analysis, repertoire, games.slice(1), setAnalysisDatabase)
-                    }, 100);
+                        calculateAnalysis(current_analysis, repertoire, games.slice(1), setAnalysisDatabase, playerName)
+                    }, 1000);
                 }
             }
         } else {

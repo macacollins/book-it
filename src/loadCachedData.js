@@ -1,5 +1,5 @@
 import refreshGames from './integrations/chess.com';
-
+import {getItemGZIP, setItemGZIP} from './storage';
 
 function loadCachedData() {
 
@@ -20,12 +20,8 @@ function loadCachedData() {
     properties.forEach(property => {
         console.log("attempting to process", property)
         if (localStorage.getItem(property)) {
-            if (justStrings.indexOf(property) === -1) {
-                console.log("attempting to process", property)
-                returnObject[property + "Storage"] = JSON.parse(localStorage.getItem(property));
-            } else {
-                returnObject[property + "Storage"] = localStorage.getItem(property);
-            }
+            returnObject[property + "Storage"] =
+                getItemGZIP(property, justStrings.indexOf(property) !== -1);
         }
     });
 

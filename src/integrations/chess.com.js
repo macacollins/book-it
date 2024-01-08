@@ -1,22 +1,62 @@
 
 
-function refreshGames(setGames) {
-    console.log("Fetching games from chess.com");
-    // start request to chess.com for data
-    fetch('https://api.chess.com/pub/player/***REMOVED***/games/2024/01')
-        .then((res) => res.json())
-        .then((data) => {
-            //console.log(data);
-            const games = data.games;
-
-            games.reverse();
-            setGames(games.slice(0, 10));
-            localStorage.setItem('games', JSON.stringify(games));
-        })
-        .catch((err) => {
-            console.log(err.message);
-        });
-
+// Function to get the current year and month
+function getCurrentYearAndMonth() {
+    const currentDate = new Date();
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth() + 1; // Months are zero-based, so we add 1
+    return { year, month };
 }
+
+// Function to get the year and month X months back
+function getYearAndMonthXMonthsAgo(X) {
+    const currentDate = new Date();
+    const targetDate = new Date(currentDate);
+
+    let currentYear = targetDate.getFullYear();
+    let currentMonth = targetDate.getMonth();
+
+    for (let i = 0; i < X; i++) {
+        if (currentMonth === 0) {
+            currentMonth = 11;
+            currentYear = currentYear - 1;
+        } else {
+            currentMonth = currentMonth - 1;
+        }
+    }
+
+    currentMonth += 1;
+
+    const twoDigitMonth =
+        currentMonth > 9 ? currentMonth : "0" + currentMonth;
+
+    return { year : currentYear, month: twoDigitMonth };
+}
+
+async function refreshGames(games, setGames, playerName) {
+    console.log("Fetching games from chess.com");
+
+    for (let i = 0; i < 1; i++) {
+        let {year, month} = getYearAndMonthXMonthsAgo(i);
+
+        // start requests to chess.com for data
+        await fetch('https://api.chess.com/pub/player/' + playerName + "/games/" + year + "/" + month)
+            .then((res) => res.json())
+            .then((data) => {
+                const thisMonthGames = data.games;
+
+                let currentGames = JSON.parse(localStorage.getItem('games'));
+
+                const newGames = thisMonthGames.reverse()
+                setGames([ ...currentGames, ...newGames ]);
+                // localStorage.setItem('games', JSON.stringify([ ...newGames, ...currentGames ]));
+            })
+            .catch((err) => {
+                console.log(err.message);
+            });
+    }
+}
+
+
 
 export default refreshGames;
