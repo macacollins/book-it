@@ -27,7 +27,7 @@ const AnalysisResult = ({analysisDatabase, game}) => {
         </div>
         <div slot="supporting-text">
             <div className="side-by-side">
-                {'End Position'}
+                {analysis.advice}
                 <ChessBoard fen={analysis.displayFEN}
                             invert={analysis.invert_board}
                             name="my-board"
@@ -45,7 +45,7 @@ const AnalysisResult = ({analysisDatabase, game}) => {
                     Course Search
                 </md-text-button>
                 <br></br>
-                {analysis.advice}
+
             </div>
         </div>
         <div slot="trailing-supporting-text">

@@ -6,6 +6,7 @@ const Arrow = ({fromX, fromY, destX, destY, color = 'red'}) => {
     const targetY1 = 4.5 - fromY;
     const targetY2 = 4.5 - destY;
 
+    // These ids are defined in Drawings.js
     const markerEnd = color === 'red' ? 'url(#arrowhead-r)' : 'url(#arrowhead-g)';
 
     return <g>

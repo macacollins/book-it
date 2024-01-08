@@ -53,7 +53,7 @@ function App() {
         <>
             {'Enter your lines here'}
             <FileUpload setRepertoire={setRepertoire}> </FileUpload>
-            <md-filled-button onClick={refreshGames}>Refresh games</md-filled-button>
+            <md-filled-button onClick={() => refreshGames(setGames)}>Refresh games</md-filled-button>
             <md-list>
                 {listItems}
             </md-list>
