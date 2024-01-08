@@ -1,6 +1,5 @@
 import {Chess} from 'chess.js'
 
-
 function calculateAnalysis(current_analysis, repertoire, games) {
 
     let analysisDatabase = JSON.parse(localStorage.getItem("analysisDatabase")) || {};
@@ -14,11 +13,11 @@ function calculateAnalysis(current_analysis, repertoire, games) {
 
             if (current_analysis[game.url]) {
                 // skip for now. We can consider reworking this system when lines are more dynamically updated.
-                console.log(`Found analysis for ${game.url}`);
+                // console.log(`Found analysis for ${game.url}`);
                 return
             }
 
-            console.log(`calculating analysis for ${game.url}`);
+            // console.log(`calculating analysis for ${game.url}`);
 
             //console.log(game.pgn);
             //console.log(new Chess());

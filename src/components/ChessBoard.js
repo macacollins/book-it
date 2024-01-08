@@ -15,16 +15,13 @@ const ChessBoard = ({
             }
 
             /*global Chessboard */
-            console.log(finalID);
             const board = Chessboard(finalID, config);
 
             if (invert) {
                 board.flip();
             }
-
-            const box_size = 49
         }, 100);
-    }, [fen]);
+    }, [fen, finalID, invert]);
 
     return (
         <div>
