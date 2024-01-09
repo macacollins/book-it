@@ -108,7 +108,7 @@ function App({
 
         <p>Found {listItems.length} results.</p>
         <md-list>
-            {/*{listItems}*/}
+            {listItems}
         </md-list>
     </>;
 
