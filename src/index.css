@@ -8,8 +8,17 @@ body {
 }
 
 
-h1, h2, h3, p,  {
+h1, h2, h3, p, .text-field, label {
   padding: 5px;
+  padding-left:10px;
+}
+
+md-outlined-text-field, md-filled-button, form {
+  padding: 10px;
+}
+
+md-filled-button {
+  left: 10px;
 }
 
 code {

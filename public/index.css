@@ -11,22 +11,3 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
-
-h1, h2, h3, p, label, input, md-outlined-text-field, md-filled-button {
-  padding: 10px;
-}
-
-.side-by-side {
-    display: inline-block;
-    margin-right: 10px;
-}
-
-.cg-shapes {
-  pointer-events: none;
-  z-index: 10000;
-  position: absolute;
-  height: 388px;
-  width: 388px;
-  float: left;
-}
-

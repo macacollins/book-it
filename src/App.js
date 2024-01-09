@@ -52,7 +52,7 @@ function App({
     const [matchingMoves, setMatchingMoves] = useState(matchingMovesStorage || 3)
 
     // tab navigation
-    const [activeTab, setActiveTab] = useState(0);
+    const [activeTab, setActiveTab] = useState("panel-one");
 
     useEffect(() => {
             console.log("Calculating analysis")
@@ -104,8 +104,8 @@ function App({
             {leftBookCheckbox}
         </label>
         <br></br>
-        <md-filled-button onClick={() => { refreshGames(games, setGames, playerName) }}>Refresh games</md-filled-button>
-
+        <p><md-filled-button onClick={() => { refreshGames(games, setGames, playerName) }}>Refresh games</md-filled-button>
+        </p>
         <p>Found {listItems.length} results.</p>
         <md-list>
             {listItems}
@@ -327,9 +327,13 @@ function App({
                 currentPanel.hidden = true;
             }
 
+
+
             const panelId = tabs.activeTab?.getAttribute('aria-controls');
             const root = tabs.getRootNode();
             currentPanel = root.querySelector(`#${panelId}`);
+
+            setActiveTab(panelId)
             if (currentPanel) {
                 currentPanel.hidden = false;
             }
@@ -362,13 +366,13 @@ function App({
             </md-tabs>
 
             <div role="tabpanel" id="panel-one" aria-labelledby="tab-one">
-                {configPage}
+                {activeTab === "panel-one" && configPage || ''}
             </div>
             <div role="tabpanel" id="panel-two" aria-labelledby="tab-two" hidden>
-                {resultsPage}
+                {activeTab === "panel-two" && resultsPage || ""}
             </div>
             <div role="tabpanel" id="panel-three" aria-labelledby="tab-three" hidden>
-                {drillPage}
+                {activeTab === "panel-three" && drillPage || ""}
             </div>
         </>
     );
