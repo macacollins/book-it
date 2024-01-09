@@ -1,5 +1,5 @@
 
-const Arrow = ({fromX, fromY, destX, destY, color = 'red'}) => {
+const Arrow = ({fromX, fromY, destX, destY, color = 'red', hidden = false}) => {
 
     const targetX1 = fromX - 4.5;
     const targetX2 = destX - 4.5;
@@ -9,9 +9,11 @@ const Arrow = ({fromX, fromY, destX, destY, color = 'red'}) => {
     // These ids are defined in Drawings.js
     const markerEnd = color === 'red' ? 'url(#arrowhead-r)' : 'url(#arrowhead-g)';
 
+    let opacity = hidden ? 0 : 1;
+
     return <g>
         <g>
-            <line stroke={color} stroke-width="0.15625" stroke-linecap="round" marker-end={markerEnd} opacity="1"
+            <line opacity={opacity} stroke={color} stroke-width="0.15625" stroke-linecap="round" marker-end={markerEnd} opacity="1"
                   x1={targetX1} y1={targetY1} x2={targetX2} y2={targetY2}></line>
         </g>
     </g>

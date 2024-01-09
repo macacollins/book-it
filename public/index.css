@@ -22,6 +22,7 @@ h1, h2, h3, p, label, input, md-outlined-text-field, md-filled-button {
 }
 
 .cg-shapes {
+  pointer-events: none;
   z-index: 10000;
   position: absolute;
   height: 388px;

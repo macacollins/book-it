@@ -20,6 +20,7 @@ import '@material/web/tabs/secondary-tab.js';
 import '@material/web/tabs/tabs.js';
 
 import AnalysisResult from './components/AnalysisResult';
+import Arrow from './components/Arrow';
 import ChessBoard from './components/ChessBoard';
 import FileUpload from './components/FileUpload';
 import calculateAnalysis from './analysis/calculateAnalysis';
@@ -107,7 +108,7 @@ function App({
 
         <p>Found {listItems.length} results.</p>
         <md-list>
-            {listItems}
+            {/*{listItems}*/}
         </md-list>
     </>;
 
@@ -226,31 +227,56 @@ function App({
 
         const drillAnalysisResult = analysisDatabase[nextGame.url];
 
-        drillBoard = <ChessBoard fen={drillAnalysisResult.displayFEN}
-                    invert={drillAnalysisResult.invert_board}
-                    name="drill-board"
-                    game_url={nextGame.url + "drillresult"}
-                    draggable={true}
-                    arrows={[]}
-                    moveCallback={move => {
-                        console.log(drillAnalysisResult.arrows);
-                        console.log(move);
+        drillBoard = <md-list-item>
+            <div slot="headline">{drillAnalysisResult.headers.White}{' vs '}{drillAnalysisResult.headers.Black}{'\n'}
+                {drillAnalysisResult.headers.Result}
+            </div>
+            <div slot="supporting-text">
+                <div className="side-by-side">
+                    {drillAnalysisResult.advice}
+                    <ChessBoard fen={drillAnalysisResult.displayFEN}
+                                invert={drillAnalysisResult.invert_board}
+                                name="drill-board"
+                                game_url={nextGame.url + "drillresult"}
+                                draggable={!currentDrillResult}
+                                arrows={currentDrillResult ? drillAnalysisResult.arrows.map(arrow => <Arrow {...arrow}></Arrow>) : []}
+                                moveCallback={move => {
+                                    console.log(drillAnalysisResult.arrows);
+                                    console.log(move);
 
-                        let filtered =
-                            drillAnalysisResult
-                                .arrows
-                                .filter(arrow => arrow.color === "green")
-                                .filter(arrow => arrow.moveSan === move.san);
+                                    let filtered =
+                                        drillAnalysisResult
+                                            .arrows
+                                            .filter(arrow => arrow.color === "green")
+                                            .filter(arrow => arrow.moveSan === move.san);
 
-                        if (filtered.length > 0) {
-                            console.log("Success, " + move.san + " was the right move.");
-                            setCurrentDrillResult("Success");
-                        } else {
-                            console.log("failure, was expecting another move")
-                            setCurrentDrillResult("Failure")
-                        }
-                    }}
-        ></ChessBoard>
+                                    if (filtered.length > 0) {
+                                        console.log("Success, " + move.san + " was the right move.");
+                                        setCurrentDrillResult("Success");
+                                    } else {
+                                        console.log("failure, was expecting another move")
+                                        setCurrentDrillResult("Failure")
+                                    }
+                                }}
+                    ></ChessBoard>
+                </div>
+                <div className="buttonlist">
+                    <md-text-button onClick={() => window.open(drillAnalysisResult.headers.Link)}>Chess.com</md-text-button>
+                    <md-text-button
+                        onClick={() => window.open('https://lichess.org/analysis/' + drillAnalysisResult.displayFEN)}>Lichess
+                        Analysis
+                    </md-text-button>
+                    <md-text-button
+                        onClick={() => window.open('https://www.chessable.com/courses/fen/' + drillAnalysisResult.displayFEN)}>Chessable
+                        Course Search
+                    </md-text-button>
+                    <br></br>
+
+                </div>
+            </div>
+            <div slot="trailing-supporting-text">
+            </div>
+        </md-list-item>
 
         if (currentDrillResult === "Failure") {
             drillCurrentDisplay = <>
@@ -263,7 +289,6 @@ function App({
                     }}>Next
                     </md-filled-button>
                 </p>
-                <AnalysisResult nameOverride="drill" game={nextGame} analysisDatabase={analysisDatabase}></AnalysisResult>
             </>
 
         } else if (currentDrillResult === "Success") {
@@ -276,7 +301,6 @@ function App({
                     }}>Next
 
                     </md-filled-button>
-                <AnalysisResult nameOverride="drill" game={nextGame} analysisDatabase={analysisDatabase}></AnalysisResult>
             </>
 
         }
@@ -288,7 +312,7 @@ function App({
             <p>In this page, you can practice the moves you missed from your repertoire.</p>
             <p>They are presented here in chronological order starting with the most recent games.</p>
 
-            <p>{drillBoard}</p>
+            {drillBoard}
             {drillCurrentDisplay}
         </>
 

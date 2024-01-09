@@ -95,7 +95,7 @@ const ChessBoard = ({
 
             const config = {
                 position: fen,
-                draggable: true,
+                draggable: draggable,
                 dropOffBoard,
                 onDragStart,
                 onDrop,
@@ -114,10 +114,10 @@ const ChessBoard = ({
         }, 100);
     }, [fen, finalID, invert]);
 
-    let drawings = arrows.length > 0 ? <Drawings arrows={arrows}> </Drawings> : '';
+    let drawings = <Drawings arrows={arrows}> </Drawings>
 
     return (
-        <div>
+        <div className="side-by-side">
             {drawings}
             <div id={finalID} style={{"height": "388px", "width": "388px"}}>
             </div>
