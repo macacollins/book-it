@@ -17,7 +17,7 @@ export async function getItemGZIP(key) {
 
     if (result && result.length > 0) {
         if (result[0]) {
-            console.log("Got db result", result, result[0].value)
+            // console.log("Got db result", result, result[0].value)
             return JSON.parse(result[0].value);
         }
 

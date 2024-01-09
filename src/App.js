@@ -20,6 +20,7 @@ import '@material/web/tabs/secondary-tab.js';
 import '@material/web/tabs/tabs.js';
 
 import AnalysisResult from './components/AnalysisResult';
+import ChessBoard from './components/ChessBoard';
 import FileUpload from './components/FileUpload';
 import calculateAnalysis from './analysis/calculateAnalysis';
 import refreshGames from './integrations/chess.com'
@@ -68,21 +69,14 @@ function App({
                 return analysisDatabase[game.url] && analysisDatabase[game.url].you_left_book
             }
             return true;
-        }).map(game => {
-            return <AnalysisResult game={game} analysisDatabase={analysisDatabase}></AnalysisResult>
+        }).map(singleGame => {
+            if (singleGame) {
+                return <AnalysisResult game={singleGame} analysisDatabase={analysisDatabase}></AnalysisResult>
+            } else {
+                return "No game found"
+            }
         }) || [];
 
-    const resultsPage = <>
-        <h2>Results</h2>
-        <p>Reviewing lines from repertoire "{repertoireChoice}" as {playerName}</p>
-        <p>This is a list of games at the position where they left the book.</p>
-        <md-filled-button onClick={() => { refreshGames(games, setGames, playerName) }}>Refresh games</md-filled-button>
-
-        <p>Found {listItems.length} results.</p>
-        <md-list>
-            {listItems}
-        </md-list>
-    </>;
 
     const leftBookCheckbox = userLeftBookOnly ?
         <md-checkbox
@@ -99,6 +93,24 @@ function App({
                 setItemGZIP("userLeftBookOnly", !userLeftBookOnly);
             }}>
         </md-checkbox>
+
+    const resultsPage = <>
+        <h2>Results</h2>
+        <p>Reviewing lines from repertoire "{repertoireChoice}" as {playerName}</p>
+        <p>This is a list of games at the position where they left the book.</p>
+        <label>
+            Show only lines where you left book first
+            {leftBookCheckbox}
+        </label>
+        <br></br>
+        <md-filled-button onClick={() => { refreshGames(games, setGames, playerName) }}>Refresh games</md-filled-button>
+
+        <p>Found {listItems.length} results.</p>
+        <md-list>
+            {listItems}
+        </md-list>
+    </>;
+
 
     const checkboxItems =
         (repertoireList && repertoireList.map && repertoireList || []).map(repertoireName => {
@@ -135,6 +147,7 @@ function App({
         <h3>User</h3>
         <p>Please enter your chess.com username.</p>
 
+
         <md-outlined-text-field
             label="chess.com Username"
             value={playerName}
@@ -154,6 +167,7 @@ function App({
         <md-outlined-text-field
             label="Repertoire Name"
             value={newRepertoireNameField}
+
             onInput={e => {
                 setNewRepertoireNameField(e.target.value);
                 console.log("set it to ", e.target.value);
@@ -172,10 +186,7 @@ function App({
         }}> </FileUpload>
 
         <h3>Settings</h3>
-        <label>
-            Show only lines where you left book first
-            {leftBookCheckbox}
-        </label>
+
         <br></br>
 
         <label>
@@ -194,7 +205,92 @@ function App({
         <br></br>
     </>
 
-    const drillPage = <>This functionality is still in active development.</>
+    const [ currentDrillIndex, setCurrentDrillIndex ] = useState(0);
+    const [ currentDrillResult, setCurrentDrillResult ] = useState("");
+
+
+    const filteredGames = games && games.filter &&
+        games.filter(nextGame => {
+            return analysisDatabase[nextGame.url] && analysisDatabase[nextGame.url].you_left_book
+        });
+
+    const nextGame =
+        filteredGames.length > currentDrillIndex ?
+            filteredGames[currentDrillIndex] :
+            undefined;
+
+    let nextDrill = <p>You haven't left book yet, or haven't played enough games. Try Configuration.</p>
+    let drillBoard = '';
+    let drillCurrentDisplay = ''
+    if (nextGame && nextGame.url) {
+
+        const drillAnalysisResult = analysisDatabase[nextGame.url];
+
+        drillBoard = <ChessBoard fen={drillAnalysisResult.displayFEN}
+                    invert={drillAnalysisResult.invert_board}
+                    name="drill-board"
+                    game_url={nextGame.url + "drillresult"}
+                    draggable={true}
+                    arrows={[]}
+                    moveCallback={move => {
+                        console.log(drillAnalysisResult.arrows);
+                        console.log(move);
+
+                        let filtered =
+                            drillAnalysisResult
+                                .arrows
+                                .filter(arrow => arrow.color === "green")
+                                .filter(arrow => arrow.moveSan === move.san);
+
+                        if (filtered.length > 0) {
+                            console.log("Success, " + move.san + " was the right move.");
+                            setCurrentDrillResult("Success");
+                        } else {
+                            console.log("failure, was expecting another move")
+                            setCurrentDrillResult("Failure")
+                        }
+                    }}
+        ></ChessBoard>
+
+        if (currentDrillResult === "Failure") {
+            drillCurrentDisplay = <>
+                <p>{"Oops, better study on this one."}
+                </p>
+                <p>
+                    <md-filled-button onClick={() => {
+                        setCurrentDrillIndex(currentDrillIndex + 1);
+                        setCurrentDrillResult(undefined);
+                    }}>Next
+                    </md-filled-button>
+                </p>
+                <AnalysisResult nameOverride="drill" game={nextGame} analysisDatabase={analysisDatabase}></AnalysisResult>
+            </>
+
+        } else if (currentDrillResult === "Success") {
+            drillCurrentDisplay = <>
+                <p>{"Congrats, you did it!"}</p>
+                <md-filled-button onClick={() => {
+                        setCurrentDrillIndex(currentDrillIndex + 1);
+                        setCurrentDrillResult(undefined);
+
+                    }}>Next
+
+                    </md-filled-button>
+                <AnalysisResult nameOverride="drill" game={nextGame} analysisDatabase={analysisDatabase}></AnalysisResult>
+            </>
+
+        }
+    }
+
+    const drillPage =
+        <>
+            <h2>Drills</h2>
+            <p>In this page, you can practice the moves you missed from your repertoire.</p>
+            <p>They are presented here in chronological order starting with the most recent games.</p>
+
+            <p>{drillBoard}</p>
+            {drillCurrentDisplay}
+        </>
 
 
     // set up tabs

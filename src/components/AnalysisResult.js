@@ -6,7 +6,17 @@ import '@material/web/list/list.js';
 
 import '@material/web/list/list-item.js';
 
-const AnalysisResult = ({analysisDatabase, game}) => {
+const AnalysisResult = ({analysisDatabase, game, nameOverride="my-name"}) => {
+
+    if (typeof game === "undefined") {
+        return <md-list-item>
+            <div slot="headline">
+                Loading Analysis for game
+                {game.url}
+            </div>
+        </md-list-item>
+    }
+
     // display code stays under this line
     let analysis = analysisDatabase[game.url];
 
@@ -30,7 +40,7 @@ const AnalysisResult = ({analysisDatabase, game}) => {
                 {analysis.advice}
                 <ChessBoard fen={analysis.displayFEN}
                             invert={analysis.invert_board}
-                            name="my-board"
+                            name={nameOverride}
                             game_url={game.url}
                             arrows={arrows}></ChessBoard>
             </div>

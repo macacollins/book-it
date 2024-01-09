@@ -98,7 +98,8 @@ async function calculateAnalysis(current_analysis, repertoire, games, setAnalysi
                     color: "red",
                     fromX, fromY,
                     destX: toX,
-                    destY: toY
+                    destY: toY,
+                    san: move_made.san
                 }
 
                 analysis.arrows.push(arrowConfig)
@@ -135,7 +136,8 @@ async function calculateAnalysis(current_analysis, repertoire, games, setAnalysi
                 fromX,
                 fromY,
                 destX: toX,
-                destY: toY
+                destY: toY,
+                moveSan: move.san
             }
 
             analysis.arrows.push(arrowConfig);
