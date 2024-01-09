@@ -6,9 +6,9 @@ import reportWebVitals from './reportWebVitals';
 
 import loadCachedData from "./loadCachedData";
 
-const propsFromLocalStorage = loadCachedData();
+import './index.css'
 
-
+const propsFromLocalStorage = await loadCachedData();
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

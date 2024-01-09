@@ -1,7 +1,7 @@
 import refreshGames from './integrations/chess.com';
 import {getItemGZIP, setItemGZIP} from './storage';
 
-function loadCachedData() {
+async function loadCachedData() {
 
     const properties =
         [ "analysisDatabase",
@@ -14,16 +14,15 @@ function loadCachedData() {
             "repertoireChoice"
         ];
 
-    const justStrings = [ "repertoireChoice", "playerName"];
-
     let returnObject = {};
-    properties.forEach(property => {
+    for (let property of properties) {
         console.log("attempting to process", property)
-        if (localStorage.getItem(property)) {
-            returnObject[property + "Storage"] =
-                getItemGZIP(property, justStrings.indexOf(property) !== -1);
+        if (await getItemGZIP(property)) {
+            let gzipped =
+                await getItemGZIP(property);
+            returnObject[property + "Storage"] = gzipped;
         }
-    });
+    }
 
     return returnObject;
 }

@@ -1,6 +1,7 @@
 import './App.css';
 
 import {useState, useEffect} from 'react';
+import { setItemGZIP } from './storage';
 
 // index.js
 import '@material/web/button/filled-button.js';
@@ -69,7 +70,7 @@ function App({
             return true;
         }).map(game => {
             return <AnalysisResult game={game} analysisDatabase={analysisDatabase}></AnalysisResult>
-        });
+        }) || [];
 
     const resultsPage = <>
         <h2>Results</h2>
@@ -88,19 +89,19 @@ function App({
             checked={userLeftBookOnly}
             onClick={() => {
                 setUserLeftBookOnly(!userLeftBookOnly)
-                localStorage.setItem("userLeftBookOnly", JSON.stringify(!userLeftBookOnly));
+                setItemGZIP("userLeftBookOnly", !userLeftBookOnly);
             }}>
         </md-checkbox>
         :
         <md-checkbox
             onClick={() => {
                 setUserLeftBookOnly(!userLeftBookOnly)
-                localStorage.setItem("userLeftBookOnly", JSON.stringify(!userLeftBookOnly));
+                setItemGZIP("userLeftBookOnly", !userLeftBookOnly);
             }}>
         </md-checkbox>
 
     const checkboxItems =
-        repertoireList.map(repertoireName => {
+        (repertoireList && repertoireList.map && repertoireList || []).map(repertoireName => {
             const kebabed = repertoireName;
 
             const props = repertoireName === repertoireChoice ? ({
@@ -116,7 +117,7 @@ function App({
                     onClick={() => {
 
                         setRepertoireChoice(repertoireName);
-                        localStorage.setItem("repertoireChoice", repertoireName);
+                        setItemGZIP("repertoireChoice", repertoireName);
                     }}
                     id="default-lines-radio"
                     name="with-labels"
@@ -139,7 +140,7 @@ function App({
             value={playerName}
             onInput={e => {
                 setPlayerName(e.target.value);
-                localStorage.setItem("playerName", e.target.value);
+                setItemGZIP("playerName", e.target.value);
             }}>
         </md-outlined-text-field>
 
@@ -186,7 +187,7 @@ function App({
             type="number"
             onInput={e => {
                 setMatchingMoves(e.target.value);
-                localStorage.setItem("matchingMoves", e.target.value);
+                setItemGZIP("matchingMoves", e.target.value);
             }}>
         </md-outlined-text-field>
 

@@ -1,4 +1,5 @@
 
+import { getItemGZIP, setItemGZIP } from '../storage';
 
 // Function to get the current year and month
 function getCurrentYearAndMonth() {
@@ -42,14 +43,14 @@ async function refreshGames(games, setGames, playerName) {
         // start requests to chess.com for data
         await fetch('https://api.chess.com/pub/player/' + playerName + "/games/" + year + "/" + month)
             .then((res) => res.json())
-            .then((data) => {
-                const thisMonthGames = data.games;
+            .then(async (data) => {
+                const thisMonthGames = data.games || [];
 
-                let currentGames = JSON.parse(localStorage.getItem('games'));
+                let currentGames = []; //await getItemGZIP('games') || [];
 
                 const newGames = thisMonthGames.reverse()
                 setGames([ ...currentGames, ...newGames ]);
-                // localStorage.setItem('games', JSON.stringify([ ...newGames, ...currentGames ]));
+                setItemGZIP('games', [ ...newGames, ...currentGames ]);
             })
             .catch((err) => {
                 console.log(err.message);

@@ -1,10 +1,11 @@
 import {Chess} from 'chess.js'
+import { getItemGZIP, setItemGZIP } from '../storage';
 
-function calculateAnalysis(current_analysis, repertoire, games, setAnalysisDatabase, playerName) {
+async function calculateAnalysis(current_analysis, repertoire, games, setAnalysisDatabase, playerName) {
 
-    let analysisDatabase = JSON.parse(localStorage.getItem("analysisDatabase")) || {};
+    let analysisDatabase = await getItemGZIP("analysisDatabase") || {};
 
-    const repertoireChoice = localStorage.getItem("repertoireChoice");
+    const repertoireChoice = await getItemGZIP("repertoireChoice");
 
     let thisRepertoire = repertoire[repertoireChoice];
 
@@ -13,7 +14,7 @@ function calculateAnalysis(current_analysis, repertoire, games, setAnalysisDatab
     function processSingleGame(game) {
 
         if (current_analysis[game.url]) {
-            // skip for now. We can consider reworking this system when lines are more dynamically updated.
+            // skip for now.r We can consider reworking this system when lines are more dynamically updated.
             // console.log(`Found analysis for ${game.url}`);
             return
         }
@@ -193,7 +194,7 @@ function calculateAnalysis(current_analysis, repertoire, games, setAnalysisDatab
                 if (analysisDatabase) {
                     console.log("Writing analysis to localStorage", analysisDatabase);
 
-                    localStorage.setItem("analysisDatabase", JSON.stringify(analysisDatabase));
+                    setItemGZIP("analysisDatabase", analysisDatabase);
                     setAnalysisDatabase(analysisDatabase);
 
 

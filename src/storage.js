@@ -1,20 +1,53 @@
-import zlib from 'browserify-zlib';
+import Dexie from 'dexie';
+/*
+|----------------------------|
+| Declare your database      |
+|----------------------------|
+*/
 
-export function getItemGZIP(key) {
-    let stringValue = localStorage.get(key);
-    let ungzippedValue;
+const db = new Dexie('AppDatabase');
 
-    if (stringValue) {
-        ungzippedValue = zlib.ungzipSync(stringValue);
+// Declare tables, IDs and indexes
+db.version(1).stores({
+    objectCache: '++id, key, value'
+});
+
+export async function getItemGZIP(key) {
+    const result = await db.objectCache.where('key').equals(key).toArray();;
+
+    if (result && result.length > 0) {
+        if (result[0]) {
+            console.log("Got db result", result, result[0].value)
+            return JSON.parse(result[0].value);
+        }
+
+        return
+
+    } else {
+        return
     }
-
-    return ungzippedValue || stringValue;
 }
 
-export function setItemGZIP(key, value) {
-    let gzippedValue = zlib.gzipSync(value);
+export async function setItemGZIP(key, value) {
 
-    if (gzippedValue) {
-        localStorage.setItem(key, gzippedValue);
+    let currentValue = await db.objectCache.where('key').equals(key).toArray();
+
+    if (currentValue.length === 0) {
+        let result = await db.objectCache.add({key, value: JSON.stringify(value)}).then(function (updated) {
+            if (updated) {
+                console.log("New record inserted for " + key);
+            } else {
+                console.log("Nothing was updated - there were no item with primary key: " + currentValue.id);
+            }
+        });;
+    } else {
+
+        let result = await db.objectCache.update(currentValue[0].id, {key, value: JSON.stringify(value)}).then(function (updated) {
+            if (updated) {
+                console.log("Key updated");
+            } else {
+                console.log("Nothing was updated - there were no item with primary key: " + currentValue.id);
+            }
+        });
     }
 }

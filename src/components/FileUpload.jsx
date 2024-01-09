@@ -59,7 +59,7 @@ const FileUpload = ({repertoire, setRepertoire, newRepertoireNameField, setNewRe
                     [newRepertoireNameField]: fenRepo
                 }
                 setRepertoire(newRepertoire);
-                setItemGZIP('repertoire', JSON.stringify(newRepertoire));
+                setItemGZIP('repertoire', newRepertoire);
 
                 const newRepertoireList = [
                     ...repertoireList,
@@ -67,7 +67,7 @@ const FileUpload = ({repertoire, setRepertoire, newRepertoireNameField, setNewRe
                 ]
 
                 setRepertoireList(newRepertoireList);
-                localStorage.setItem('repertoireList', JSON.stringify(newRepertoireList));
+                setItemGZIP('repertoireList', newRepertoireList);
 
                 // setNewRepertoireNameField("");
             };
