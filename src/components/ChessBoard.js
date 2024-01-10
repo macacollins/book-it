@@ -111,6 +111,12 @@ const ChessBoard = ({
 
             const domBoard = document.getElementById(finalID);
 
+            function preventBehavior(e) {
+                e.preventDefault();
+            };
+
+            domBoard.addEventListener("touchmove", preventBehavior, {passive: false});
+
         }, 100);
     }, [fen, finalID, invert]);
 

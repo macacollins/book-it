@@ -212,7 +212,7 @@ function App({
 
     const filteredGames = games && games.filter &&
         games.filter(nextGame => {
-            return analysisDatabase[nextGame.url] && analysisDatabase[nextGame.url].you_left_book
+            return analysisDatabase[nextGame.url] && analysisDatabase[nextGame.url].you_left_book && analysisDatabase[nextGame.url].foundIntersection
         });
 
     const nextGame =
