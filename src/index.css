@@ -26,16 +26,19 @@ code {
     monospace;
 }
 
+md-filled-button.drill-button {
+  left:100px;
+}
+
 .side-by-side {
-    display: inline-block;
+    display: block;
     margin-right: 10px;
 }
-
-.cg_shapes {
+.cg-shapes {
+  pointer-events: none;
+  z-index: 10000;
   position: absolute;
-  height: 392px;
-  width: 392px;
+  height: 294px;
+  width: 294px;
   float: left;
-  left: 0px;
 }
-

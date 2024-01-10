@@ -119,7 +119,7 @@ const ChessBoard = ({
     return (
         <div className="side-by-side">
             {drawings}
-            <div id={finalID} style={{"height": "388px", "width": "388px"}}>
+            <div id={finalID} style={{"height": "294px", "width": "294px"}}>
             </div>
         </div>
     );

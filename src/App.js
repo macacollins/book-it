@@ -236,7 +236,7 @@ function App({
                     {drillAnalysisResult.advice}
                     <ChessBoard fen={drillAnalysisResult.displayFEN}
                                 invert={drillAnalysisResult.invert_board}
-                                name="drill-board"
+                                name={"drill-board" + currentDrillIndex}
                                 game_url={nextGame.url + "drillresult"}
                                 draggable={!currentDrillResult}
                                 arrows={currentDrillResult ? drillAnalysisResult.arrows.map(arrow => <Arrow {...arrow}></Arrow>) : []}
@@ -280,9 +280,7 @@ function App({
 
         if (currentDrillResult === "Failure") {
             drillCurrentDisplay = <>
-                <p>{"Oops, better study on this one."}
-                </p>
-                <p>
+                <p style={{"line-height":"36px"}}>{"Oops, better study on this one."}
                     <md-filled-button onClick={() => {
                         setCurrentDrillIndex(currentDrillIndex + 1);
                         setCurrentDrillResult(undefined);
@@ -293,14 +291,15 @@ function App({
 
         } else if (currentDrillResult === "Success") {
             drillCurrentDisplay = <>
-                <p>{"Congrats, you did it!"}</p>
-                <md-filled-button onClick={() => {
+                <p style={{"line-height":"36px"}}>{"Congrats, you did it!"}
+                <md-filled-button className={"drill-button"} onClick={() => {
                         setCurrentDrillIndex(currentDrillIndex + 1);
                         setCurrentDrillResult(undefined);
 
                     }}>Next
 
                     </md-filled-button>
+                </p>
             </>
 
         }
@@ -308,9 +307,7 @@ function App({
 
     const drillPage =
         <>
-            <h2>Drills</h2>
-            <p>In this page, you can practice the moves you missed from your repertoire.</p>
-            <p>They are presented here in chronological order starting with the most recent games.</p>
+            <p>Practice the moves you missed from your repertoire</p>
 
             {drillBoard}
             {drillCurrentDisplay}
