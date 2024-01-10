@@ -228,12 +228,8 @@ function App({
         const drillAnalysisResult = analysisDatabase[nextGame.url];
 
         drillBoard = <md-list-item>
-            <div slot="headline">{drillAnalysisResult.headers.White}{' vs '}{drillAnalysisResult.headers.Black}{'\n'}
-                {drillAnalysisResult.headers.Result}
-            </div>
             <div slot="supporting-text">
                 <div className="side-by-side">
-                    {drillAnalysisResult.advice}
                     <ChessBoard fen={drillAnalysisResult.displayFEN}
                                 invert={drillAnalysisResult.invert_board}
                                 name={"drill-board" + currentDrillIndex}
@@ -307,8 +303,6 @@ function App({
 
     const drillPage =
         <>
-            <p>Practice the moves you missed from your repertoire</p>
-
             {drillBoard}
             {drillCurrentDisplay}
         </>
@@ -324,8 +318,6 @@ function App({
                 currentPanel.hidden = true;
             }
 
-
-
             const panelId = tabs.activeTab?.getAttribute('aria-controls');
             const root = tabs.getRootNode();
             currentPanel = root.querySelector(`#${panelId}`);
@@ -340,9 +332,6 @@ function App({
 
     return (
         <>
-            <h1>Book It</h1>
-            <p>A tool to help you learn your chess opening lines</p>
-
             <md-tabs
                 id="nav-tabs"
                 aria-label="A custom themed tab bar"
