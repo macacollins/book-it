@@ -8,12 +8,6 @@ import loadCachedData from "./loadCachedData";
 
 import './index.css'
 
-function preventBehavior(e) {
-    e.preventDefault();
-};
-
-document.addEventListener("touchmove", preventBehavior, {passive: false});
-
 const propsFromLocalStorage = await loadCachedData();
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
