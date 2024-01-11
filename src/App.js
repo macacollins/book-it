@@ -1,7 +1,7 @@
 import './App.css';
 
 import {useState, useEffect} from 'react';
-import { setItemGZIP } from './storage';
+import {setItemGZIP} from './storage';
 
 // index.js
 import '@material/web/button/filled-button.js';
@@ -44,6 +44,11 @@ function App({
                  repertoireChoiceStorage
              }) {
 
+
+    // Declare main state of application
+    // This includes data stored by the application such as the repertoire and player name
+    // This application may be a better fit for Redux due to all the state that we are passing around.
+    // The useState effect makes code very explicit about state stuff which is good
     const [games, setGames] = useState(gamesStorage || []);
     const [repertoire, setRepertoire] = useState(repertoireStorage || {"Default Lines": defaultLines});
     const [analysisDatabase, setAnalysisDatabase] = useState(analysisDatabaseStorage || {});
@@ -58,8 +63,9 @@ function App({
     // tab navigation
     const [activeTab, setActiveTab] = useState("panel-one");
 
+    // If the repertoire or games change, start performing analysis on the games
     useEffect(() => {
-            console.log("Calculating analysis")
+            console.log("Calculating analysis");
 
             // put on the queue
             setTimeout(() => {
@@ -68,38 +74,48 @@ function App({
         }, [repertoire, games]
     )
 
-    const resultsPage = <Results { ... {games, userLeftBookOnly, setUserLeftBookOnly, playerName, repertoireChoice, analysisDatabase, setGames} }></Results>;
+    const resultsPage = <Results {...{
+        games,
+        userLeftBookOnly,
+        setUserLeftBookOnly,
+        playerName,
+        repertoireChoice,
+        analysisDatabase,
+        setGames
+    }}></Results>;
 
-    console.log("new repertoire name field is ", newRepertoireNameField);
+    const configPage = <ConfigPage {...{
+        playerName,
+        setPlayerName,
+        repertoireChoice,
+        setRepertoireChoice,
+        newRepertoireNameField,
+        setNewRepertoireNameField,
+        setRepertoire,
+        repertoire,
+        repertoireList,
+        setRepertoireList,
+        matchingMoves,
+        setMatchingMoves
+    }}/>
 
-    const configPage = <ConfigPage { ... {
-        playerName, setPlayerName, repertoireChoice, setRepertoireChoice, newRepertoireNameField, setNewRepertoireNameField,
-        setRepertoire, repertoire, repertoireList, setRepertoireList, matchingMoves, setMatchingMoves} }/>
-
-    const drillPage = <Drills { ... { games, analysisDatabase } }></Drills>
+    const drillPage = <Drills {...{games, analysisDatabase}}></Drills>
 
     // set up tabs
-    // TODO React state-ify it
     useEffect(() => {
-        let currentPanel = document.querySelector('#panel-one');
 
         const tabs = document.querySelector("#nav-tabs");
         tabs.addEventListener('change', () => {
-            if (currentPanel) {
-                currentPanel.hidden = true;
-            }
-
             const panelId = tabs.activeTab?.getAttribute('aria-controls');
-            const root = tabs.getRootNode();
-            currentPanel = root.querySelector(`#${panelId}`);
-
-            setActiveTab(panelId)
-            if (currentPanel) {
-                currentPanel.hidden = false;
-            }
+            setActiveTab(panelId);
         });
 
     }, []);
+
+    const [oneProps, twoProps, threeProps ] =
+        ["panel-one", "panel-two", "panel-three" ].map(
+            tabID => tabID === activeTab ? {} : { "hidden": true }
+        )
 
     return (
         <>
@@ -122,13 +138,13 @@ function App({
                 </md-primary-tab>
             </md-tabs>
 
-            <div role="tabpanel" id="panel-one" aria-labelledby="tab-one">
+            <div role="tabpanel" id="panel-one" aria-labelledby="tab-one" {...oneProps}>
                 {activeTab === "panel-one" && configPage || ''}
             </div>
-            <div role="tabpanel" id="panel-two" aria-labelledby="tab-two" hidden>
+            <div role="tabpanel" id="panel-two" aria-labelledby="tab-two" {...twoProps}>
                 {activeTab === "panel-two" && resultsPage || ""}
             </div>
-            <div role="tabpanel" id="panel-three" aria-labelledby="tab-three" hidden>
+            <div role="tabpanel" id="panel-three" aria-labelledby="tab-three" {...threeProps}>
                 {activeTab === "panel-three" && drillPage || ""}
             </div>
         </>

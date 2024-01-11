@@ -5,7 +5,15 @@ import refreshGames from "../integrations/chess.com";
 import {useState} from 'react';
 
 
-export default function Results({games, userLeftBookOnly, setUserLeftBookOnly, playerName, repertoireChoice, analysisDatabase, setGames}) {
+export default function Results({
+                                    games,
+                                    userLeftBookOnly,
+                                    setUserLeftBookOnly,
+                                    playerName,
+                                    repertoireChoice,
+                                    analysisDatabase,
+                                    setGames
+                                }) {
     const [currentPage, setCurrentPage] = useState(1);
 
     const itemsPerPage = 10;
@@ -53,7 +61,7 @@ export default function Results({games, userLeftBookOnly, setUserLeftBookOnly, p
 
     let indicesToUse = Array.from({length: numberPages}).map((ignore, index) => index);
 
-    if (currentPage > 5 ) {
+    if (currentPage > 5) {
         indicesToUse = indicesToUse.map(number => number + currentPage - 5);
     }
 
@@ -68,7 +76,7 @@ export default function Results({games, userLeftBookOnly, setUserLeftBookOnly, p
                 const className = item === currentPage - 1 ? "currentPage" : '';
 
                 return item < numberPages ?
-                    <text-button key={item} onClick={() => setCurrentPage(item + 1)}  { ... { "class": className } }>
+                    <text-button key={item} onClick={() => setCurrentPage(item + 1)}  {...{"class": className}}>
                         {item + 1}
                     </text-button>
                     : ''
@@ -91,7 +99,7 @@ export default function Results({games, userLeftBookOnly, setUserLeftBookOnly, p
             </text-button>
         );
     }
-    const paginationSection = <div className={"pagination"}> { "Page | " }{ paginationButtons }</div>
+    const paginationSection = <div className={"pagination"}> {"Page | "}{paginationButtons}</div>
 
     return <>
         <h2>Results</h2>
