@@ -2,8 +2,17 @@ import AnalysisResult from "../components/AnalysisResult";
 import {setItemGZIP} from "../storage";
 import refreshGames from "../integrations/chess.com";
 
+import {useState} from 'react';
+
 
 export default function Results({games, userLeftBookOnly, setUserLeftBookOnly, playerName, repertoireChoice, analysisDatabase, setGames}) {
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const itemsPerPage = 10;
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+
     let listItems = games && games.filter &&
         games.filter(game => {
             if (userLeftBookOnly) {
@@ -18,11 +27,17 @@ export default function Results({games, userLeftBookOnly, setUserLeftBookOnly, p
             }
         }) || [];
 
+    const filteredGamesLength = listItems.length
+
+    listItems = listItems.slice(indexOfFirstItem, indexOfFirstItem + itemsPerPage);
+
+    let numberPages = Math.ceil(filteredGamesLength / itemsPerPage)
 
     const leftBookCheckbox = userLeftBookOnly ?
         <md-checkbox
             checked={userLeftBookOnly}
             onClick={() => {
+                setCurrentPage(1);
                 setUserLeftBookOnly(!userLeftBookOnly)
                 setItemGZIP("userLeftBookOnly", !userLeftBookOnly);
             }}>
@@ -30,10 +45,53 @@ export default function Results({games, userLeftBookOnly, setUserLeftBookOnly, p
         :
         <md-checkbox
             onClick={() => {
+                setCurrentPage(1);
                 setUserLeftBookOnly(!userLeftBookOnly)
                 setItemGZIP("userLeftBookOnly", !userLeftBookOnly);
             }}>
         </md-checkbox>
+
+    let indicesToUse = Array.from({length: numberPages}).map((ignore, index) => index);
+
+    if (currentPage > 5 ) {
+        indicesToUse = indicesToUse.map(number => number + currentPage - 5);
+    }
+
+    if (currentPage < numberPages - 5) {
+        indicesToUse = indicesToUse.slice(0, 10);
+    }
+
+    const paginationButtons =
+        indicesToUse.map(
+            (item, index) => {
+
+                const className = item === currentPage - 1 ? "currentPage" : '';
+
+                return item < numberPages ?
+                    <text-button key={item} onClick={() => setCurrentPage(item + 1)}  { ... { "class": className } }>
+                        {item + 1}
+                    </text-button>
+                    : ''
+            }
+        )
+
+    // Show buttons for first and last pages
+    if (currentPage > 5) {
+        paginationButtons.unshift(
+            <text-button key="first" onClick={() => setCurrentPage(1)}>
+                First
+            </text-button>
+        );
+    }
+
+    if (currentPage < numberPages - 9) {
+        paginationButtons.push(
+            <text-button key="last" onClick={() => setCurrentPage(numberPages)}>
+                Last
+            </text-button>
+        );
+    }
+    const paginationSection = <div className={"pagination"}> { "Page | " }{ paginationButtons }</div>
 
     return <>
         <h2>Results</h2>
@@ -44,11 +102,17 @@ export default function Results({games, userLeftBookOnly, setUserLeftBookOnly, p
             {leftBookCheckbox}
         </label>
         <br></br>
-        <p><md-filled-button onClick={() => { refreshGames(games, setGames, playerName) }}>Refresh games</md-filled-button>
+        <p>
+            <md-filled-button onClick={() => {
+                refreshGames(games, setGames, playerName)
+            }}>Refresh games
+            </md-filled-button>
         </p>
-        <p>Found {listItems.length} results.</p>
+        <p>Found {filteredGamesLength} results.</p>
+        {paginationSection}
         <md-list>
             {listItems}
         </md-list>
+        {paginationSection}
     </>;
 }

@@ -42,3 +42,16 @@ md-filled-button.drill-button {
   width: 294px;
   float: left;
 }
+
+.pagination {
+  padding:10px;
+}
+
+.pagination text-button {
+  padding: 5px;
+  cursor: pointer;
+}
+
+.currentPage {
+  color: green;
+}
