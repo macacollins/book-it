@@ -29,6 +29,10 @@ import loadCachedData from './loadCachedData';
 
 import defaultLines from './integrations/default-lines';
 
+import ConfigPage from './pages/Configuration';
+import Results from './pages/Results';
+import Drills from './pages/Drills';
+
 function App({
                  analysisDatabaseStorage,
                  repertoireStorage,
@@ -64,251 +68,18 @@ function App({
         }, [repertoire, games]
     )
 
-    let listItems = games && games.filter &&
-        games.filter(game => {
-            if (userLeftBookOnly) {
-                return analysisDatabase[game.url] && analysisDatabase[game.url].you_left_book
-            }
-            return true;
-        }).map(singleGame => {
-            if (singleGame) {
-                return <AnalysisResult game={singleGame} analysisDatabase={analysisDatabase}></AnalysisResult>
-            } else {
-                return "No game found"
-            }
-        }) || [];
-
-
-    const leftBookCheckbox = userLeftBookOnly ?
-        <md-checkbox
-            checked={userLeftBookOnly}
-            onClick={() => {
-                setUserLeftBookOnly(!userLeftBookOnly)
-                setItemGZIP("userLeftBookOnly", !userLeftBookOnly);
-            }}>
-        </md-checkbox>
-        :
-        <md-checkbox
-            onClick={() => {
-                setUserLeftBookOnly(!userLeftBookOnly)
-                setItemGZIP("userLeftBookOnly", !userLeftBookOnly);
-            }}>
-        </md-checkbox>
-
-    const resultsPage = <>
-        <h2>Results</h2>
-        <p>Reviewing lines from repertoire "{repertoireChoice}" as {playerName}</p>
-        <p>This is a list of games at the position where they left the book.</p>
-        <label>
-            Show only lines where you left book first
-            {leftBookCheckbox}
-        </label>
-        <br></br>
-        <p><md-filled-button onClick={() => { refreshGames(games, setGames, playerName) }}>Refresh games</md-filled-button>
-        </p>
-        <p>Found {listItems.length} results.</p>
-        <md-list>
-            {listItems}
-        </md-list>
-    </>;
-
-
-    const checkboxItems =
-        (repertoireList && repertoireList.map && repertoireList || []).map(repertoireName => {
-            const kebabed = repertoireName;
-
-            const props = repertoireName === repertoireChoice ? ({
-                "checked" : true,
-                "touch-target": "wrapper"
-            }) : {
-                "touch-target": "wrapper"
-            };
-
-            return <div class="radio-label">
-                <md-radio
-                    aria-label={repertoireName}
-                    onClick={() => {
-
-                        setRepertoireChoice(repertoireName);
-                        setItemGZIP("repertoireChoice", repertoireName);
-                    }}
-                    id="default-lines-radio"
-                    name="with-labels"
-                    {... props}>
-                </md-radio>
-                <label for="default-lines-radio">{repertoireName}</label>
-            </div>
-        })
+    const resultsPage = <Results { ... {games, userLeftBookOnly, setUserLeftBookOnly, playerName, repertoireChoice, analysisDatabase, setGames} }></Results>;
 
     console.log("new repertoire name field is ", newRepertoireNameField);
 
-    const configPage = <>
-        <h2>Configuration</h2>
+    const configPage = <ConfigPage { ... {
+        playerName, setPlayerName, repertoireChoice, setRepertoireChoice, newRepertoireNameField, setNewRepertoireNameField,
+        setRepertoire, repertoire, repertoireList, setRepertoireList, matchingMoves, setMatchingMoves} }/>
 
-        <h3>User</h3>
-        <p>Please enter your chess.com username.</p>
-
-
-        <md-outlined-text-field
-            label="chess.com Username"
-            value={playerName}
-            onInput={e => {
-                setPlayerName(e.target.value);
-                setItemGZIP("playerName", e.target.value);
-            }}>
-        </md-outlined-text-field>
-
-        <h3>Repertoire</h3>
-        <div class="column" role="radiogroup" aria-label="Repertoire">
-            {checkboxItems}
-        </div>
-
-        <h3>Upload New Lines</h3>
-
-        <md-outlined-text-field
-            label="Repertoire Name"
-            value={newRepertoireNameField}
-
-            onInput={e => {
-                setNewRepertoireNameField(e.target.value);
-                console.log("set it to ", e.target.value);
-
-            }}>
-        </md-outlined-text-field>
-        <br></br>
-        <FileUpload
-            newRepertoireNameField={newRepertoireNameField}
-                    {...{
-            repertoire,
-            setRepertoire,
-            setNewRepertoireNameField,
-            repertoireList,
-            setRepertoireList
-        }}> </FileUpload>
-
-        <h3>Settings</h3>
-
-        <br></br>
-
-        <label>
-            Show lines that have at least this many matching moves
-        </label>
-        <md-outlined-text-field
-            label="Matching Moves"
-            value={matchingMoves}
-            type="number"
-            onInput={e => {
-                setMatchingMoves(e.target.value);
-                setItemGZIP("matchingMoves", e.target.value);
-            }}>
-        </md-outlined-text-field>
-
-        <br></br>
-    </>
-
-    const [ currentDrillIndex, setCurrentDrillIndex ] = useState(0);
-    const [ currentDrillResult, setCurrentDrillResult ] = useState("");
-
-
-    const filteredGames = games && games.filter &&
-        games.filter(nextGame => {
-            return analysisDatabase[nextGame.url] && analysisDatabase[nextGame.url].you_left_book && analysisDatabase[nextGame.url].foundIntersection
-        });
-
-    const nextGame =
-        filteredGames.length > currentDrillIndex ?
-            filteredGames[currentDrillIndex] :
-            undefined;
-
-    let nextDrill = <p>You haven't left book yet, or haven't played enough games. Try Configuration.</p>
-    let drillBoard = '';
-    let drillCurrentDisplay = ''
-    if (nextGame && nextGame.url) {
-
-        const drillAnalysisResult = analysisDatabase[nextGame.url];
-
-        drillBoard = <md-list-item>
-            <div slot="supporting-text">
-                <div className="side-by-side">
-                    <ChessBoard fen={drillAnalysisResult.displayFEN}
-                                invert={drillAnalysisResult.invert_board}
-                                name={"drill-board" + currentDrillIndex}
-                                game_url={nextGame.url + "drillresult"}
-                                draggable={!currentDrillResult}
-                                arrows={currentDrillResult ? drillAnalysisResult.arrows.map(arrow => <Arrow {...arrow}></Arrow>) : []}
-                                moveCallback={move => {
-                                    console.log(drillAnalysisResult.arrows);
-                                    console.log(move);
-
-                                    let filtered =
-                                        drillAnalysisResult
-                                            .arrows
-                                            .filter(arrow => arrow.color === "green")
-                                            .filter(arrow => arrow.moveSan === move.san);
-
-                                    if (filtered.length > 0) {
-                                        console.log("Success, " + move.san + " was the right move.");
-                                        setCurrentDrillResult("Success");
-                                    } else {
-                                        console.log("failure, was expecting another move")
-                                        setCurrentDrillResult("Failure")
-                                    }
-                                }}
-                    ></ChessBoard>
-                </div>
-                <div className="buttonlist">
-                    <md-text-button onClick={() => window.open(drillAnalysisResult.headers.Link)}>Chess.com</md-text-button>
-                    <md-text-button
-                        onClick={() => window.open('https://lichess.org/analysis/' + drillAnalysisResult.displayFEN)}>Lichess
-                        Analysis
-                    </md-text-button>
-                    <md-text-button
-                        onClick={() => window.open('https://www.chessable.com/courses/fen/' + drillAnalysisResult.displayFEN)}>Chessable
-                        Course Search
-                    </md-text-button>
-                    <br></br>
-
-                </div>
-            </div>
-            <div slot="trailing-supporting-text">
-            </div>
-        </md-list-item>
-
-        if (currentDrillResult === "Failure") {
-            drillCurrentDisplay = <>
-                <p style={{"line-height":"36px"}}>{"Oops, better study on this one."}
-                    <md-filled-button onClick={() => {
-                        setCurrentDrillIndex(currentDrillIndex + 1);
-                        setCurrentDrillResult(undefined);
-                    }}>Next
-                    </md-filled-button>
-                </p>
-            </>
-
-        } else if (currentDrillResult === "Success") {
-            drillCurrentDisplay = <>
-                <p style={{"line-height":"36px"}}>{"Congrats, you did it!"}
-                <md-filled-button className={"drill-button"} onClick={() => {
-                        setCurrentDrillIndex(currentDrillIndex + 1);
-                        setCurrentDrillResult(undefined);
-
-                    }}>Next
-
-                    </md-filled-button>
-                </p>
-            </>
-
-        }
-    }
-
-    const drillPage =
-        <>
-            {drillBoard}
-            {drillCurrentDisplay}
-        </>
-
+    const drillPage = <Drills { ... { games, analysisDatabase } }></Drills>
 
     // set up tabs
+    // TODO React state-ify it
     useEffect(() => {
         let currentPanel = document.querySelector('#panel-one');
 
