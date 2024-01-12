@@ -19,11 +19,19 @@ export default function Drills({ games = [], analysisDatabase }) {
             filteredGames[currentDrillIndex] :
             undefined;
 
+
     let drillBoard = '';
     let drillCurrentDisplay = ''
     if (nextGame && nextGame.url) {
 
         const drillAnalysisResult = analysisDatabase[nextGame.url];
+
+        const path = new URL(drillAnalysisResult.headers.ECOUrl).pathname;
+
+        // Get the last path segment and replace hyphens with spaces
+        const openingName = path.split('/').pop().replace(/-/g, ' ');
+
+        console.log("Opening was", openingName);
 
         drillBoard = <md-list-item>
             <div slot="supporting-text">
@@ -33,7 +41,8 @@ export default function Drills({ games = [], analysisDatabase }) {
                                 name={"drill-board" + currentDrillIndex}
                                 game_url={nextGame.url + "drillresult"}
                                 draggable={!currentDrillResult}
-                                arrows={currentDrillResult ? drillAnalysisResult.arrows.map(arrow => <Arrow {...arrow}></Arrow>) : []}
+                                arrows={currentDrillResult ? drillAnalysisResult.arrows.map(arrow =>
+                                    <Arrow {...arrow}></Arrow>) : []}
                                 moveCallback={move => {
                                     console.log(drillAnalysisResult.arrows);
                                     console.log(move);
@@ -54,8 +63,10 @@ export default function Drills({ games = [], analysisDatabase }) {
                                 }}
                     ></ChessBoard>
                 </div>
+                {/*<p><a href={"https://lichess.org/opening/" + openingName}>{drillAnalysisResult.headers.ECO} {openingName}</a></p>*/}
                 <div className="buttonlist">
-                    <md-text-button onClick={() => window.open(drillAnalysisResult.headers.Link)}>Chess.com</md-text-button>
+                    <md-text-button onClick={() => window.open(drillAnalysisResult.headers.Link)}>Chess.com
+                    </md-text-button>
                     <md-text-button
                         onClick={() => window.open('https://lichess.org/analysis/' + drillAnalysisResult.displayFEN)}>Lichess
                         Analysis

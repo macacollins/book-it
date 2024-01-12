@@ -37,7 +37,7 @@ function getYearAndMonthXMonthsAgo(X) {
 async function refreshGames(games, setGames, playerName) {
     console.log("Fetching games from chess.com");
 
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < 3; i++) {
         let {year, month} = getYearAndMonthXMonthsAgo(i);
 
         // start requests to chess.com for data

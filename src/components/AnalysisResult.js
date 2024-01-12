@@ -29,7 +29,15 @@ const AnalysisResult = ({analysisDatabase, game, nameOverride="my-name"}) => {
         </md-list-item>
     }
 
+
     let arrows = analysis.arrows.map(arrow => <Arrow {...arrow} ></Arrow>);
+
+    const path = new URL(analysis.headers.ECOUrl).pathname;
+
+    // Get the last path segment and replace hyphens with spaces
+    const openingName = path.split('/').pop().replace(/-/g, ' ');
+
+    console.log("Opening was", openingName);
 
     return <md-list-item>
         <div slot="headline">{analysis.headers.White}{' vs '}{analysis.headers.Black}{'\n'}
@@ -38,6 +46,7 @@ const AnalysisResult = ({analysisDatabase, game, nameOverride="my-name"}) => {
         <div slot="supporting-text">
             <div className="side-by-side">
                 {analysis.advice}
+                <p>{analysis.headers.ECO} {openingName}</p>
                 <ChessBoard fen={analysis.displayFEN}
                             invert={analysis.invert_board}
                             name={nameOverride}

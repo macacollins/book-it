@@ -162,14 +162,19 @@ async function calculateAnalysis(current_analysis, repertoire, games, setAnalysi
 
         analysis.fen_at_departure = chess_game_display.fen();
         analysis.you_left_book =
+            foundIntersection && (
             chess_game_display.turn() === "w" ?
-                chess_game.header().White === "***REMOVED***" :
-                chess_game.header().Black === "***REMOVED***";
+                chess_game.header().White === playerName :
+                chess_game.header().Black === playerName);
 
-        if (analysis.you_left_book) {
-            advice = "You left book on this one. Study the lines from the repertoire."
+        if (foundIntersection) {
+            if (analysis.you_left_book) {
+                advice = "You left book on this one. Study the lines from the repertoire."
+            } else {
+                advice = "They left book. Consider analyzing the move to get an idea of how to play against it."
+            }
         } else {
-            advice = "They left book. Consider analyzing the move to get an idea of how to play against it."
+            advice = "This position was not found in the repertoire. Consider expanding it for the below opening name."
         }
 
         // console.log("turn()", chess_game.turn());
