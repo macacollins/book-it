@@ -3,6 +3,7 @@ import {setItemGZIP} from "../storage";
 import refreshGames from "../integrations/chess.com";
 
 import {useState} from 'react';
+import findTopOpenings from "../analysis/findTopOpenings";
 
 
 export default function Results({
@@ -21,11 +22,44 @@ export default function Results({
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
 
+    const [ currentOpeningFilter, setCurrentOpeningFilter ] = useState("");
+
+    let topOpenings = findTopOpenings(games || [], analysisDatabase).slice(0, 14);
+
+    let openingFilters = topOpenings.map(({opening, count}) =>
+            <md-select-option value={opening}
+                              onClick={() => { setCurrentOpeningFilter(opening) }}>
+                {opening} {count}
+            </md-select-option>
+    );
+
+    openingFilters.push(
+        <md-select-option onClick={() => {
+            setCurrentOpeningFilter('')
+        }}>
+            Clear Opening Filter
+        </md-select-option>)
+
+    openingFilters = <md-outlined-select>
+            {openingFilters}
+        </md-outlined-select>
+
     let listItems = games && games.filter &&
         games.filter(game => {
-            if (userLeftBookOnly) {
-                return analysisDatabase[game.url] && analysisDatabase[game.url].you_left_book
+            if (currentOpeningFilter === "") {
+                if (userLeftBookOnly) {
+                    return analysisDatabase[game.url] && analysisDatabase[game.url].you_left_book
+                }
+                return true;
+            } else if (analysisDatabase[game.url] && currentOpeningFilter === analysisDatabase[game.url].openingFamily ) {
+                if (userLeftBookOnly) {
+                    return analysisDatabase[game.url] && analysisDatabase[game.url].you_left_book
+                }
+                return true;
+            } else {
+                return false
             }
+
             return true;
         }).map(singleGame => {
             if (singleGame) {
@@ -109,6 +143,8 @@ export default function Results({
             Show only lines where you left book first
             {leftBookCheckbox}
         </label>
+        <br></br>
+        {openingFilters}
         <br></br>
         <p>
             <md-filled-button onClick={() => {

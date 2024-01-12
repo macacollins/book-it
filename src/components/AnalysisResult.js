@@ -37,7 +37,7 @@ const AnalysisResult = ({analysisDatabase, game, nameOverride="my-name"}) => {
     // Get the last path segment and replace hyphens with spaces
     const openingName = path.split('/').pop().replace(/-/g, ' ');
 
-    console.log("Opening was", openingName);
+    // console.log("Opening was", openingName);
 
     return <md-list-item>
         <div slot="headline">{analysis.headers.White}{' vs '}{analysis.headers.Black}{'\n'}

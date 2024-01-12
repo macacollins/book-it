@@ -183,7 +183,14 @@ async function calculateAnalysis(current_analysis, repertoire, games, setAnalysi
         analysis.advice = advice;
         analysis.displayFEN = chess_game_display.fen();
 
+
         analysis.headers = chess_game.header();
+
+        const path = new URL(analysis.headers.ECOUrl).pathname;
+        // Get the last path segment and replace hyphens with spaces
+        const openingName = path.split('/').pop().replace(/-/g, ' ').replace(/[0-9].*/g, '');
+
+        analysis.openingFamily = openingName;
 
         analysisDatabase[game.url] = analysis;
 

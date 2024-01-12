@@ -14,13 +14,9 @@ export default
     "1.d4 d5 2.c4 dxc4 3.e3 a6 4.Bxc4 Nf6 5.Nf3 b5 6.Bd3\n" +
     "1.d4 d5 2.c4 dxc4 3.e3 Nf6 4.Bxc4 a6 5.a4 e6 6.Nf3 c5 7.O-O \n" +
     "1.d4 d5 2.c4 dxc4 3.e3 Nf6 4.Bxc4 e6 5.Nf3 c5 6.O-O a6 7.a4\n" +
-    "1.d4 Nf6 2.c4 e6 3.Nf3 Bb4 4.Qc2 d5 5.cxd5 Nxd5 6.e4 \n" +
-    "1.d4 Nf6 2.c4 e6 3.Nf3 Bb4 4.Qc2 d5 5.cxd5 Qxd5 6.e3\n" +
-    "1.d4 Nf6 2.c4 e6 3.Nf3 Bb4 4.Qc2 d5 5.cxd5 exd5 6.Bg5\n" +
-    "1.d4 Nf6 2.c4 e6 3.Nf3 Bb4 4.Qc2 c5 5.dxc5 Bxc5 6.Nc3\n" +
     "1.d4 Nf6 2.c4 g6 3.Nf3 Bg7 4.Bg5 h6 5.Bh4 c5 6.e3 O-O\n" +
     "1.d4 Nf6 2.c4 g6 3.Nf3 Bg7 4.Bg5 h6 5.Bh4 O-O 6.Nc3\n" +
-    "1.d4 Nf6 2.c4 g6 3.Nf3 Bg7 4.Bg5 c5 5.d5 b5 6.Nxb5 \n" +
+    "1.d4 Nf6 2.c4 g6 3.Nf3 Bg7 4.Bg5 c5 5.d5 b5 \n" +
     "1.d4 Nf6 2.c4 g6 3.Nf3 Bg7 4.Bg5 c5 5.d5 d6 6.e4\n" +
     "1.d4 Nf6 2.c4 g6 3.Nf3 Bg7 4.Bg5 d5 5.Bxf6\n"
 

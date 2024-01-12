@@ -18,6 +18,9 @@ import '@material/web/iconbutton/icon-button.js';
 import '@material/web/tabs/primary-tab.js';
 import '@material/web/tabs/secondary-tab.js';
 import '@material/web/tabs/tabs.js';
+import '@material/web/select/select-option.js';
+import '@material/web/select/outlined-select.js';
+
 
 import AnalysisResult from './components/AnalysisResult';
 import Arrow from './components/Arrow';
@@ -42,7 +45,7 @@ function App({
                  repertoireListStorage,
                  matchingMovesStorage,
                  userLeftBookOnlyStorage,
-                 repertoireChoiceStorage
+                 repertoireChoiceStorage,
              }) {
 
 
@@ -50,15 +53,18 @@ function App({
     // This includes data stored by the application such as the repertoire and player name
     // This application may be a better fit for useReducer due to all the state that we are passing around.
     // The useState effect makes code very explicit about state stuff which is good
-    const [games, setGames] = useState(gamesStorage || []);
-    const [repertoire, setRepertoire] = useState(repertoireStorage || {});
-    const [analysisDatabase, setAnalysisDatabase] = useState(analysisDatabaseStorage || {});
+    const [playerName, setPlayerName] = useState(playerNameStorage || "")
 
-    const [userLeftBookOnly, setUserLeftBookOnly] = useState(userLeftBookOnlyStorage || true);
+    const [repertoire, setRepertoire] = useState(repertoireStorage || {});
     const [repertoireChoice, setRepertoireChoice] = useState(repertoireChoiceStorage);
     const [repertoireList, setRepertoireList] = useState(repertoireListStorage || []);
+
+    const [games, setGames] = useState(gamesStorage || []);
+
+    const [analysisDatabase, setAnalysisDatabase] = useState(analysisDatabaseStorage || {});
+
     const [newRepertoireNameField, setNewRepertoireNameField] = useState("");
-    const [playerName, setPlayerName] = useState(playerNameStorage || "")
+    const [userLeftBookOnly, setUserLeftBookOnly] = useState(userLeftBookOnlyStorage || true);
     const [matchingMoves, setMatchingMoves] = useState(matchingMovesStorage || 3)
 
     // tab navigation
@@ -83,92 +89,94 @@ function App({
     });
 
 
-// If the repertoire or games change, start performing analysis on the games
-useEffect(() => {
-        console.log("Calculating analysis");
+    // If the repertoire or games change, start performing analysis on the games
+    useEffect(() => {
+            console.log("Calculating analysis");
 
-        // put on the queue
-        setTimeout(() => {
-            calculateAnalysis(analysisDatabase, repertoire, games, setAnalysisDatabase, playerName);
-        }, 0);
-    }, [repertoire, games]
-)
-
-const resultsPage = <Results {...{
-    games,
-    userLeftBookOnly,
-    setUserLeftBookOnly,
-    playerName,
-    repertoireChoice,
-    analysisDatabase,
-    setGames
-}}></Results>;
-
-const configPage = <ConfigPage {...{
-    playerName,
-    setPlayerName,
-    repertoireChoice,
-    setRepertoireChoice,
-    newRepertoireNameField,
-    setNewRepertoireNameField,
-    setRepertoire,
-    repertoire,
-    repertoireList,
-    setRepertoireList,
-    matchingMoves,
-    setMatchingMoves
-}}/>
-
-const drillPage = <Drills {...{games, analysisDatabase}}></Drills>
-
-// set up tabs
-useEffect(() => {
-
-    const tabs = document.querySelector("#nav-tabs");
-    tabs.addEventListener('change', () => {
-        const panelId = tabs.activeTab?.getAttribute('aria-controls');
-        setActiveTab(panelId);
-    });
-
-}, []);
-
-const [oneProps, twoProps, threeProps] =
-    ["panel-one", "panel-two", "panel-three"].map(
-        tabID => tabID === activeTab ? {} : {"hidden": true}
+            // put on the queue
+            setTimeout(() => {
+                calculateAnalysis(analysisDatabase, repertoire, games, setAnalysisDatabase, playerName);
+            }, 0);
+        }, [repertoire, games]
     )
 
-return (
-    <>
-        <md-tabs
-            id="nav-tabs"
-            aria-label="A custom themed tab bar"
-            class="custom"
-            activeTabIndex={activeTab}
-            onChange={(e) => {
-                console.log("Change triggered", e)
-            }}>
-            <md-primary-tab id="tab-one" aria-controls="panel-one">
-                Configuration
-            </md-primary-tab>
-            <md-primary-tab id="tab-two" aria-controls="panel-two">
-                Results
-            </md-primary-tab>
-            <md-primary-tab id="tab-three" aria-controls="panel-three">
-                Drill
-            </md-primary-tab>
-        </md-tabs>
+    const resultsPage = <Results {...{
+        games,
+        userLeftBookOnly,
+        setUserLeftBookOnly,
+        playerName,
+        repertoireChoice,
+        analysisDatabase,
+        setGames
+    }}></Results>;
 
-        <div role="tabpanel" id="panel-one" aria-labelledby="tab-one" {...oneProps}>
-            {activeTab === "panel-one" && configPage || ''}
-        </div>
-        <div role="tabpanel" id="panel-two" aria-labelledby="tab-two" {...twoProps}>
-            {activeTab === "panel-two" && resultsPage || ""}
-        </div>
-        <div role="tabpanel" id="panel-three" aria-labelledby="tab-three" {...threeProps}>
-            {activeTab === "panel-three" && drillPage || ""}
-        </div>
-    </>
-);
+    const configPage = <ConfigPage {...{
+        playerName,
+        setPlayerName,
+        repertoireChoice,
+        setRepertoireChoice,
+        newRepertoireNameField,
+        setNewRepertoireNameField,
+        setRepertoire,
+        repertoire,
+        repertoireList,
+        setRepertoireList,
+        matchingMoves,
+        setMatchingMoves,
+        setAnalysisDatabase,
+        setGames
+    }}/>
+
+    const drillPage = <Drills {...{games, analysisDatabase}}></Drills>
+
+    // set up tabs
+    useEffect(() => {
+
+        const tabs = document.querySelector("#nav-tabs");
+        tabs.addEventListener('change', () => {
+            const panelId = tabs.activeTab?.getAttribute('aria-controls');
+            setActiveTab(panelId);
+        });
+
+    }, []);
+
+    const [oneProps, twoProps, threeProps] =
+        ["panel-one", "panel-two", "panel-three"].map(
+            tabID => tabID === activeTab ? {} : {"hidden": true}
+        )
+
+    return (
+        <>
+            <md-tabs
+                id="nav-tabs"
+                aria-label="A custom themed tab bar"
+                class="custom"
+                activeTabIndex={activeTab}
+                onChange={(e) => {
+                    console.log("Change triggered", e)
+                }}>
+                <md-primary-tab id="tab-one" aria-controls="panel-one">
+                    Configuration
+                </md-primary-tab>
+                <md-primary-tab id="tab-two" aria-controls="panel-two">
+                    Results
+                </md-primary-tab>
+                <md-primary-tab id="tab-three" aria-controls="panel-three">
+                    Drill
+                </md-primary-tab>
+            </md-tabs>
+
+            <div role="tabpanel" id="panel-one" aria-labelledby="tab-one" {...oneProps}>
+                {activeTab === "panel-one" && configPage || ''}
+            </div>
+            <div role="tabpanel" id="panel-two" aria-labelledby="tab-two" {...twoProps}>
+                {activeTab === "panel-two" && resultsPage || ""}
+            </div>
+            <div role="tabpanel" id="panel-three" aria-labelledby="tab-three" {...threeProps}>
+                {activeTab === "panel-three" && drillPage || ""}
+            </div>
+        </>
+    );
 }
 
 export default App;

@@ -4,7 +4,7 @@ import FileUpload from "../components/FileUpload";
 
 function ConfigPage({
                         playerName, setPlayerName, repertoireChoice, setRepertoireChoice, newRepertoireNameField, setNewRepertoireNameField,
-                        setRepertoire, repertoire, repertoireList, setRepertoireList, matchingMoves, setMatchingMoves}) {
+                        setRepertoire, repertoire, repertoireList, setRepertoireList, matchingMoves, setMatchingMoves, setCurrentGames, setAnalysisDatabase, setGames}) {
 
     // Make the checkbox items for repertoire selection
     const checkboxItems =
@@ -12,7 +12,7 @@ function ConfigPage({
             const kebabed = repertoireName;
 
             const props = repertoireName === repertoireChoice ? ({
-                "checked" : true,
+                "checked": true,
                 "touch-target": "wrapper"
             }) : {
                 "touch-target": "wrapper"
@@ -28,12 +28,39 @@ function ConfigPage({
                     }}
                     id="default-lines-radio"
                     name="with-labels"
-                    {... props}>
+                    {...props}>
                 </md-radio>
                 <label for="default-lines-radio">{repertoireName}</label>
             </div>
         })
 
+    let resetGamesButton = <md-filled-button className={"drill-button"} onClick={() => {
+        setGames([]);
+        setItemGZIP("games", []);
+    }}>Reset Games</md-filled-button>;
+
+    let resetAnalysisDatabase = <md-filled-button className={"drill-button"} onClick={() => {
+
+        setAnalysisDatabase({});
+        setItemGZIP("analysisDatabase", {});
+
+    }}>Reset Analysis Database</md-filled-button>
+
+    let resetRepertoires = <md-filled-button className={"drill-button"} onClick={() => {
+
+        setRepertoireChoice({});
+        setItemGZIP("repertoireChoice", "");
+
+        setRepertoireList({});
+        setItemGZIP("repertoireList", []);
+
+        setRepertoire({});
+        setItemGZIP("repertoire", {});
+
+
+    }}>Reset Repertoires</md-filled-button>
+
+    let buttons = [resetGamesButton, resetAnalysisDatabase, resetRepertoires ];
 
     return <>
         <h2>Configuration</h2>
@@ -97,6 +124,8 @@ function ConfigPage({
         </md-outlined-text-field>
 
         <br></br>
+
+        {buttons}
     </>
 }
 
