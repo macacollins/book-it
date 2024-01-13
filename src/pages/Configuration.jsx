@@ -4,7 +4,7 @@ import FileUpload from "../components/FileUpload";
 
 function ConfigPage({
                         playerName, setPlayerName, repertoireChoice, setRepertoireChoice, newRepertoireNameField, setNewRepertoireNameField,
-                        setRepertoire, repertoire, repertoireList, setRepertoireList, matchingMoves, setMatchingMoves, setCurrentGames, setAnalysisDatabase, setGames}) {
+                        setRepertoire, repertoire, repertoireList, setRepertoireList, matchingMoves, setMatchingMoves, setCurrentGames, dispatchAnalysisDatabase, setGames}) {
 
     // Make the checkbox items for repertoire selection
     const checkboxItems =
@@ -41,7 +41,7 @@ function ConfigPage({
 
     let resetAnalysisDatabase = <md-filled-button className={"drill-button"} onClick={() => {
 
-        setAnalysisDatabase({});
+        dispatchAnalysisDatabase({type: 'RESET'});
         setItemGZIP("analysisDatabase", {});
 
     }}>Reset Analysis Database</md-filled-button>

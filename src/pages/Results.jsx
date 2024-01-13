@@ -24,27 +24,8 @@ export default function Results({
 
     const [ currentOpeningFilter, setCurrentOpeningFilter ] = useState("");
 
-    let topOpenings = findTopOpenings(games || [], analysisDatabase).slice(0, 14);
 
-    let openingFilters = topOpenings.map(({opening, count}) =>
-            <md-select-option value={opening}
-                              onClick={() => { setCurrentOpeningFilter(opening) }}>
-                {opening} {count}
-            </md-select-option>
-    );
-
-    openingFilters.push(
-        <md-select-option onClick={() => {
-            setCurrentOpeningFilter('')
-        }}>
-            Clear Opening Filter
-        </md-select-option>)
-
-    openingFilters = <md-outlined-select>
-            {openingFilters}
-        </md-outlined-select>
-
-    let listItems = games && games.filter &&
+    let filteredGames = games && games.filter &&
         games.filter(game => {
             if (currentOpeningFilter === "") {
                 if (userLeftBookOnly) {
@@ -61,7 +42,9 @@ export default function Results({
             }
 
             return true;
-        }).map(singleGame => {
+        });
+
+    let listItems = filteredGames.map(singleGame => {
             if (singleGame) {
                 return <AnalysisResult game={singleGame} analysisDatabase={analysisDatabase}></AnalysisResult>
             } else {
@@ -70,6 +53,27 @@ export default function Results({
         }) || [];
 
     const filteredGamesLength = listItems.length
+
+
+    let topOpenings = findTopOpenings(filteredGames || [], analysisDatabase).slice(0, 14);
+
+    let openingFilters = topOpenings.map(({opening, count}) =>
+        <md-select-option value={opening}
+                          onClick={() => { setCurrentOpeningFilter(opening) }}>
+            {opening} {count}
+        </md-select-option>
+    );
+
+    openingFilters.push(
+        <md-select-option onClick={() => {
+            setCurrentOpeningFilter('')
+        }}>
+            Clear Opening Filter
+        </md-select-option>)
+
+    openingFilters = <md-outlined-select>
+        {openingFilters}
+    </md-outlined-select>
 
     listItems = listItems.slice(indexOfFirstItem, indexOfFirstItem + itemsPerPage);
 
@@ -139,6 +143,7 @@ export default function Results({
         <h2>Results</h2>
         <p>Reviewing lines from repertoire "{repertoireChoice}" as {playerName}</p>
         <p>This is a list of games at the position where they left the book.</p>
+        <p>AnalysisDB: {typeof analysisDatabase === "object" ? Object.keys(analysisDatabase).length : "uninitialized" }</p>
         <label>
             Show only lines where you left book first
             {leftBookCheckbox}

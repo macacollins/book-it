@@ -1,6 +1,6 @@
 import './App.css';
 
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useReducer} from 'react';
 import {setItemGZIP} from './storage';
 
 // index.js
@@ -46,7 +46,9 @@ function App({
                  matchingMovesStorage,
                  userLeftBookOnlyStorage,
                  repertoireChoiceStorage,
+    worker,
              }) {
+
 
 
     // Declare main state of application
@@ -60,8 +62,6 @@ function App({
     const [repertoireList, setRepertoireList] = useState(repertoireListStorage || []);
 
     const [games, setGames] = useState(gamesStorage || []);
-
-    const [analysisDatabase, setAnalysisDatabase] = useState(analysisDatabaseStorage || {});
 
     const [newRepertoireNameField, setNewRepertoireNameField] = useState("");
     const [userLeftBookOnly, setUserLeftBookOnly] = useState(userLeftBookOnlyStorage || true);
@@ -88,15 +88,84 @@ function App({
         })()
     });
 
+    let [ initializedWorker, setInitializedWorker ] = useState(false);
+
+    let [ intervalID, setIntervalID ] = useState(0);
+
+
+    function reducer(state, action) {
+        if (action.type === 'ADD_ANALYSIS') {
+            // console.log("Adding analysis")
+
+            const newState = {
+                ... action.data,
+                ... state
+            };
+            setItemGZIP('analysisDatabase', newState);
+
+            return newState;
+
+        } else if (action.type === 'RESET') {
+            setItemGZIP('analysisDatabase', {});
+            return {};
+        }
+        throw Error('Unknown action.');
+    }
+
+    const [analysisDatabase, dispatchAnalysisDatabase] = useReducer(reducer, analysisDatabaseStorage );
+    // console.log("state.keys,", Object.keys(analysisDatabase).length)
 
     // If the repertoire or games change, start performing analysis on the games
     useEffect(() => {
             console.log("Calculating analysis");
 
-            // put on the queue
-            setTimeout(() => {
-                calculateAnalysis(analysisDatabase, repertoire, games, setAnalysisDatabase, playerName);
-            }, 0);
+            if (intervalID !== 0) {
+                console.log("Clearing current interval.");
+                clearInterval(intervalID);
+            }
+
+            if (!initializedWorker) {
+
+                let currentRepertoire = repertoire[repertoireChoice];
+
+                function customSort(item) {
+                    // For example, sorting based on the 'value' property
+                    return item.endDate;
+                }
+
+                // Sort the array based on the result of the custom function
+                const sortedGames = games.sort(function(a, b) {
+                    return customSort(a) - customSort(b);
+                }).reverse();
+
+                let i = -1;
+                setIntervalID(setInterval(() => {
+                    if (i < (games.length / 5) + 1) {
+                        i = i + 1;
+                    } else {
+                        return;
+                    }
+
+                    let payload = {analysisDatabase, repertoire: currentRepertoire, games: sortedGames, playerName};
+                    // console.log("Sending ", payload);
+                    worker.postMessage(payload);
+                    worker.onmessage = (message) => {
+                        // console.log("answer from worker", message);
+
+                        dispatchAnalysisDatabase({ type: 'ADD_ANALYSIS',
+                            data: message.data.currentAnalysisDatabase
+                        })
+
+                        // console.log("state.keys,", Object.keys(analysisDatabase).length)
+                        const newDatabase = { ... message.data.currentAnalysisDatabase, ...analysisDatabase};
+                        // setAnalysisDatabase(newDatabase);
+                        // setItemGZIP("analysisDatabase", newDatabase)
+                    };
+
+                }, 0));
+
+                setInitializedWorker(true)
+            }
         }, [repertoire, games]
     )
 
@@ -123,7 +192,7 @@ function App({
         setRepertoireList,
         matchingMoves,
         setMatchingMoves,
-        setAnalysisDatabase,
+        dispatchAnalysisDatabase,
         setGames
     }}/>
 

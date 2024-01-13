@@ -10,10 +10,12 @@ import './index.css'
 
 const propsFromLocalStorage = await loadCachedData();
 
+let worker = new Worker(new URL('./worker.js', import.meta.url));
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App { ... propsFromLocalStorage }/>
+    <App worker={worker} { ... propsFromLocalStorage }/>
   </React.StrictMode>
 );
 
