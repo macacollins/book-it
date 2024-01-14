@@ -101,7 +101,10 @@ function App({
                 ... action.data,
                 ... state
             };
-            setItemGZIP('analysisDatabase', newState);
+
+            if (Object.keys(newState).length !== Object.keys(state).length) {
+                setItemGZIP('analysisDatabase', newState);
+            }
 
             return newState;
 

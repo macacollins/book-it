@@ -36,7 +36,11 @@ let receiver = async (message) => {
         }
     }
 
-
+    // post final contents
+    message.target.postMessage({
+        action: "SET_ANALYSIS_DATABASE",
+        currentAnalysisDatabase: currentAnalysisDatabase
+    });
 };
 
 /* eslint-disable no-restricted-globals */
