@@ -21,10 +21,10 @@ export async function getItemGZIP(key) {
             return JSON.parse(result[0].value);
         }
 
-        return
+        return []
 
     } else {
-        return
+        return []
     }
 }
 

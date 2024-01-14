@@ -46,9 +46,8 @@ function App({
                  matchingMovesStorage,
                  userLeftBookOnlyStorage,
                  repertoireChoiceStorage,
-    worker,
+                 worker,
              }) {
-
 
 
     // Declare main state of application
@@ -72,7 +71,7 @@ function App({
 
     useEffect(() => {
         (async () => {
-            if (repertoireList.length == 0) {
+            if (repertoireList.length === 0) {
                 const defaultAnalysisName = "Queen's Gambit"
                 await setItemGZIP("repertoireChoice", defaultAnalysisName)
                 processNewRepertoire(defaultLines, {
@@ -87,19 +86,14 @@ function App({
             }
         })()
     });
-
-    let [ initializedWorker, setInitializedWorker ] = useState(false);
-
-    let [ intervalID, setIntervalID ] = useState(0);
-
-
+    
     function reducer(state, action) {
         if (action.type === 'ADD_ANALYSIS') {
             // console.log("Adding analysis")
 
             const newState = {
-                ... action.data,
-                ... state
+                ...action.data,
+                ...state
             };
 
             if (Object.keys(newState).length !== Object.keys(state).length) {
@@ -115,60 +109,40 @@ function App({
         throw Error('Unknown action.');
     }
 
-    const [analysisDatabase, dispatchAnalysisDatabase] = useReducer(reducer, analysisDatabaseStorage );
+    const [analysisDatabase, dispatchAnalysisDatabase] = useReducer(reducer, analysisDatabaseStorage);
     // console.log("state.keys,", Object.keys(analysisDatabase).length)
 
     // If the repertoire or games change, start performing analysis on the games
     useEffect(() => {
             console.log("Calculating analysis");
 
-            if (intervalID !== 0) {
-                console.log("Clearing current interval.");
-                clearInterval(intervalID);
+            let currentRepertoire = repertoire[repertoireChoice];
+
+            function customSort(item) {
+                // For example, sorting based on the 'value' property
+                return item.endDate;
             }
 
-            if (!initializedWorker) {
+            // Sort the array based on the result of the custom function
+            const sortedGames = games.sort(function (a, b) {
+                return customSort(a) - customSort(b);
+            }).reverse();
 
-                let currentRepertoire = repertoire[repertoireChoice];
+            let payload = {analysisDatabase, repertoire: currentRepertoire, games: sortedGames, playerName};
+            // console.log("Sending ", payload);
+            worker.postMessage(payload);
+            worker.onmessage = (message) => {
+                // console.log("answer from worker", message);
 
-                function customSort(item) {
-                    // For example, sorting based on the 'value' property
-                    return item.endDate;
-                }
+                dispatchAnalysisDatabase({
+                    type: 'ADD_ANALYSIS',
+                    data: message.data.currentAnalysisDatabase
+                })
 
-                // Sort the array based on the result of the custom function
-                const sortedGames = games.sort(function(a, b) {
-                    return customSort(a) - customSort(b);
-                }).reverse();
+                // console.log("state.keys,", Object.keys(analysisDatabase).length)
+                const newDatabase = {...message.data.currentAnalysisDatabase, ...analysisDatabase};
+            };
 
-                let i = -1;
-                setIntervalID(setInterval(() => {
-                    if (i < (games.length / 5) + 1) {
-                        i = i + 1;
-                    } else {
-                        return;
-                    }
-
-                    let payload = {analysisDatabase, repertoire: currentRepertoire, games: sortedGames, playerName};
-                    // console.log("Sending ", payload);
-                    worker.postMessage(payload);
-                    worker.onmessage = (message) => {
-                        // console.log("answer from worker", message);
-
-                        dispatchAnalysisDatabase({ type: 'ADD_ANALYSIS',
-                            data: message.data.currentAnalysisDatabase
-                        })
-
-                        // console.log("state.keys,", Object.keys(analysisDatabase).length)
-                        const newDatabase = { ... message.data.currentAnalysisDatabase, ...analysisDatabase};
-                        // setAnalysisDatabase(newDatabase);
-                        // setItemGZIP("analysisDatabase", newDatabase)
-                    };
-
-                }, 0));
-
-                setInitializedWorker(true)
-            }
         }, [repertoire, games]
     )
 

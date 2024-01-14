@@ -105,6 +105,10 @@ const ChessBoard = ({
             /*global Chessboard */
             const board = Chessboard(finalID, config);
 
+            if (!board) {
+                return;
+            }
+
             if (invert) {
                 board.flip();
             }
@@ -114,7 +118,7 @@ const ChessBoard = ({
             if (!draggable) {
                 function preventBehavior(e) {
                     e.preventDefault();
-                };
+                }
 
                 domBoard.addEventListener("touchmove", preventBehavior, {passive: false});
             }

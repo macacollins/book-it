@@ -37,8 +37,10 @@ function getYearAndMonthXMonthsAgo(X) {
 async function refreshGames(games, setGames, playerName) {
     console.log("Fetching games from chess.com");
 
-    setGames([]);
-    setItemGZIP('games', [])
+    // setGames([]);
+    // setItemGZIP('games', [])
+
+    let finalGames = [];
 
     for (let i = 0; i < 1; i++) {
         let {year, month} = getYearAndMonthXMonthsAgo(i);
@@ -49,17 +51,28 @@ async function refreshGames(games, setGames, playerName) {
             .then(async (data) => {
                 const thisMonthGames = data.games || [];
 
-                let currentGames = await getItemGZIP('games') || [];
-
                 const newGames = thisMonthGames.reverse();
 
-                const fullGameList = [ ... new Set([ ...currentGames, ...newGames ]) ];
-                setGames(fullGameList);
-                setItemGZIP('games', fullGameList);
+                const fullGameList = [ ... new Set([ ...finalGames, ...newGames ]) ];
+
+                function customSort(item) {
+                    // For example, sorting based on the 'value' property
+                    return item.endDate;
+                }
+
+                // Sort the array based on the result of the custom function
+                finalGames = fullGameList.sort(function(a, b) {
+                    return customSort(a) - customSort(b);
+                }).reverse();
             })
             .catch((err) => {
                 console.log(err.message);
             });
+    }
+
+    if (games.length !== finalGames.length) {
+        setGames(finalGames);
+        setItemGZIP('games', finalGames);
     }
 }
 
