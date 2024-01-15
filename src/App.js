@@ -86,7 +86,7 @@ function App({
             }
         })()
     });
-    
+
     function reducer(state, action) {
         if (action.type === 'ADD_ANALYSIS') {
             // console.log("Adding analysis")
@@ -120,7 +120,7 @@ function App({
 
             function customSort(item) {
                 // For example, sorting based on the 'value' property
-                return item.endDate;
+                return item.end_time;
             }
 
             // Sort the array based on the result of the custom function

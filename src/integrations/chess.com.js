@@ -42,7 +42,7 @@ async function refreshGames(games, setGames, playerName) {
 
     let finalGames = [];
 
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < 3; i++) {
         let {year, month} = getYearAndMonthXMonthsAgo(i);
 
         // start requests to chess.com for data
@@ -57,7 +57,7 @@ async function refreshGames(games, setGames, playerName) {
 
                 function customSort(item) {
                     // For example, sorting based on the 'value' property
-                    return item.endDate;
+                    return item.end_time;
                 }
 
                 // Sort the array based on the result of the custom function
