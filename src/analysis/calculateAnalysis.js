@@ -53,25 +53,25 @@ function calculateAnalysis(analysisDatabase, repertoire, game, playerName) {
 
             //console.log("Lines are", lines);
             let next_moves = lines.map(line => {
-                let problyMove;
+                let maybeMove;
 
                 if (gameCache[line]) {
 
-                    problyMove = gameCache[line];
-                    problyMove = problyMove.history().slice(i, i + 1);
+                    maybeMove = gameCache[line];
+                    maybeMove = maybeMove.history().slice(i, i + 1);
 
                 } else {
-                    problyMove = new Chess();
-                    problyMove.loadPgn(line)
+                    maybeMove = new Chess();
+                    maybeMove.loadPgn(line)
 
-                    gameCache[line] = problyMove;
+                    gameCache[line] = maybeMove;
 
-                    problyMove = problyMove.history().slice(i, i + 1);
+                    maybeMove = maybeMove.history().slice(i, i + 1);
                 }
 
-                if (problyMove && problyMove.length > 0) {
+                if (maybeMove && maybeMove.length > 0) {
                     // console.log("")
-                    return problyMove[0];
+                    return maybeMove[0];
                 } else {
                     return "oops"
                 }
