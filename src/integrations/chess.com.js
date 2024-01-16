@@ -48,7 +48,6 @@ async function refreshGames(games, setGames, playerName) {
 
                 const newGames = thisMonthGames.reverse();
 
-
                 const fullGameList = [ ...new Set([ ...finalGames, ...newGames ]) ];
 
                 function customSort(item) {

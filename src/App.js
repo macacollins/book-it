@@ -5,6 +5,13 @@ import {setItemDexie} from './storage';
 
 import analysisDatabaseReducer from './reducers/analysisDatabase';
 
+import './css/colors.module.css';
+import './css/theme.css';
+import './css/theme.dark.css';
+import './css/theme.light.css';
+import './css/tokens.css';
+import './css/typography.module.css';
+
 // index.js
 import '@material/web/button/filled-button.js';
 import '@material/web/button/outlined-button.js';
