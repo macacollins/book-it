@@ -28,14 +28,10 @@ export default function Drills({ games = [], analysisDatabase }) {
 
         const drillAnalysisResult = analysisDatabase[nextGame.url];
 
-        const path = new URL(drillAnalysisResult.headers.ECOUrl).pathname;
-
         const chessJSGame = new Chess();
         chessJSGame.loadPgn(nextGame.pgn);
 
         const moves = chessJSGame.history().slice(0, drillAnalysisResult.finalMoveIndex);
-        // Get the last path segment and replace hyphens with spaces
-        const openingName = path.split('/').pop().replace(/-/g, ' ');
 
         drillBoard = <md-list-item>
             <div slot="supporting-text">

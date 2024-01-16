@@ -13,7 +13,7 @@ const Arrow = ({fromX, fromY, destX, destY, color = 'red', hidden = false}) => {
 
     return <g>
         <g>
-            <line opacity={opacity} stroke={color} stroke-width="0.15625" stroke-linecap="round" marker-end={markerEnd} opacity="1"
+            <line opacity={opacity} stroke={color} stroke-width="0.15625" stroke-linecap="round" marker-end={markerEnd}
                   x1={targetX1} y1={targetY1} x2={targetX2} y2={targetY2}></line>
         </g>
     </g>

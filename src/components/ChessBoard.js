@@ -125,6 +125,9 @@ const ChessBoard = ({
             }
 
         }, 100);
+
+        // If you take out the dependency array, it remakes the board each time
+        // eslint-disable-next-line
     }, [fen, finalID, invert]);
 
     let drawings = <Drawings arrows={arrows}> </Drawings>

@@ -1,5 +1,4 @@
-import refreshGames from './integrations/chess.com';
-import {getItemDexie, setItemDexie} from './storage';
+import {getItemDexie} from './storage';
 
 async function loadCachedData() {
 

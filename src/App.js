@@ -109,12 +109,12 @@ function App({
                     type: 'ADD_ANALYSIS',
                     data: message.data.currentAnalysisDatabase
                 })
-
-                // console.log("state.keys,", Object.keys(analysisDatabase).length)
-                const newDatabase = {...message.data.currentAnalysisDatabase, ...analysisDatabase};
             };
 
-        }, [repertoire, games]
+        },
+        // These effect array items chosen on purpose
+        // eslint-disable-next-line
+        [repertoire, games]
     )
 
     // Create the actual pages
@@ -188,13 +188,13 @@ function App({
             </md-tabs>
 
             <div role="tabpanel" id="panel-one" aria-labelledby="tab-one" {...oneProps}>
-                {activeTab === "panel-one" && configPage || ''}
+                {activeTab === "panel-one" ? configPage : ''}
             </div>
             <div role="tabpanel" id="panel-two" aria-labelledby="tab-two" {...twoProps}>
-                {activeTab === "panel-two" && resultsPage || ""}
+                {activeTab === "panel-two" ? resultsPage : ""}
             </div>
             <div role="tabpanel" id="panel-three" aria-labelledby="tab-three" {...threeProps}>
-                {activeTab === "panel-three" && drillPage || ""}
+                {activeTab === "panel-three" ? drillPage : ""}
             </div>
         </>
     );

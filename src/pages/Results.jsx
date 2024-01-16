@@ -40,8 +40,6 @@ export default function Results({
             } else {
                 return false
             }
-
-            return true;
         });
 
     let listItems = filteredGames.map(singleGame => {

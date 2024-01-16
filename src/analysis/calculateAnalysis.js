@@ -1,9 +1,6 @@
 import {Chess} from 'chess.js'
-import { getItemDexie, setItemDexie } from '../storage';
 
 function calculateAnalysis(analysisDatabase, repertoire, game, playerName) {
-    
-    let moveArrow;
 
     if (analysisDatabase[game.url]) {
         // skip for now.r We can consider reworking this system when lines are more dynamically updated.
@@ -54,7 +51,6 @@ function calculateAnalysis(analysisDatabase, repertoire, game, playerName) {
             let lines = repertoire[last_fen] || [];
             finalMoveIndex = i;
 
-            //console.log("Left at line", finalMoveIndex);
             //console.log("Lines are", lines);
             let next_moves = lines.map(line => {
                 let problyMove;
@@ -82,7 +78,7 @@ function calculateAnalysis(analysisDatabase, repertoire, game, playerName) {
             });
 
 
-            last_moves = [ ... (next_moves.filter(moveName => moveName !== "oops")) ];
+            last_moves = [ ...(next_moves.filter(moveName => moveName !== "oops")) ];
 
             foundIntersection = true;
             analysis.foundIntersection = true;
@@ -116,7 +112,7 @@ function calculateAnalysis(analysisDatabase, repertoire, game, playerName) {
         last_moves = [...new Set(last_moves)];
     }
 
-    let next_move_arrows = last_moves.map(last_move => {
+    last_moves.forEach(last_move => {
         let cloned_game = new Chess(last_fen);
 
         let move;
@@ -162,7 +158,6 @@ function calculateAnalysis(analysisDatabase, repertoire, game, playerName) {
         //console.log("No intersection, loaded pgn instead");
         last_fen = game.pgn
     }
-    next_move_arrows.push(moveArrow);
 
     let advice = 'No advice found.';
 

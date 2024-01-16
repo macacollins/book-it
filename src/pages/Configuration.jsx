@@ -8,9 +8,7 @@ function ConfigPage({
 
     // Make the checkbox items for repertoire selection
     const checkboxItems =
-        (repertoireList && repertoireList.map && repertoireList || []).map(repertoireName => {
-            const kebabed = repertoireName;
-
+        ((repertoireList && repertoireList.map) ? repertoireList : []).map(repertoireName => {
             const props = repertoireName === repertoireChoice ? ({
                 "checked": true,
                 "touch-target": "wrapper"

@@ -1,13 +1,5 @@
-import {Chess} from 'chess.js'
-
-import {useEffect} from 'react';
-
-import { setItemDexie } from '../storage';
-
 import processNewRepertoire from '../integrations/processNewRepertoire';
-
 const FileUpload = ({repertoire, setRepertoire, newRepertoireNameField, setNewRepertoireNameField, repertoireList, setRepertoireList}) => {
-
     function handleFile(event) {
         const fileInput = event.target;
         const file = fileInput.files[0];

@@ -1,13 +1,5 @@
 
-import { getItemDexie, setItemDexie } from '../storage';
-
-// Function to get the current year and month
-function getCurrentYearAndMonth() {
-    const currentDate = new Date();
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth() + 1; // Months are zero-based, so we add 1
-    return { year, month };
-}
+import { setItemDexie } from '../storage';
 
 // Function to get the year and month X months back
 function getYearAndMonthXMonthsAgo(X) {
@@ -48,19 +40,22 @@ async function refreshGames(games, setGames, playerName) {
         // start requests to chess.com for data
         await fetch('https://api.chess.com/pub/player/' + playerName + "/games/" + year + "/" + month)
             .then((res) => res.json())
+            // We only care about the final value
+            // Disabling the unsafe references check
+            // eslint-disable-next-line
             .then(async (data) => {
                 const thisMonthGames = data.games || [];
 
                 const newGames = thisMonthGames.reverse();
 
-                const fullGameList = [ ... new Set([ ...finalGames, ...newGames ]) ];
+
+                const fullGameList = [ ...new Set([ ...finalGames, ...newGames ]) ];
 
                 function customSort(item) {
                     // For example, sorting based on the 'value' property
                     return item.end_time;
                 }
 
-                // Sort the array based on the result of the custom function
                 finalGames = fullGameList.sort(function(a, b) {
                     return customSort(a) - customSort(b);
                 }).reverse();

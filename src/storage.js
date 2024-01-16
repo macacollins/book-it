@@ -31,16 +31,16 @@ export async function setItemDexie(key, value) {
     let currentValue = await db.objectCache.where('key').equals(key).toArray();
 
     if (currentValue.length === 0) {
-        let result = await db.objectCache.add({key, value: JSON.stringify(value)}).then(function (updated) {
+        await db.objectCache.add({key, value: JSON.stringify(value)}).then(function (updated) {
             if (updated) {
                 console.log("New record inserted for " + key);
             } else {
                 console.log("Nothing was updated - there were no item with primary key: " + currentValue.id);
             }
-        });;
+        });
     } else {
 
-        let result = await db.objectCache.update(currentValue[0].id, {key, value: JSON.stringify(value)}).then(function (updated) {
+        await db.objectCache.update(currentValue[0].id, {key, value: JSON.stringify(value)}).then(function (updated) {
             if (updated) {
                 console.log("Key updated");
             } else {
