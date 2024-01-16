@@ -1,6 +1,6 @@
 
 import Drawings from './Drawings';
-import {useEffect, useRef} from 'react';
+import {useEffect} from 'react';
 
 import {Chess} from 'chess.js';
 
@@ -17,9 +17,6 @@ const ChessBoard = ({
                         moves = []
                    }) => {
     const finalID = name + game_url.replace(/[^a-zA-Z0-9]/g, '');
-
-    // We need useRef so that it will persist between callbacks attached to the Chessboard object
-    // We will need to rethink placement if we end up supporting a more complicated use case
 
     // Initialize the board after the component mounts to the DOM
     useEffect(() => {
@@ -99,7 +96,7 @@ const ChessBoard = ({
                             console.log("Unable to make move", singleMove, " on board", game, e)
                         }
                         makeMoves(moves.slice(1));
-                    }, 300);
+                    }, 250);
                 }
             }
 
@@ -109,7 +106,7 @@ const ChessBoard = ({
 
             setTimeout(() => {
                 makeMoves(moves);
-            }, 500);
+            }, 200);
 
             if (invert) {
                 board.flip();

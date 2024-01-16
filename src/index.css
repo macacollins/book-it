@@ -38,9 +38,12 @@ md-filled-button.drill-button {
   pointer-events: none;
   z-index: 10000;
   position: absolute;
-  height: 294px;
-  width: 294px;
+  height: 288px;
+  width: 288px;
   float: left;
+
+  border-width: 1.75px;
+  border-style: solid;
 }
 
 .pagination {
