@@ -1,4 +1,4 @@
-import {setItemGZIP} from "../storage";
+import {setItemDexie} from "../storage";
 
 export default function reducer(state, action) {
     if (action.type === 'ADD_ANALYSIS') {
@@ -10,13 +10,13 @@ export default function reducer(state, action) {
         };
 
         if (Object.keys(newState).length !== Object.keys(state).length) {
-            setItemGZIP('analysisDatabase', newState);
+            setItemDexie('analysisDatabase', newState);
         }
 
         return newState;
 
     } else if (action.type === 'RESET') {
-        setItemGZIP('analysisDatabase', {});
+        setItemDexie('analysisDatabase', {});
         return {};
     }
     throw Error('Unknown action.');

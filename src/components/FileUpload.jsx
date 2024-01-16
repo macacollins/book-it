@@ -2,7 +2,7 @@ import {Chess} from 'chess.js'
 
 import {useEffect} from 'react';
 
-import { setItemGZIP } from '../storage';
+import { setItemDexie } from '../storage';
 
 import processNewRepertoire from '../integrations/processNewRepertoire';
 

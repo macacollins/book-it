@@ -1,5 +1,5 @@
 import {Chess} from 'chess.js'
-import { getItemGZIP, setItemGZIP } from '../storage';
+import { getItemDexie, setItemDexie } from '../storage';
 
 function calculateAnalysis(analysisDatabase, repertoire, game, playerName) {
     

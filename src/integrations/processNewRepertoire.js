@@ -1,5 +1,5 @@
 import {Chess} from "chess.js";
-import {setItemGZIP} from "../storage";
+import {setItemDexie} from "../storage";
 
 export default function processNewRepertoire(fileContents, {repertoire, setRepertoire, newRepertoireNameField, setNewRepertoireNameField, repertoireList, setRepertoireList}) {
     const lines = fileContents.split('\n');
@@ -43,7 +43,7 @@ export default function processNewRepertoire(fileContents, {repertoire, setReper
         [newRepertoireNameField]: fenRepo
     }
     setRepertoire(newRepertoire);
-    setItemGZIP('repertoire', newRepertoire);
+    setItemDexie('repertoire', newRepertoire);
 
     const newRepertoireList = [
         ...repertoireList,
@@ -51,7 +51,7 @@ export default function processNewRepertoire(fileContents, {repertoire, setReper
     ]
 
     setRepertoireList(newRepertoireList);
-    setItemGZIP('repertoireList', newRepertoireList);
+    setItemDexie('repertoireList', newRepertoireList);
 
     // setNewRepertoireNameField("");
 }

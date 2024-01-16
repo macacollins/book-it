@@ -1,5 +1,5 @@
 
-import { getItemGZIP, setItemGZIP } from '../storage';
+import { getItemDexie, setItemDexie } from '../storage';
 
 // Function to get the current year and month
 function getCurrentYearAndMonth() {
@@ -38,7 +38,7 @@ async function refreshGames(games, setGames, playerName) {
     console.log("Fetching games from chess.com");
 
     // setGames([]);
-    // setItemGZIP('games', [])
+    // setItemDexie('games', [])
 
     let finalGames = [];
 
@@ -72,7 +72,7 @@ async function refreshGames(games, setGames, playerName) {
 
     if (games.length !== finalGames.length) {
         setGames(finalGames);
-        setItemGZIP('games', finalGames);
+        setItemDexie('games', finalGames);
     }
 }
 

@@ -1,5 +1,5 @@
 import AnalysisResult from "../components/AnalysisResult";
-import {setItemGZIP} from "../storage";
+import {setItemDexie} from "../storage";
 import refreshGames from "../integrations/chess.com";
 
 import {useState} from 'react';
@@ -85,7 +85,7 @@ export default function Results({
             onClick={() => {
                 setCurrentPage(1);
                 setUserLeftBookOnly(!userLeftBookOnly)
-                setItemGZIP("userLeftBookOnly", !userLeftBookOnly);
+                setItemDexie("userLeftBookOnly", !userLeftBookOnly);
             }}>
         </md-checkbox>
         :
@@ -93,7 +93,7 @@ export default function Results({
             onClick={() => {
                 setCurrentPage(1);
                 setUserLeftBookOnly(!userLeftBookOnly)
-                setItemGZIP("userLeftBookOnly", !userLeftBookOnly);
+                setItemDexie("userLeftBookOnly", !userLeftBookOnly);
             }}>
         </md-checkbox>
 

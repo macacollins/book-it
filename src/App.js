@@ -1,7 +1,7 @@
 import './App.css';
 
 import {useState, useEffect, useReducer} from 'react';
-import {setItemGZIP} from './storage';
+import {setItemDexie} from './storage';
 
 import analysisDatabaseReducer from './reducers/analysisDatabase';
 
@@ -67,7 +67,7 @@ function App({
         (async () => {
             if (repertoireList.length === 0) {
                 const defaultAnalysisName = "Queen's Gambit"
-                await setItemGZIP("repertoireChoice", defaultAnalysisName)
+                await setItemDexie("repertoireChoice", defaultAnalysisName)
                 processNewRepertoire(defaultLines, {
                     repertoire,
                     setRepertoire,
@@ -154,7 +154,7 @@ function App({
         tabs.addEventListener('change', () => {
             const panelId = tabs.activeTab?.getAttribute('aria-controls');
             setActiveTab(panelId);
-            setItemGZIP("activeTab", panelId);
+            setItemDexie("activeTab", panelId);
         });
 
     }, []);

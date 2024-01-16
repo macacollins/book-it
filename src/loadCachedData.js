@@ -1,5 +1,5 @@
 import refreshGames from './integrations/chess.com';
-import {getItemGZIP, setItemGZIP} from './storage';
+import {getItemDexie, setItemDexie} from './storage';
 
 async function loadCachedData() {
 
@@ -18,9 +18,9 @@ async function loadCachedData() {
     let returnObject = {};
     for (let property of properties) {
         console.log("attempting to process", property)
-        if (await getItemGZIP(property)) {
+        if (await getItemDexie(property)) {
             let gzipped =
-                await getItemGZIP(property);
+                await getItemDexie(property);
             returnObject[property + "Storage"] = gzipped;
         }
     }

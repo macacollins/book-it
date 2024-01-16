@@ -1,4 +1,4 @@
-import {setItemGZIP} from "../storage";
+import {setItemDexie} from "../storage";
 import FileUpload from "../components/FileUpload";
 
 
@@ -24,7 +24,7 @@ function ConfigPage({
                     onClick={() => {
 
                         setRepertoireChoice(repertoireName);
-                        setItemGZIP("repertoireChoice", repertoireName);
+                        setItemDexie("repertoireChoice", repertoireName);
                     }}
                     id="default-lines-radio"
                     name="with-labels"
@@ -36,26 +36,26 @@ function ConfigPage({
 
     let resetGamesButton = <md-filled-button className={"drill-button"} onClick={() => {
         setGames([]);
-        setItemGZIP("games", []);
+        setItemDexie("games", []);
     }}>Reset Games</md-filled-button>;
 
     let resetAnalysisDatabase = <md-filled-button className={"drill-button"} onClick={() => {
 
         dispatchAnalysisDatabase({type: 'RESET'});
-        setItemGZIP("analysisDatabase", {});
+        setItemDexie("analysisDatabase", {});
 
     }}>Reset Analysis Database</md-filled-button>
 
     let resetRepertoires = <md-filled-button className={"drill-button"} onClick={() => {
 
         setRepertoireChoice({});
-        setItemGZIP("repertoireChoice", "");
+        setItemDexie("repertoireChoice", "");
 
         setRepertoireList({});
-        setItemGZIP("repertoireList", []);
+        setItemDexie("repertoireList", []);
 
         setRepertoire({});
-        setItemGZIP("repertoire", {});
+        setItemDexie("repertoire", {});
 
 
     }}>Reset Repertoires</md-filled-button>
@@ -74,7 +74,7 @@ function ConfigPage({
             value={playerName}
             onInput={e => {
                 setPlayerName(e.target.value);
-                setItemGZIP("playerName", e.target.value);
+                setItemDexie("playerName", e.target.value);
             }}>
         </md-outlined-text-field>
 
@@ -119,7 +119,7 @@ function ConfigPage({
             type="number"
             onInput={e => {
                 setMatchingMoves(e.target.value);
-                setItemGZIP("matchingMoves", e.target.value);
+                setItemDexie("matchingMoves", e.target.value);
             }}>
         </md-outlined-text-field>
 

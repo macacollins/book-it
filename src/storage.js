@@ -10,7 +10,7 @@ db.version(1).stores({
     objectCache: '++id, key, value'
 });
 
-export async function getItemGZIP(key) {
+export async function getItemDexie(key) {
     const result = await db.objectCache.where('key').equals(key).toArray();;
 
     if (result && result.length > 0) {
@@ -26,7 +26,7 @@ export async function getItemGZIP(key) {
     }
 }
 
-export async function setItemGZIP(key, value) {
+export async function setItemDexie(key, value) {
 
     let currentValue = await db.objectCache.where('key').equals(key).toArray();
 
