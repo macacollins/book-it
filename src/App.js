@@ -149,7 +149,9 @@ function App({
         matchingMoves,
         setMatchingMoves,
         dispatchAnalysisDatabase,
-        setGames
+        setGames,
+        games,
+        analysisDatabase
     }}/>
 
     const drillPage = <Drills {...{games, analysisDatabase}}></Drills>

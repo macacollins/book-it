@@ -17,7 +17,9 @@ function ConfigPage({
                         setMatchingMoves,
                         setCurrentGames,
                         dispatchAnalysisDatabase,
-                        setGames
+                        setGames,
+                        games,
+                        analysisDatabase
                     }) {
 
     // Make the checkbox items for repertoire selection
@@ -46,31 +48,44 @@ function ConfigPage({
             </div>
         })
 
-    let resetGamesButton = <md-filled-button className={"drill-button"} onClick={() => {
-        setGames([]);
-        setItemDexie("games", []);
-    }}>Reset Games</md-filled-button>;
+    let resetGamesButton = <>
+        <p> Current Games: {games.length}</p>
+        <md-filled-button className={"drill-button"} onClick={() => {
+            setGames([]);
+            setItemDexie("games", []);
+        }}>Reset Games
+        </md-filled-button>
+    </>;
 
-    let resetAnalysisDatabase = <md-filled-button className={"drill-button"} onClick={() => {
+    let resetAnalysisDatabase = <>
+        <p> Current Analysis Items: {Object.keys(analysisDatabase).length}</p>
+        <md-filled-button className={"drill-button"} onClick={() => {
 
-        dispatchAnalysisDatabase({type: 'RESET'});
-        setItemDexie("analysisDatabase", {});
+            dispatchAnalysisDatabase({type: 'RESET'});
+            setItemDexie("analysisDatabase", {});
 
-    }}>Reset Analysis Database</md-filled-button>
+        }}>Reset Analysis Database
+        </md-filled-button>
+    </>
 
-    let resetRepertoires = <md-filled-button className={"drill-button"} onClick={() => {
+    let resetRepertoires =
+        <>
+            <p> Current Repertoires: {repertoireList.length}</p>
+            <md-filled-button className={"drill-button"} onClick={() => {
 
-        setRepertoireChoice({});
-        setItemDexie("repertoireChoice", "");
+                setRepertoireChoice({});
+                setItemDexie("repertoireChoice", "");
 
-        setRepertoireList({});
-        setItemDexie("repertoireList", []);
+                setRepertoireList({});
+                setItemDexie("repertoireList", []);
 
-        setRepertoire({});
-        setItemDexie("repertoire", {});
+                setRepertoire({});
+                setItemDexie("repertoire", {});
 
 
-    }}>Reset Repertoires</md-filled-button>
+            }}>Reset Repertoires
+            </md-filled-button>
+        </>
 
     let buttons = [resetGamesButton, resetAnalysisDatabase, resetRepertoires];
 
@@ -120,8 +135,6 @@ function ConfigPage({
 
         <h3>Settings</h3>
 
-        <br></br>
-
         <label>
             Show lines that have at least this many matching moves
         </label>
@@ -135,8 +148,7 @@ function ConfigPage({
             }}>
         </md-outlined-text-field>
 
-        <br></br>
-
+        <h3>Clear Data</h3>
         {buttons}
     </>
 }

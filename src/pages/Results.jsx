@@ -71,9 +71,9 @@ export default function Results({
             Clear Opening Filter
         </md-select-option>)
 
-    openingFilters = <md-outlined-select>
+    openingFilters = <><h3>Opening Filter</h3><md-outlined-select>
         {openingFilters}
-    </md-outlined-select>
+    </md-outlined-select></>
 
     listItems = listItems.slice(indexOfFirstItem, indexOfFirstItem + itemsPerPage);
 
@@ -141,9 +141,7 @@ export default function Results({
 
     return <>
         <h2>Games</h2>
-        <p>Reviewing lines from repertoire "{repertoireChoice}" as {playerName}</p>
         <p>This is a list of games at the position where they left the book.</p>
-        <p>AnalysisDB: {typeof analysisDatabase === "object" ? Object.keys(analysisDatabase).length : "uninitialized"}</p>
         <label>
             Show only lines where you left book first
             {leftBookCheckbox}
