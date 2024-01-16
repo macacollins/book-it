@@ -1,13 +1,15 @@
-import {useState} from 'react';
+import {useState, useRef} from 'react';
 
 import Arrow from '../components/Arrow';
 import ChessBoard from '../components/ChessBoard';
+import {Chess} from 'chess.js';
 
 
 export default function Drills({ games = [], analysisDatabase }) {
     const [ currentDrillIndex, setCurrentDrillIndex ] = useState(0);
     const [ currentDrillResult, setCurrentDrillResult ] = useState("");
 
+    const madeMove = useRef(false);
 
     const filteredGames = games && games.filter &&
         games.filter(nextGame => {
@@ -28,21 +30,25 @@ export default function Drills({ games = [], analysisDatabase }) {
 
         const path = new URL(drillAnalysisResult.headers.ECOUrl).pathname;
 
+        const chessJSGame = new Chess();
+        chessJSGame.loadPgn(nextGame.pgn);
+
+        const moves = chessJSGame.history().slice(0, drillAnalysisResult.finalMoveIndex);
         // Get the last path segment and replace hyphens with spaces
         const openingName = path.split('/').pop().replace(/-/g, ' ');
-
-        console.log("Opening was", openingName);
 
         drillBoard = <md-list-item>
             <div slot="supporting-text">
                 <div className="side-by-side">
-                    <ChessBoard fen={drillAnalysisResult.displayFEN}
+                    <ChessBoard fen={'start'}
+                                moves={moves}
                                 invert={drillAnalysisResult.invert_board}
                                 name={"drill-board" + currentDrillIndex}
                                 game_url={nextGame.url + "drillresult"}
                                 draggable={!currentDrillResult}
                                 arrows={currentDrillResult ? drillAnalysisResult.arrows.map(arrow =>
                                     <Arrow {...arrow}></Arrow>) : []}
+                                madeMoveRef={madeMove}
                                 moveCallback={move => {
                                     console.log(drillAnalysisResult.arrows);
                                     console.log(move);
@@ -60,6 +66,8 @@ export default function Drills({ games = [], analysisDatabase }) {
                                         console.log("failure, was expecting another move")
                                         setCurrentDrillResult("Failure")
                                     }
+
+                                    madeMove.current = true;
                                 }}
                     ></ChessBoard>
                 </div>
@@ -89,6 +97,7 @@ export default function Drills({ games = [], analysisDatabase }) {
                     <md-filled-button onClick={() => {
                         setCurrentDrillIndex(currentDrillIndex + 1);
                         setCurrentDrillResult(undefined);
+                        madeMove.current = false;
                     }}>Next
                     </md-filled-button>
                 </p>
@@ -100,7 +109,7 @@ export default function Drills({ games = [], analysisDatabase }) {
                     <md-filled-button className={"drill-button"} onClick={() => {
                         setCurrentDrillIndex(currentDrillIndex + 1);
                         setCurrentDrillResult(undefined);
-
+                        madeMove.current = false;
                     }}>Next
 
                     </md-filled-button>

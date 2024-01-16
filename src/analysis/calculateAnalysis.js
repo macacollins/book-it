@@ -168,6 +168,7 @@ function calculateAnalysis(analysisDatabase, repertoire, game, playerName) {
 
     analysis.result = chess_game.header().Result
 
+    analysis.finalMoveIndex = finalMoveIndex;
     analysis.fen_at_departure = chess_game_display.fen();
     analysis.you_left_book =
         foundIntersection && (

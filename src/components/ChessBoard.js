@@ -1,10 +1,8 @@
 
 import Drawings from './Drawings';
-import {useEffect} from 'react';
+import {useEffect, useRef} from 'react';
 
 import {Chess} from 'chess.js';
-
-
 
 const ChessBoard = ({
                        name,
@@ -14,18 +12,27 @@ const ChessBoard = ({
                         arrows = [],
                         draggable = false,
                         dropOffBoard='snapback',
-                        moveCallback=(move => {console.log("Got move", move)})
+                        madeMoveRef = { current: true },
+                        moveCallback=(move => {console.log("Got move", move)}),
+                        moves = []
                    }) => {
     const finalID = name + game_url.replace(/[^a-zA-Z0-9]/g, '');
+
+    // We need useRef so that it will persist between callbacks attached to the Chessboard object
+    // We will need to rethink placement if we end up supporting a more complicated use case
+
     // Initialize the board after the component mounts to the DOM
     useEffect(() => {
         setTimeout(() => {
-
-
-            const game = new Chess(fen);
+            const game = new Chess();
 
             function onDragStart (source, piece, position, orientation) {
-                console.log("onDragStart called")
+                console.log("onDragStart called, madeMove = ", madeMoveRef);
+
+                if (madeMoveRef.current) {
+                    console.log("already made move");
+                    return false;
+                }
 
                 // do not pick up pieces if the game is over
                 if (game.game_over) return false
@@ -36,62 +43,34 @@ const ChessBoard = ({
                     return false
                 }
             }
-// update the board position after the piece snap
-// for castling, en passant, pawn promotion
+            // update the board position after the piece snap
+            // for castling, en passant, pawn promotion
             function onSnapEnd () {
                 board.position(game.fen())
             }
-            function onDrop (source, target) {
+            function onDrop(source, target) {
                 console.log("onDrop called")
-                // see if the move is legal
-                var move = game.move({
-                    from: source,
-                    to: target,
-                    // promotion: 'q' // NOTE: always promote to a queen for example simplicity
-                })
+
+                let move;
+
+                try {
+                    // see if the move is legal
+                    move = game.move({
+                        from: source,
+                        to: target,
+                        // promotion: 'q' // NOTE: always promote to a queen for example simplicity
+                    });
+                } catch (e) {
+                    console.log("Invalid move attempted", e)
+                    return 'snapback';
+                }
 
                 // illegal move
-                if (move === null) return 'snapback'
-
-                updateStatus(move)
-            }
-
-            function updateStatus (move) {
-
-                console.log("updateStatus called")
-
-                var status = ''
-
-                var moveColor = 'White'
-                if (game.turn() === 'b') {
-                    moveColor = 'Black'
-                }
-
-                // checkmate?
-                if (game.in_checkmate) {
-                    status = 'Game over, ' + moveColor + ' is in checkmate.'
-                }
-
-                // draw?
-                else if (game.in_draw) {
-                    status = 'Game over, drawn position'
-                }
-
-                // game still on
-                else {
-                    status = moveColor + ' to move'
-
-                    // check?
-                    if (game.in_check) {
-                        status += ', ' + moveColor + ' is in check'
-                    }
-                }
-
-                console.log(move, status)
+                if (!move) return 'snapback'
 
                 moveCallback(move)
-            }
 
+            }
 
             const config = {
                 position: fen,
@@ -103,11 +82,34 @@ const ChessBoard = ({
             }
 
             /*global Chessboard */
+            // TODO fork and react-ify this library
             const board = Chessboard(finalID, config);
+
+            function makeMoves(moves) {
+                if (moves.length) {
+                    setTimeout(() => {
+                        console.log("Moving", moves);
+
+                        let singleMove = game.move(moves[0]);
+                        console.log("Trying singleMove", singleMove);
+
+                        try {
+                            board.move(`${singleMove.from}-${singleMove.to}`);
+                        } catch (e) {
+                            console.log("Unable to make move", singleMove, " on board", game, e)
+                        }
+                        makeMoves(moves.slice(1));
+                    }, 300);
+                }
+            }
 
             if (!board) {
                 return;
             }
+
+            setTimeout(() => {
+                makeMoves(moves);
+            }, 500);
 
             if (invert) {
                 board.flip();
@@ -115,7 +117,8 @@ const ChessBoard = ({
 
             const domBoard = document.getElementById(finalID);
 
-            if (!draggable) {
+            // Turn off mobile scrolling behavior if they drag inside the board on mobile
+            if (draggable) {
                 function preventBehavior(e) {
                     e.preventDefault();
                 }

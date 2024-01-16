@@ -1,8 +1,6 @@
 import Dexie from 'dexie';
 /*
-|----------------------------|
-| Declare your database      |
-|----------------------------|
+This application currently uses Dexie as a key-value store.
 */
 
 const db = new Dexie('AppDatabase');
