@@ -11,7 +11,7 @@ const ChessBoard = ({
                         fen = 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R',
                         arrows = [],
                         draggable = false,
-                        dropOffBoard='snapback',
+                        dropOffBoard= 'snapback',
                         madeMoveRef = { current: true },
                         moveCallback=(move => {console.log("Got move", move)}),
                         moves = []
@@ -85,10 +85,10 @@ const ChessBoard = ({
             function makeMoves(moves) {
                 if (moves.length) {
                     setTimeout(() => {
-                        console.log("Moving", moves);
+                        // console.log("Moving", moves);
 
                         let singleMove = game.move(moves[0]);
-                        console.log("Trying singleMove", singleMove);
+                        // console.log("Trying singleMove", singleMove);
 
                         try {
                             board.move(`${singleMove.from}-${singleMove.to}`);
@@ -112,9 +112,10 @@ const ChessBoard = ({
                 board.flip();
             }
 
-            const domBoard = document.getElementById(finalID);
 
             // Turn off mobile scrolling behavior if they drag inside the board on mobile
+            const domBoard = document.getElementById(finalID);
+
             if (draggable) {
                 function preventBehavior(e) {
                     e.preventDefault();

@@ -3,6 +3,8 @@ import './App.css';
 import {useState, useEffect, useReducer} from 'react';
 import {setItemGZIP} from './storage';
 
+import analysisDatabaseReducer from './reducers/analysisDatabase';
+
 // index.js
 import '@material/web/button/filled-button.js';
 import '@material/web/button/outlined-button.js';
@@ -21,15 +23,6 @@ import '@material/web/tabs/tabs.js';
 import '@material/web/select/select-option.js';
 import '@material/web/select/outlined-select.js';
 
-
-import AnalysisResult from './components/AnalysisResult';
-import Arrow from './components/Arrow';
-import ChessBoard from './components/ChessBoard';
-import FileUpload from './components/FileUpload';
-import calculateAnalysis from './analysis/calculateAnalysis';
-import refreshGames from './integrations/chess.com'
-import loadCachedData from './loadCachedData';
-
 import defaultLines from './integrations/default-lines';
 
 import ConfigPage from './pages/Configuration';
@@ -47,8 +40,8 @@ function App({
                  userLeftBookOnlyStorage,
                  repertoireChoiceStorage,
                  worker,
+                 activeTabStorage
              }) {
-
 
     // Declare main state of application
     // This includes data stored by the application such as the repertoire and player name
@@ -67,8 +60,9 @@ function App({
     const [matchingMoves, setMatchingMoves] = useState(matchingMovesStorage || 3)
 
     // tab navigation
-    const [activeTab, setActiveTab] = useState("panel-one");
+    const [activeTab, setActiveTab] = useState((typeof activeTabStorage === "string" && activeTabStorage) || "panel-one");
 
+    // This effect initializes a new repertoire based on some common Queen's Gambit lines if none are found
     useEffect(() => {
         (async () => {
             if (repertoireList.length === 0) {
@@ -87,30 +81,7 @@ function App({
         })()
     });
 
-    function reducer(state, action) {
-        if (action.type === 'ADD_ANALYSIS') {
-            // console.log("Adding analysis")
-
-            const newState = {
-                ...action.data,
-                ...state
-            };
-
-            if (Object.keys(newState).length !== Object.keys(state).length) {
-                setItemGZIP('analysisDatabase', newState);
-            }
-
-            return newState;
-
-        } else if (action.type === 'RESET') {
-            setItemGZIP('analysisDatabase', {});
-            return {};
-        }
-        throw Error('Unknown action.');
-    }
-
-    const [analysisDatabase, dispatchAnalysisDatabase] = useReducer(reducer, analysisDatabaseStorage);
-    // console.log("state.keys,", Object.keys(analysisDatabase).length)
+    const [analysisDatabase, dispatchAnalysisDatabase] = useReducer(analysisDatabaseReducer, analysisDatabaseStorage);
 
     // If the repertoire or games change, start performing analysis on the games
     useEffect(() => {
@@ -146,6 +117,7 @@ function App({
         }, [repertoire, games]
     )
 
+    // Create the actual pages
     const resultsPage = <Results {...{
         games,
         userLeftBookOnly,
@@ -175,39 +147,42 @@ function App({
 
     const drillPage = <Drills {...{games, analysisDatabase}}></Drills>
 
-    // set up tabs
+    // set up tab change listener
     useEffect(() => {
 
         const tabs = document.querySelector("#nav-tabs");
         tabs.addEventListener('change', () => {
             const panelId = tabs.activeTab?.getAttribute('aria-controls');
             setActiveTab(panelId);
+            setItemGZIP("activeTab", panelId);
         });
 
     }, []);
 
+    // hide the inactive tab panels
     const [oneProps, twoProps, threeProps] =
         ["panel-one", "panel-two", "panel-three"].map(
             tabID => tabID === activeTab ? {} : {"hidden": true}
+        )
+
+    // Add the active property to the appropriate md-primary-tab
+    const [oneActive, twoActive, threeActive] =
+        ["panel-one", "panel-two", "panel-three"].map(
+            tabID => tabID === activeTab ? {"active": true} : {}
         )
 
     return (
         <>
             <md-tabs
                 id="nav-tabs"
-                aria-label="A custom themed tab bar"
-                class="custom"
-                activeTabIndex={activeTab}
-                onChange={(e) => {
-                    console.log("Change triggered", e)
-                }}>
-                <md-primary-tab id="tab-one" aria-controls="panel-one">
+                aria-label="A custom themed tab bar">
+                <md-primary-tab id="tab-one" aria-controls="panel-one" {...oneActive}>
                     Configuration
                 </md-primary-tab>
-                <md-primary-tab id="tab-two" aria-controls="panel-two">
-                    Results
+                <md-primary-tab id="tab-two" aria-controls="panel-two" {...twoActive}>
+                    Games
                 </md-primary-tab>
-                <md-primary-tab id="tab-three" aria-controls="panel-three">
+                <md-primary-tab id="tab-three" aria-controls="panel-three" {...threeActive}>
                     Drill
                 </md-primary-tab>
             </md-tabs>

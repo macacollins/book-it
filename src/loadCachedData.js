@@ -11,7 +11,8 @@ async function loadCachedData() {
             "repertoireList",
             "matchingMoves",
             "userLeftBookOnly",
-            "repertoireChoice"
+            "repertoireChoice",
+            "activeTab"
         ];
 
     let returnObject = {};

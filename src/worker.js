@@ -20,15 +20,17 @@ let receiver = async (message) => {
     for (let game of games) {
         i++;
 
-        console.time("calculateAnalysis")
+        // You can use the commented out code below to time the analysis
+        // console.time("calculateAnalysis")
         let value = calculateAnalysis(currentAnalysisDatabase, repertoire, game, playerName);
-        console.timeEnd("calculateAnalysis")
+        // console.timeEnd("calculateAnalysis")
 
         currentAnalysisDatabase[game.url] = value;
 
+        // Every few items, post back the progress so the UI can use it
         if (i > 0 && i % 10 === 0) {
 
-            console.log(i);
+            // console.log(i);
             message.target.postMessage({
                 action: "SET_ANALYSIS_DATABASE",
                 currentAnalysisDatabase: currentAnalysisDatabase
@@ -41,6 +43,8 @@ let receiver = async (message) => {
         action: "SET_ANALYSIS_DATABASE",
         currentAnalysisDatabase: currentAnalysisDatabase
     });
+
+    console.log("Completed analysis");
 };
 
 /* eslint-disable no-restricted-globals */

@@ -140,7 +140,7 @@ export default function Results({
     const paginationSection = <div className={"pagination"}> {"Page | "}{paginationButtons}</div>
 
     return <>
-        <h2>Results</h2>
+        <h2>Games</h2>
         <p>Reviewing lines from repertoire "{repertoireChoice}" as {playerName}</p>
         <p>This is a list of games at the position where they left the book.</p>
         <p>AnalysisDB: {typeof analysisDatabase === "object" ? Object.keys(analysisDatabase).length : "uninitialized" }</p>
