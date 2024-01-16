@@ -3,7 +3,7 @@ import {getItemDexie} from './storage';
 async function loadCachedData() {
 
     const properties =
-        [ "analysisDatabase",
+        ["analysisDatabase",
             "repertoire",
             "games",
             "playerName",

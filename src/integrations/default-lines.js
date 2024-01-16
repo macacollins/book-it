@@ -1,7 +1,6 @@
 // mainlines from some recent grandmaster games
 
-export default
-    "1.d4 d5 2.c4 e6 3.Nc3 Nf6 4.Bg5 Be7 5.e3 O-O\n" +
+export default "1.d4 d5 2.c4 e6 3.Nc3 Nf6 4.Bg5 Be7 5.e3 O-O\n" +
     "1.d4 d5 2.c4 e6 3.Nc3 Nf6 4.Bg5 Be7 5.e3 a6 \n" +
     "1.d4 d5 2.c4 e6 3.Nc3 a6 4.cxd5 exd5 5.Nf3 Nf6\n" +
     "1.d4 d5 2.c4 e6 3.Nc3 Nf6 4.Bg5 Nbd7 5.e3 c6\n" +

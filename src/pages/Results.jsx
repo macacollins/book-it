@@ -22,7 +22,7 @@ export default function Results({
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
 
-    const [ currentOpeningFilter, setCurrentOpeningFilter ] = useState("");
+    const [currentOpeningFilter, setCurrentOpeningFilter] = useState("");
 
 
     let filteredGames = games && games.filter &&
@@ -32,7 +32,7 @@ export default function Results({
                     return analysisDatabase[game.url] && analysisDatabase[game.url].you_left_book
                 }
                 return true;
-            } else if (analysisDatabase[game.url] && currentOpeningFilter === analysisDatabase[game.url].openingFamily ) {
+            } else if (analysisDatabase[game.url] && currentOpeningFilter === analysisDatabase[game.url].openingFamily) {
                 if (userLeftBookOnly) {
                     return analysisDatabase[game.url] && analysisDatabase[game.url].you_left_book
                 }
@@ -43,12 +43,12 @@ export default function Results({
         });
 
     let listItems = filteredGames.map(singleGame => {
-            if (singleGame) {
-                return <AnalysisResult game={singleGame} analysisDatabase={analysisDatabase}></AnalysisResult>
-            } else {
-                return "No game found"
-            }
-        }) || [];
+        if (singleGame) {
+            return <AnalysisResult game={singleGame} analysisDatabase={analysisDatabase}></AnalysisResult>
+        } else {
+            return "No game found"
+        }
+    }) || [];
 
     const filteredGamesLength = listItems.length
 
@@ -57,7 +57,9 @@ export default function Results({
 
     let openingFilters = topOpenings.map(({opening, count}) =>
         <md-select-option value={opening}
-                          onClick={() => { setCurrentOpeningFilter(opening) }}>
+                          onClick={() => {
+                              setCurrentOpeningFilter(opening)
+                          }}>
             {opening} {count}
         </md-select-option>
     );
@@ -141,7 +143,7 @@ export default function Results({
         <h2>Games</h2>
         <p>Reviewing lines from repertoire "{repertoireChoice}" as {playerName}</p>
         <p>This is a list of games at the position where they left the book.</p>
-        <p>AnalysisDB: {typeof analysisDatabase === "object" ? Object.keys(analysisDatabase).length : "uninitialized" }</p>
+        <p>AnalysisDB: {typeof analysisDatabase === "object" ? Object.keys(analysisDatabase).length : "uninitialized"}</p>
         <label>
             Show only lines where you left book first
             {leftBookCheckbox}

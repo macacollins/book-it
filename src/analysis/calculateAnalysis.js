@@ -78,7 +78,7 @@ function calculateAnalysis(analysisDatabase, repertoire, game, playerName) {
             });
 
 
-            last_moves = [ ...(next_moves.filter(moveName => moveName !== "oops")) ];
+            last_moves = [...(next_moves.filter(moveName => moveName !== "oops"))];
 
             foundIntersection = true;
             analysis.foundIntersection = true;
@@ -167,9 +167,9 @@ function calculateAnalysis(analysisDatabase, repertoire, game, playerName) {
     analysis.fen_at_departure = chess_game_display.fen();
     analysis.you_left_book =
         foundIntersection && (
-        chess_game_display.turn() === "w" ?
-            chess_game.header().White === playerName :
-            chess_game.header().Black === playerName);
+            chess_game_display.turn() === "w" ?
+                chess_game.header().White === playerName :
+                chess_game.header().Black === playerName);
 
     if (foundIntersection) {
         if (analysis.you_left_book) {

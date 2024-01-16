@@ -16,7 +16,7 @@ export default function findTopOpenings(games, analysisDatabase) {
 
     let openingList = [];
     Object.keys(openingsCounts).forEach(key => {
-        openingList.push({ opening: key, count: openingsCounts[key]});
+        openingList.push({opening: key, count: openingsCounts[key]});
     })
 
     // Custom function to calculate a sorting criterion
@@ -26,7 +26,7 @@ export default function findTopOpenings(games, analysisDatabase) {
     }
 
     // Sort the array based on the result of the custom function
-    const result = openingList.sort(function(a, b) {
+    const result = openingList.sort(function (a, b) {
         return customSort(a) - customSort(b);
     }).reverse();
 

@@ -13,9 +13,9 @@ let worker = new Worker(new URL('./worker.js', import.meta.url));
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
-    <App worker={worker} { ... propsFromLocalStorage }/>
-  </React.StrictMode>
+    <React.StrictMode>
+        <App worker={worker} {...propsFromLocalStorage}/>
+    </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function

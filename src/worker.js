@@ -5,7 +5,7 @@ console.log("Worker is running");
 let receiver = async (message) => {
     // console.log("Starting to work", message)
     // { data: { analysisDatabase, repertoire, games, playerName } }
-    let { data: { analysisDatabase, repertoire, games, playerName } } = message;
+    let {data: {analysisDatabase, repertoire, games, playerName}} = message;
     let currentAnalysisDatabase = typeof analysisDatabase === "object" ? analysisDatabase : {};
 
     if (typeof repertoire !== "object" || Object.keys(repertoire).length === 0) {

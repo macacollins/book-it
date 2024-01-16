@@ -1,5 +1,13 @@
 import processNewRepertoire from '../integrations/processNewRepertoire';
-const FileUpload = ({repertoire, setRepertoire, newRepertoireNameField, setNewRepertoireNameField, repertoireList, setRepertoireList}) => {
+
+const FileUpload = ({
+                        repertoire,
+                        setRepertoire,
+                        newRepertoireNameField,
+                        setNewRepertoireNameField,
+                        repertoireList,
+                        setRepertoireList
+                    }) => {
     function handleFile(event) {
         const fileInput = event.target;
         const file = fileInput.files[0];
@@ -11,7 +19,14 @@ const FileUpload = ({repertoire, setRepertoire, newRepertoireNameField, setNewRe
                 const fileContents = e.target.result;
                 //console.log("File Contents as String:", fileContents);
 
-                processNewRepertoire(fileContents, {repertoire, setRepertoire, newRepertoireNameField, setNewRepertoireNameField, repertoireList, setRepertoireList})
+                processNewRepertoire(fileContents, {
+                    repertoire,
+                    setRepertoire,
+                    newRepertoireNameField,
+                    setNewRepertoireNameField,
+                    repertoireList,
+                    setRepertoireList
+                })
 
             };
 

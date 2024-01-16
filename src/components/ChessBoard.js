@@ -1,21 +1,22 @@
-
 import Drawings from './Drawings';
 import {useEffect} from 'react';
 
 import {Chess} from 'chess.js';
 
 const ChessBoard = ({
-                       name,
+                        name,
                         game_url,
                         invert = false,
                         fen = 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R',
                         arrows = [],
                         draggable = false,
-                        dropOffBoard= 'snapback',
-                        madeMoveRef = { current: true },
-                        moveCallback=(move => {console.log("Got move", move)}),
+                        dropOffBoard = 'snapback',
+                        madeMoveRef = {current: true},
+                        moveCallback = (move => {
+                            console.log("Got move", move)
+                        }),
                         moves = []
-                   }) => {
+                    }) => {
     const finalID = name + game_url.replace(/[^a-zA-Z0-9]/g, '');
 
     // Initialize the board after the component mounts to the DOM
@@ -23,7 +24,7 @@ const ChessBoard = ({
         setTimeout(() => {
             const game = new Chess();
 
-            function onDragStart (source, piece, position, orientation) {
+            function onDragStart(source, piece, position, orientation) {
                 console.log("onDragStart called, madeMove = ", madeMoveRef);
 
                 if (madeMoveRef.current) {
@@ -40,11 +41,13 @@ const ChessBoard = ({
                     return false
                 }
             }
+
             // update the board position after the piece snap
             // for castling, en passant, pawn promotion
-            function onSnapEnd () {
+            function onSnapEnd() {
                 board.position(game.fen())
             }
+
             function onDrop(source, target) {
                 console.log("onDrop called")
 

@@ -1,4 +1,3 @@
-
 // If we allow highlighting later we might wish to use this
 // const Circle = ({x, y}) => {
 //     //return <g><circle stroke="#15781B" stroke-width="0.0625" fill="none" opacity="1" cx="-0.5" cy="2.5" r="0.46875"></circle></g></g>

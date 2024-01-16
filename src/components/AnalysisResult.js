@@ -1,4 +1,3 @@
-
 import Arrow from './Arrow';
 import ChessBoard from './ChessBoard';
 
@@ -6,7 +5,7 @@ import '@material/web/list/list.js';
 
 import '@material/web/list/list-item.js';
 
-const AnalysisResult = ({analysisDatabase, game, nameOverride="my-name"}) => {
+const AnalysisResult = ({analysisDatabase, game, nameOverride = "my-name"}) => {
 
     if (typeof game === "undefined") {
         return <md-list-item>

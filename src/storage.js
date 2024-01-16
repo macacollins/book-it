@@ -11,7 +11,7 @@ db.version(1).stores({
 });
 
 export async function getItemDexie(key) {
-    const result = await db.objectCache.where('key').equals(key).toArray();;
+    const result = await db.objectCache.where('key').equals(key).toArray();
 
     if (result && result.length > 0) {
         if (result[0]) {

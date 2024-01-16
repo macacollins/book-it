@@ -1,7 +1,14 @@
 import {Chess} from "chess.js";
 import {setItemDexie} from "../storage";
 
-export default function processNewRepertoire(fileContents, {repertoire, setRepertoire, newRepertoireNameField, setNewRepertoireNameField, repertoireList, setRepertoireList}) {
+export default function processNewRepertoire(fileContents, {
+    repertoire,
+    setRepertoire,
+    newRepertoireNameField,
+    setNewRepertoireNameField,
+    repertoireList,
+    setRepertoireList
+}) {
     const lines = fileContents.split('\n');
 
     // { [fen]: [ line, line, line, line ] }

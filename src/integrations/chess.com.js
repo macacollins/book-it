@@ -1,5 +1,4 @@
-
-import { setItemDexie } from '../storage';
+import {setItemDexie} from '../storage';
 
 // Function to get the year and month X months back
 function getYearAndMonthXMonthsAgo(X) {
@@ -23,7 +22,7 @@ function getYearAndMonthXMonthsAgo(X) {
     const twoDigitMonth =
         currentMonth > 9 ? currentMonth : "0" + currentMonth;
 
-    return { year : currentYear, month: twoDigitMonth };
+    return {year: currentYear, month: twoDigitMonth};
 }
 
 async function refreshGames(games, setGames, playerName) {
@@ -48,14 +47,14 @@ async function refreshGames(games, setGames, playerName) {
 
                 const newGames = thisMonthGames.reverse();
 
-                const fullGameList = [ ...new Set([ ...finalGames, ...newGames ]) ];
+                const fullGameList = [...new Set([...finalGames, ...newGames])];
 
                 function customSort(item) {
                     // For example, sorting based on the 'value' property
                     return item.end_time;
                 }
 
-                finalGames = fullGameList.sort(function(a, b) {
+                finalGames = fullGameList.sort(function (a, b) {
                     return customSort(a) - customSort(b);
                 }).reverse();
             })
@@ -69,7 +68,6 @@ async function refreshGames(games, setGames, playerName) {
         setItemDexie('games', finalGames);
     }
 }
-
 
 
 export default refreshGames;

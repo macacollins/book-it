@@ -5,9 +5,9 @@ import ChessBoard from '../components/ChessBoard';
 import {Chess} from 'chess.js';
 
 
-export default function Drills({ games = [], analysisDatabase }) {
-    const [ currentDrillIndex, setCurrentDrillIndex ] = useState(0);
-    const [ currentDrillResult, setCurrentDrillResult ] = useState("");
+export default function Drills({games = [], analysisDatabase}) {
+    const [currentDrillIndex, setCurrentDrillIndex] = useState(0);
+    const [currentDrillResult, setCurrentDrillResult] = useState("");
 
     const madeMove = useRef(false);
 
@@ -89,7 +89,7 @@ export default function Drills({ games = [], analysisDatabase }) {
 
         if (currentDrillResult === "Failure") {
             drillCurrentDisplay = <>
-                <p style={{"line-height":"36px"}}>{"Oops, better study on this one."}
+                <p style={{"line-height": "36px"}}>{"Oops, better study on this one."}
                     <md-filled-button onClick={() => {
                         setCurrentDrillIndex(currentDrillIndex + 1);
                         setCurrentDrillResult(undefined);
@@ -101,7 +101,7 @@ export default function Drills({ games = [], analysisDatabase }) {
 
         } else if (currentDrillResult === "Success") {
             drillCurrentDisplay = <>
-                <p style={{"line-height":"36px"}}>{"Congrats, you did it!"}
+                <p style={{"line-height": "36px"}}>{"Congrats, you did it!"}
                     <md-filled-button className={"drill-button"} onClick={() => {
                         setCurrentDrillIndex(currentDrillIndex + 1);
                         setCurrentDrillResult(undefined);
@@ -116,7 +116,7 @@ export default function Drills({ games = [], analysisDatabase }) {
     }
 
     return <>
-            {drillBoard}
-            {drillCurrentDisplay}
-        </>
+        {drillBoard}
+        {drillCurrentDisplay}
+    </>
 };

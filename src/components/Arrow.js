@@ -1,4 +1,3 @@
-
 const Arrow = ({fromX, fromY, destX, destY, color = 'red', hidden = false}) => {
 
     const targetX1 = fromX - 4.5;

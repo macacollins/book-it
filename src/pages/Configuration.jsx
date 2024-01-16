@@ -3,8 +3,22 @@ import FileUpload from "../components/FileUpload";
 
 
 function ConfigPage({
-                        playerName, setPlayerName, repertoireChoice, setRepertoireChoice, newRepertoireNameField, setNewRepertoireNameField,
-                        setRepertoire, repertoire, repertoireList, setRepertoireList, matchingMoves, setMatchingMoves, setCurrentGames, dispatchAnalysisDatabase, setGames}) {
+                        playerName,
+                        setPlayerName,
+                        repertoireChoice,
+                        setRepertoireChoice,
+                        newRepertoireNameField,
+                        setNewRepertoireNameField,
+                        setRepertoire,
+                        repertoire,
+                        repertoireList,
+                        setRepertoireList,
+                        matchingMoves,
+                        setMatchingMoves,
+                        setCurrentGames,
+                        dispatchAnalysisDatabase,
+                        setGames
+                    }) {
 
     // Make the checkbox items for repertoire selection
     const checkboxItems =
@@ -58,7 +72,7 @@ function ConfigPage({
 
     }}>Reset Repertoires</md-filled-button>
 
-    let buttons = [resetGamesButton, resetAnalysisDatabase, resetRepertoires ];
+    let buttons = [resetGamesButton, resetAnalysisDatabase, resetRepertoires];
 
     return <>
         <h2>Configuration</h2>
