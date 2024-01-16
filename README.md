@@ -12,10 +12,15 @@ You can upload any set of lines you want to learn. Learning the London and the C
 
 Once you pick your repertoire and import your games from chess.com, you can see where the games left your repertoire lines. By default, this list only shows you the games where you played a different move than the repertoire. This allows you to quickly identify the gaps in your knowledge.
 
-The red arrow is the move you played, and the green arrow is the move you should have played.
+
 
 ![Screenshot of Games tab showing the top. It lists the player name, repertoire, and has a checkbox for filtering for games where you left the repertoire.](images/Games1.png)
+
+In each of the images, the site puts a green arrow on the move you should have played, and a red arrow on the move that you played instead.
+
 ![Screenshot of the Games tab showing a result in the list. There is a red arrow showing hte move](images/Games2.png)
+
+Now that you know where to focus, you can run drills in the drills tab to practice the moves where you left the repertoire. Or, you can access one of the links under the board.
 
 ## Drills
 
@@ -30,6 +35,8 @@ Here's a list of things the app links to other sites for rather than attempt to 
 - Viewing the rest of the game (Links to chess.com instead)
 - Analyzing positions (Links to Lichess instead)
 - Educating you about Chess openings (Links to Chessable instead)
+
+These links are under each game in the list.
 
 ### Chess.com
 
@@ -59,9 +66,7 @@ If you played a game and didn't have any idea what to do at the position where y
 
 ## Client-side only
 
-This application is free and there is no server interaction other than loading static assets such as JS, HTML, and CSS.
-
-
+This application is free and there is no server interaction other than loading static assets such as JS, HTML, and CSS. It is hosted from this repository directly on GitHub at [https://macacollins.github.io/book-it/](https://macacollins.github.io/book-it/)
 
 # Try it out!
 
@@ -69,7 +74,7 @@ You can try the application [here](https://macacollins.github.io/book-it/). You 
 
 ![Screenshot of Configuration Page](images/Configuration.png)
 
-Then click the Games or Drill tabs to get started
+Then click the Games or Drill tabs to get started.
 
 ## Using Custom Repertoires
 
