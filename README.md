@@ -1,70 +1,92 @@
-# Getting Started with Create React App
+# Book It!
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Learn your chess openings with precisely targeted exercises based on your recent Chess.com games.
 
-## Available Scripts
+# Features
 
-In the project directory, you can run:
+## Import Custom Repertoires
 
-### `npm start`
+You can upload any set of lines you want to learn. Learning the London and the Caro? Prepare your PGN with the lines you want from those openings and you can use it with this site. 
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Review your games
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Once you pick your repertoire and import your games from chess.com, you can see where the games left your repertoire lines. By default, this list only shows you the games where you played a different move than the repertoire. This allows you to quickly identify the gaps in your knowledge.
 
-### `npm test`
+The red arrow is the move you played, and the green arrow is the move you should have played.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+![Screenshot of Games tab showing the top. It lists the player name, repertoire, and has a checkbox for filtering for games where you left the repertoire.](images/Games1.png)
+![Screenshot of the Games tab showing a result in the list. There is a red arrow showing hte move](images/Games2.png)
 
-### `npm run build`
+## Drills
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+You can practice the lines that you missed by going to the drills tab. The board will play through the first few moves. Then, it's your turn to try again where you missed last time.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+![Short video of the Drills page showing a couple of drill exercises](images/Test3.gif)
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## External links
 
-### `npm run eject`
+Here's a list of things the app links to other sites for rather than attempt to re-implement:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- Viewing the rest of the game (Links to chess.com instead)
+- Analyzing positions (Links to Lichess instead)
+- Educating you about Chess openings (Links to Chessable instead)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Chess.com
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+This link takes you to the game itself so that you can look over what happened and use any other chess.com features you want.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+![Screenshot of the same game from the list result in ](images/Chesscom.png)
 
-## Learn More
+### Lichess
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+This link takes you to an analysis board at the position where you played the different move. 
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+![Screenshot of the lichess analysis board at lichess.org for the ](images/Lichess.png)
 
-### Code Splitting
+You can compare moves, access web-based Stockfish 16, and see Lichess statistics here.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### Chessable
 
-### Analyzing the Bundle Size
+This link takes you to a Chessable position search. This will return a list of any courses that have the position where you played a different move from the repertoire. 
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+![Screenshot of the chessable UI with a search for the position from the previous examples](images/Chessable1.png)
 
-### Making a Progressive Web App
+If you have a course that includes the line from your game, you can click it to access a list of matching lines in the Chessable course. This lets you quickly find reference material in Chessable.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+![Screenshot of the chessable UI with a list of lines included in the Chessable course](images/Chessable2.png)
 
-### Advanced Configuration
+If you played a game and didn't have any idea what to do at the position where you left the repertoire, it might be best to check Chessable courses to learn from an expert.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## Client-side only
 
-### Deployment
+This application is free and there is no server interaction other than loading static assets such as JS, HTML, and CSS.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
 
-### `npm run build` fails to minify
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+# Try it out!
+
+You can try the application [here](https://macacollins.github.io/book-it/). You can use the username annacramling with the default repertoire. Anna Cramling is a WGM and [streamer](https://www.youtube.com/@annacramling). The default repertoire has different lines than Anna plays, so you will get some results and exercises.
+
+![Screenshot of Configuration Page](images/Configuration.png)
+
+Then click the Games or Drill tabs to get started
+
+## Using Custom Repertoires
+
+To get feedback for the games you play and the lines you want to play, you will need a few things:
+
+### 1. A chess.com username
+
+You will need to enter your own chess.com username.
+
+### 2. Repertoire PGN file
+
+Enter something for the Repertoire Name field, then select a file. The application does not handle variations at the current time, so each game needs a separate line in the PGN file. Variations will not be parsed into the lines database.
+
+### 3. (Maybe) Reset analysis
+
+At this point, the application does not handle repertoire changes very well. If there is a number next to the Current Analysis Items, you will want to click Reset Analysis Database.
+
+### 4. Import Games
+
+Next, you need to navigate to the Games tab. Then click Reset Games to load games for your username from chess.com.
