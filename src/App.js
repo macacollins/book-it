@@ -181,7 +181,7 @@ function App({
         )
 
     return (
-        <>
+        <mio-root>
             <md-tabs
                 id="nav-tabs"
                 aria-label="A custom themed tab bar">
@@ -205,7 +205,7 @@ function App({
             <div role="tabpanel" id="panel-three" aria-labelledby="tab-three" {...threeProps}>
                 {activeTab === "panel-three" ? drillPage : ""}
             </div>
-        </>
+        </mio-root>
     );
 }
 

@@ -1,4 +1,5 @@
 :root {
+  color: var(--md-sys-color-on-surface);
   --md-source: #006c4a;
   /* primary */
   --md-ref-palette-primary0: #000000;
