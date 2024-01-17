@@ -26,8 +26,12 @@ jobs:
       run: |
         npm install
         npm run build
-        
-    - name: Test
-      run: |
-        npm install
-        npm run test
+
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+          # Upload entire repository
+          path: 'build'
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
