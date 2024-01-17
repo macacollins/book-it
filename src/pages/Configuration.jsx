@@ -58,7 +58,7 @@ function ConfigPage({
     </>;
 
     let resetAnalysisDatabase = <>
-        <p> Current Analysis Items: {Object.keys(analysisDatabase).length}</p>
+        <p> Current Analysis Items: {typeof analysisDatabase === 'object' ? Object.keys(analysisDatabase).length : "Not initialized"}</p>
         <md-filled-button className={"drill-button"} onClick={() => {
 
             dispatchAnalysisDatabase({type: 'RESET'});

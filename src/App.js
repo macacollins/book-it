@@ -108,15 +108,18 @@ function App({
 
             let payload = {analysisDatabase, repertoire: currentRepertoire, games: sortedGames, playerName};
             // console.log("Sending ", payload);
-            worker.postMessage(payload);
-            worker.onmessage = (message) => {
-                // console.log("answer from worker", message);
+            if (worker) {
+                worker.postMessage(payload);
+                worker.onmessage = (message) => {
+                    // console.log("answer from worker", message);
 
-                dispatchAnalysisDatabase({
-                    type: 'ADD_ANALYSIS',
-                    data: message.data.currentAnalysisDatabase
-                })
-            };
+                    dispatchAnalysisDatabase({
+                        type: 'ADD_ANALYSIS',
+                        data: message.data.currentAnalysisDatabase
+                    })
+                };
+            }
+
 
         },
         // These effect array items chosen on purpose
