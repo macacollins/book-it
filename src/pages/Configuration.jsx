@@ -93,7 +93,7 @@ function ConfigPage({
         <h2>Configuration</h2>
 
         <h3>User</h3>
-        <p>Please enter your chess.com username.</p>
+        <p>Please enter your chess.com username</p>
 
 
         <md-outlined-text-field

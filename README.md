@@ -1,3 +1,4 @@
+[![NodeJS with Webpack](https://github.com/macacollins/book-it/actions/workflows/webpack.yml/badge.svg)](https://github.com/macacollins/book-it/actions/workflows/webpack.yml)
 # Book It!
 
 Learn your chess openings with precisely targeted exercises based on your recent Chess.com games.
