@@ -200,7 +200,7 @@ function App({
                 document.querySelector('body').className = "";
             }
         });
-    }, [])
+    }, [colorScheme])
 
     let classProps = colorScheme === 'dark' ? { "class": "dark-mode"} : {};
 
