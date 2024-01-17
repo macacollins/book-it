@@ -96,6 +96,9 @@
     "setupFilesAfterEnv": [
       "<rootDir>/src/jest-setup.js"
     ],
+    "testPathIgnorePatterns": [
+      "scripts"
+    ],
     "testEnvironment": "jsdom"
   },
   "babel": {
