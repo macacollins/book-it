@@ -180,8 +180,32 @@ function App({
             tabID => tabID === activeTab ? {"active": true} : {}
         )
 
+    const [ colorScheme, setColorScheme ] = useState(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+    useEffect(() => {
+
+        if (colorScheme === 'dark') {
+            document.querySelector('body').className = "dark-mode";
+        }
+
+        window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').addListener(event => {
+            console.log("Got scheme listener to fire", event);
+            const newColorScheme = event.matches ? "dark" : "light";
+
+            setColorScheme(newColorScheme);
+
+            if (newColorScheme === 'dark') {
+                document.querySelector('body').className = "dark-mode";
+            } else {
+                document.querySelector('body').className = "";
+            }
+        });
+    }, [])
+
+    let classProps = colorScheme === 'dark' ? { "class": "dark-mode"} : {};
+
     return (
-        <mio-root>
+        <mio-root {...classProps}>
             <md-tabs
                 id="nav-tabs"
                 aria-label="A custom themed tab bar">

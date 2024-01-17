@@ -8,6 +8,9 @@ body {
 }
 
 
+
+
+
 h1, h2, h3, p, .text-field, label {
   padding: 5px;
   padding-left:10px;
@@ -46,6 +49,25 @@ md-filled-button.drill-button {
   border-style: solid;
 }
 
+#root, #panel-one, #panel-two, #panel-three, mio-root, body {
+  background: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-surface)
+}
+
+/*body {*/
+/*  background: var(--md-sys-color-surface, #fef7ff);*/
+/*}*/
+
+/*@media (prefers-color-scheme: dark) {*/
+/*  body {*/
+/*    background: var(--md-sys-color-surface, #fef7ff);*/
+/*  }*/
+/*}*/
+
+/** {*/
+/*  color: var(--md-sys-color-on-surface);*/
+/*  background: var(--md-sys-color-background);*/
+/*}*/
 
 
 .pagination {
