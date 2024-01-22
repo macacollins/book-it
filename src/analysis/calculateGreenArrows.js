@@ -31,5 +31,5 @@ export function calculateGreenArrows(repertoireMoves, lastFEN, invert_board) {
         let arrowConfig = generateArrowConfig(move, invert_board, "green")
 
         return arrowConfig;
-    });
+    }).filter(arrow => arrow !== '');
 }

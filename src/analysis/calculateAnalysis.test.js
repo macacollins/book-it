@@ -6,16 +6,20 @@ import defaultGames from '../integrations/default-games'
 import defaultLines from '../integrations/default-lines'
 import {calculateRepertoire} from "../integrations/calculateRepertoire";
 
-let game = defaultGames[0];
+let analysis;
 
-let playerName = "example";
+beforeAll(() => {
+    let game = defaultGames[0];
 
-let repertoire = calculateRepertoire(defaultLines);
+    let playerName = "example";
 
-let analysisDatabase = {};
+    let repertoire = calculateRepertoire(defaultLines);
 
-let analysis = calculateAnalysis(analysisDatabase, repertoire, game, playerName);
-console.log("Result was ", analysis);
+    let analysisDatabase = {};
+
+    analysis = calculateAnalysis(analysisDatabase, repertoire, game, playerName);
+    console.log("Result was ", analysis);
+});
 
 test('Result is correct', () => {
     expect(analysis.result).toEqual("1-0");

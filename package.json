@@ -93,13 +93,23 @@
       "\\.(scss|sass|css)$": "identity-obj-proxy",
       "@material": "identity-obj-proxy"
     },
+    "verbose": true,
     "setupFilesAfterEnv": [
       "<rootDir>/src/jest-setup.js"
     ],
     "testPathIgnorePatterns": [
       "scripts"
     ],
-    "testEnvironment": "jsdom"
+    "collectCoverageFrom": [
+      "<rootDir>/src/**"
+    ],
+    "testEnvironment": "jsdom",
+    "collectCoverage": true,
+    "coverageThreshold": {
+      "global": {
+        "lines": 98
+      }
+    }
   },
   "babel": {
     "presets": [

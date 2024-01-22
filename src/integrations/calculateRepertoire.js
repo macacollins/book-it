@@ -8,8 +8,7 @@ export function calculateRepertoire(lines) {
         lines.map ? lines
             : [];
 
-    console.log(lines);
-    // { [fen]: [ line, line, line, line ] }
+    // { [fen]: [ line, line, line, line ] }d
     // This object uses FEN strings, which is a string representation of a chess position, as keys
     // https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
     // Each position has a corresponding value which is a list of the PGN lines
@@ -28,29 +27,29 @@ export function calculateRepertoire(lines) {
 
         // Load up the game using the Chess.js library
         // This allows us to navigate through the game in JS code
-        let this_chess = new Chess();
-        this_chess.loadPgn(currentLine);
+        let fullGame = new Chess();
+        fullGame.loadPgn(currentLine);
 
         // console.log(this_chess);
 
         // Get a list of all of the moves
-        let history = this_chess.history();
+        let history = fullGame.history();
 
         // Create a new Chess.js game so that we can play the moves one by one
         // NOTE: The undo() function in Chess.js did not generate FEN in the expected fashion
         // Which is why we play it again here
-        let step_by_step_history = new Chess();
+        let stepByStepHistory = new Chess();
 
         // For each move in the game's history, play it on the board
         for (let historyMove of history) {
 
-            step_by_step_history.move(historyMove);
+            stepByStepHistory.move(historyMove);
 
             // Add the result to fenRepo
-            if (fenRepo[step_by_step_history.fen()]) {
-                fenRepo[step_by_step_history.fen()].push(currentLine);
+            if (fenRepo[stepByStepHistory.fen()]) {
+                fenRepo[stepByStepHistory.fen()].push(currentLine);
             } else {
-                fenRepo[step_by_step_history.fen()] = [currentLine];
+                fenRepo[stepByStepHistory.fen()] = [currentLine];
             }
         }
 
