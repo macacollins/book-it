@@ -71,4 +71,5 @@ let blackGames = [
     "1.d4 d5 2.c4 dxc4 3.e3 Nf6 4.Bxc4 a6 5.a4 e6 6.Nf3 Nc6"
 ].map(pgn => createDefaultGame(pgn, "black"))
 
-export default [ ...whiteGames, ...blackGames];
+let totalGames = [ ...whiteGames, ...blackGames];
+export default  totalGames;
