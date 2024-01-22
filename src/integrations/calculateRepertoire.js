@@ -3,7 +3,10 @@ import {Chess} from "chess.js";
 
 export function calculateRepertoire(lines) {
 
-    let linesArray = (lines && lines.split) ? lines.split("\n") : [];
+    let linesArray =
+        typeof lines === 'string' ? lines.split("\n") :
+        lines.map ? lines
+            : [];
 
     console.log(lines);
     // { [fen]: [ line, line, line, line ] }
