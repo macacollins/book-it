@@ -17,6 +17,6 @@ export default "1.d4 d5 2.c4 e6 3.Nc3 Nf6 4.Bg5 Be7 5.e3 O-O\n" +
     "1.d4 Nf6 2.c4 g6 3.Nf3 Bg7 4.Bg5 h6 5.Bh4 O-O 6.Nc3\n" +
     "1.d4 Nf6 2.c4 g6 3.Nf3 Bg7 4.Bg5 c5 5.d5 b5 \n" +
     "1.d4 Nf6 2.c4 g6 3.Nf3 Bg7 4.Bg5 c5 5.d5 d6 6.e4\n" +
-    "1.d4 Nf6 2.c4 g6 3.Nf3 Bg7 4.Bg5 d5 5.Bxf6\n"
+    "1.d4 Nf6 2.c4 g6 3.Nf3 Bg7 4.Bg5 d5 5.Bxf6"
 
 

@@ -14,10 +14,10 @@ export default async function analyzeGames(message, inProgressListener, finalLis
 
     console.log("Starting to process " + games.length + " games.");
 
-    let i = 0;
+    let index = 0;
 
     for (let game of games) {
-        i++;
+        index++;
 
         // You can use the commented out code below to time the analysis
         // console.time("calculateAnalysis")
@@ -27,7 +27,7 @@ export default async function analyzeGames(message, inProgressListener, finalLis
         currentAnalysisDatabase[game.url] = analysis;
 
         // Every few items, post back the progress so the UI can use it
-        if (i > 0 && i % 10 === 0) {
+        if (index > 0 && index % 10 === 0) {
 
             inProgressListener(currentAnalysisDatabase);
         }
