@@ -1,6 +1,6 @@
 import {setItemDexie} from "../storage";
 
-export default function reducer(state, action) {
+export default function reducer(state = {}, action) {
     if (action.type === 'ADD_ANALYSIS') {
         // console.log("Adding analysis")
 

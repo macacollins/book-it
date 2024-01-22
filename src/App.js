@@ -3,7 +3,10 @@ import './App.css';
 import {useState, useEffect, useReducer} from 'react';
 import {setItemDexie} from './storage';
 
+import defaultGames from './integrations/default-games'
+
 import analysisDatabaseReducer from './reducers/analysisDatabase';
+import analyzeGames from './analysis/analyzeGames';
 
 import './css/colors.module.css';
 import './css/theme.css';
@@ -73,6 +76,8 @@ function App({
     useEffect(() => {
         (async () => {
             if (repertoireList.length === 0) {
+                setPlayerName('example');
+                await setItemDexie("playerName", "example")
                 const defaultAnalysisName = "Queen's Gambit"
                 await setItemDexie("repertoireChoice", defaultAnalysisName)
                 processNewRepertoire(defaultLines, {
@@ -82,8 +87,14 @@ function App({
                     setNewRepertoireNameField,
                     repertoireList,
                     setRepertoireList
-                })
-                setRepertoireChoice(defaultAnalysisName)
+                });
+                setRepertoireChoice(defaultAnalysisName);
+
+                setGames(defaultGames);
+                await setItemDexie("games", defaultGames)
+
+                await setItemDexie("repertoireChoice", defaultAnalysisName)
+
             }
         })()
     });
@@ -111,7 +122,7 @@ function App({
                 return customSort(a) - customSort(b);
             }).reverse();
 
-            let payload = {analysisDatabase, repertoire: currentRepertoire, games: sortedGames, playerName};
+            let payload = {analysisDatabase: analysisDatabase || {}, repertoire: currentRepertoire || {}, games: sortedGames || [], playerName};
             // console.log("Sending ", payload);
             if (worker) {
                 worker.postMessage(payload);
@@ -123,6 +134,22 @@ function App({
                         data: message.data.currentAnalysisDatabase
                     })
                 };
+            } else {
+                // This section mostly included for unit testing
+                console.log("Worker was not available. Starting synchronous analysis");
+                // Do it synchronously
+
+                function reportBack(currentAnalysisDatabase) {
+                    // console.log("answer from worker", message);
+
+                    dispatchAnalysisDatabase({
+                        type: 'ADD_ANALYSIS',
+                        data: currentAnalysisDatabase
+                    })
+                }
+
+                analyzeGames({data: payload}, reportBack, reportBack)
+
             }
         },
         // These effect array items chosen on purpose
