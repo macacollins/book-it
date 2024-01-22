@@ -1,6 +1,4 @@
 
-const {}
-
 export async function setItemDexie(key, value) {
     // console.log("setItemDexie mock called");
 
@@ -12,5 +10,3 @@ export async function getItemDexie(key) {
 
     return Promise.resolve([]);
 }
-
-export function setMockItems

@@ -16,8 +16,6 @@ const Arrow = ({fromX, fromY, destX, destY, color = 'red', hidden = false}) => {
                   x1={targetX1} y1={targetY1} x2={targetX2} y2={targetY2}></line>
         </g>
     </g>
-
-    // return <g><g><line id="test-id" stroke="#15781B" stroke-width="0.15625" stroke-linecap="round" marker-end="url(#arrowhead-g)" opacity="1" d={"M -0.5 2.5 L -0.5 0.65625 z"}></line></g></g>
 };
 
 export default Arrow
