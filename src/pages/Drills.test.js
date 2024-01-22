@@ -27,11 +27,10 @@ beforeAll(() => {
 // Canary Test
 test('Renders Lichess Analysis button', async () => {
     await act(() => {
-        console.log(render(<Drills games={defaultGames} analysisDatabase={analysisDatabase} />));
+        render(<Drills games={defaultGames} analysisDatabase={analysisDatabase} />);
     });
 
     const linkElement = screen.getByText(/Lichess Analysis/i);
     expect(linkElement).toBeInTheDocument();
-
 });
 
