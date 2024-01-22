@@ -28,7 +28,10 @@ jobs:
         node-version: ${{ matrix.node-version }}
 
     - name: Run Unit Tests
-      run: npm test -- --coverage --watchAll
+      run: |
+        npm test -- --coverage --watchAll
+        npm install --save-dev react-dev-utils
+
 
     - name: Build
       run: |
