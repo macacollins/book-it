@@ -1,7 +1,7 @@
 export function calculateAdvice(analysis) {
     // TODO consider dynamically calculating this at display time
     if (analysis.foundIntersection) {
-        if (analysis.you_left_book) {
+        if (analysis.youLeftBook) {
             return "You left book on this one. Study the lines from the repertoire."
         } else {
             return "They left book. Consider analyzing the move to get an idea of how to play against it."

@@ -21,10 +21,10 @@ export default async function analyzeGames(message, inProgressListener, finalLis
 
         // You can use the commented out code below to time the analysis
         // console.time("calculateAnalysis")
-        let value = calculateAnalysis(currentAnalysisDatabase, repertoire, game, playerName);
+        let analysis = calculateAnalysis(currentAnalysisDatabase, repertoire, game, playerName);
         // console.timeEnd("calculateAnalysis")
 
-        currentAnalysisDatabase[game.url] = value;
+        currentAnalysisDatabase[game.url] = analysis;
 
         // Every few items, post back the progress so the UI can use it
         if (i > 0 && i % 10 === 0) {

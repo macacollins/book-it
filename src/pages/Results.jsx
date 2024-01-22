@@ -29,12 +29,12 @@ export default function Results({
         games.filter(game => {
             if (currentOpeningFilter === "") {
                 if (userLeftBookOnly) {
-                    return analysisDatabase[game.url] && analysisDatabase[game.url].you_left_book
+                    return analysisDatabase[game.url] && analysisDatabase[game.url].youLeftBook
                 }
                 return true;
             } else if (analysisDatabase[game.url] && currentOpeningFilter === analysisDatabase[game.url].openingFamily) {
                 if (userLeftBookOnly) {
-                    return analysisDatabase[game.url] && analysisDatabase[game.url].you_left_book
+                    return analysisDatabase[game.url] && analysisDatabase[game.url].youLeftBook
                 }
                 return true;
             } else {

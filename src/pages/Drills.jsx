@@ -13,7 +13,7 @@ export default function Drills({games = [], analysisDatabase}) {
 
     const filteredGames = games && games.filter &&
         games.filter(nextGame => {
-            return analysisDatabase[nextGame.url] && analysisDatabase[nextGame.url].you_left_book && analysisDatabase[nextGame.url].foundIntersection
+            return analysisDatabase[nextGame.url] && analysisDatabase[nextGame.url].youLeftBook && analysisDatabase[nextGame.url].foundIntersection
         })
 
     const nextGame =

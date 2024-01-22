@@ -1,3 +1,5 @@
+
+
 export default function generateArrowConfig(move_made, invert_board, color) {
     let [fromX, fromY] = squareToCoordinates(move_made.from);
     let [toX, toY] = squareToCoordinates(move_made.to);

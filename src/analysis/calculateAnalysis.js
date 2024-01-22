@@ -37,10 +37,9 @@ function calculateAnalysis(analysisDatabase, repertoire, game, playerName) {
     const chessGameDisplay = calculateFinalPosition(lastFEN, analysis.foundIntersection, game);
 
     analysis.result = mainChessGame.header().Result
-    analysis.fen_at_departure = chessGameDisplay.fen();
 
     // This is tricky, you left book if you were playing the color whose turn it was on departure
-    analysis.you_left_book =
+    analysis.youLeftBook =
         analysis.foundIntersection && (
             chessGameDisplay.turn() === "w" ?
                 mainChessGame.header().White === playerName :
