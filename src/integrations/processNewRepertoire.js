@@ -61,8 +61,7 @@ export default function processNewRepertoire(fileContents, {
         }
 
     }
-    console.log("new repertoire name field is ", newRepertoireNameField);
-    console.log("Setting current repertoire");
+    console.log("Setting current repertoire to new repertoire ", newRepertoireNameField);
 
     // Add the repertoire to the repertoire map
     // "Repertoire" here is the fenRepo mapping of position -> list of moves in the repertoire

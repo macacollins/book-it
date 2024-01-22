@@ -36,7 +36,7 @@ const FileUpload = ({
     }
 
     return <form>
-        <label for="fileInput">Choose a file below.</label>
+        <label htmlFor="fileInput">Choose a file below.</label>
         <br></br>
         <input type="file" id="fileInput" name="fileInput" onChange={handleFile}></input>
     </form>

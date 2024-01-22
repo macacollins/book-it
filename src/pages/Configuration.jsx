@@ -32,7 +32,7 @@ function ConfigPage({
                 "touch-target": "wrapper"
             };
 
-            return <div class="radio-label">
+            return <div className="radio-label" key={repertoireName}>
                 <md-radio
                     aria-label={repertoireName}
                     onClick={() => {
@@ -44,20 +44,20 @@ function ConfigPage({
                     name="with-labels"
                     {...props}>
                 </md-radio>
-                <label for="default-lines-radio">{repertoireName}</label>
+                <label htmlFor="default-lines-radio">{repertoireName}</label>
             </div>
         })
 
-    let resetGamesButton = <>
+    let resetGamesButton = <div key={"reset-games-button"}>
         <p> Current Games: {games.length}</p>
         <md-filled-button className={"drill-button"} onClick={() => {
             setGames([]);
             setItemDexie("games", []);
         }}>Reset Games
         </md-filled-button>
-    </>;
+    </div>;
 
-    let resetAnalysisDatabase = <>
+    let resetAnalysisDatabase = <div key={"reset-analysis-button"}>
         <p> Current Analysis Items: {typeof analysisDatabase === 'object' ? Object.keys(analysisDatabase).length : "Not initialized"}</p>
         <md-filled-button className={"drill-button"} onClick={() => {
 
@@ -66,10 +66,10 @@ function ConfigPage({
 
         }}>Reset Analysis Database
         </md-filled-button>
-    </>
+    </div>
 
     let resetRepertoires =
-        <>
+        <div key={"reset-repertoires-button"}>
             <p> Current Repertoires: {repertoireList.length}</p>
             <md-filled-button className={"drill-button"} onClick={() => {
 
@@ -85,7 +85,7 @@ function ConfigPage({
 
             }}>Reset Repertoires
             </md-filled-button>
-        </>
+        </div>
 
     let buttons = [resetGamesButton, resetAnalysisDatabase, resetRepertoires];
 
@@ -106,7 +106,7 @@ function ConfigPage({
         </md-outlined-text-field>
 
         <h3>Repertoire</h3>
-        <div class="column" role="radiogroup" aria-label="Repertoire">
+        <div className="column" role="radiogroup" aria-label="Repertoire">
             {checkboxItems}
         </div>
 

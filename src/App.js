@@ -92,7 +92,12 @@ function App({
 
     // If the repertoire or games change, start performing analysis on the games
     useEffect(() => {
-            console.log("Calculating analysis");
+            if (!repertoireChoice) {
+                // Nothing to do here
+                return;
+            }
+
+            console.log("Calculating analysis for repertoire", repertoireChoice);
 
             let currentRepertoire = repertoire[repertoireChoice];
 
@@ -119,8 +124,6 @@ function App({
                     })
                 };
             }
-
-
         },
         // These effect array items chosen on purpose
         // eslint-disable-next-line
