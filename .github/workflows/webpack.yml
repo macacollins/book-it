@@ -29,8 +29,8 @@ jobs:
 
     - name: Run Unit Tests
       run: |
-        npm test -- --coverage --watchAll
         npm install --save-dev react-dev-utils
+        npm test -- --coverage --watchAll
 
 
     - name: Build
