@@ -21,6 +21,7 @@ beforeAll(() => {
     console.log("Result was ", analysis);
 });
 
+
 test('Result is correct', () => {
     expect(analysis.result).toEqual("1-0");
 });

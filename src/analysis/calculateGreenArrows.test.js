@@ -8,6 +8,7 @@ test('Result length is correct', () => {
     expect(greenArrows.length).toEqual(3);
 });
 
+
 test('Error handling is ok (drop invalid moves)', () => {
 
     console.log("About to attempt illegal move a6 from start position. Expecting it to log an exception")

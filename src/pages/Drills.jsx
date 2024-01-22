@@ -5,6 +5,7 @@ import ChessBoard from '../components/ChessBoard';
 import {Chess} from 'chess.js';
 
 
+
 export default function Drills({games = [], analysisDatabase}) {
     const [currentDrillIndex, setCurrentDrillIndex] = useState(0);
     const [currentDrillResult, setCurrentDrillResult] = useState("");
@@ -24,6 +25,9 @@ export default function Drills({games = [], analysisDatabase}) {
 
     let drillBoard = '';
     let drillCurrentDisplay = ''
+
+
+    console.log("Next game", nextGame);
     if (nextGame && nextGame.url) {
 
         const drillAnalysisResult = analysisDatabase[nextGame.url];

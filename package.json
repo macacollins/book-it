@@ -101,7 +101,8 @@
       "scripts"
     ],
     "collectCoverageFrom": [
-      "<rootDir>/src/**"
+      "src/**",
+      "!src/index.js"
     ],
     "testEnvironment": "jsdom",
     "collectCoverage": true,
