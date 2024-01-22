@@ -30,8 +30,7 @@ jobs:
     - name: Run Unit Tests
       run: |
         npm install --save-dev react-dev-utils
-        npm test -- --coverage --watchAll
-
+        npm test -- --coverage
 
     - name: Build
       run: |
