@@ -58,10 +58,6 @@ if (process.env.HOST) {
   console.log(
     `If this was unintentional, check that you haven't mistakenly set it in your shell.`
   );
-  console.log(
-    `Learn more here: ${chalk.yellow('https://cra.link/advanced-config')}`
-  );
-  console.log();
 }
 
 // We require that you explicitly set browsers and do not fall back to
