@@ -1,12 +1,16 @@
 
+const {}
+
 export async function setItemDexie(key, value) {
-    console.log("Default thing called");
+    // console.log("setItemDexie mock called");
 
     return Promise.resolve();
 }
 
 export async function getItemDexie(key) {
-    console.log("Default thing called");
+    // console.log("getItemDexie thing called");
 
     return Promise.resolve([]);
 }
+
+export function setMockItems

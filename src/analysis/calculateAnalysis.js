@@ -1,106 +1,117 @@
 import {Chess} from 'chess.js'
 
+import getOpeningFamily from './getOpeningFamily';
+
+import generateArrowConfig from './generateArrowConfig'
+
+// Calculate analysis:
+// - Who left the repertoire, you or the opponent?
+// - What was the position (in FEN) when the game left the repertoire?
+// - Which arrows should we show to the user?
+//   - Green if it is a repertoire move
+//   - Red if it is the move that was played
+// - What chess opening was used in this game?
+// - Also cache chess.com headers and URL
 function calculateAnalysis(analysisDatabase, repertoire, game, playerName) {
 
+    // If we already have the game analyzed, just return
     if (analysisDatabase[game.url]) {
-        // skip for now.r We can consider reworking this system when lines are more dynamically updated.
+        // skip for now. We can consider reworking this system when analysis is dynamically updated.
         // console.log(`Found analysis for ${game.url}`);
         return analysisDatabase
     }
 
     // console.log(`calculating analysis for ${game.url}`);
-
     //console.log(game.pgn);
     //console.log(new Chess());
     // this is single analysis for one game
     const analysis = {arrows: [], notes: "No notes found."}
-    let chess_game = new Chess();
-    chess_game.loadPgn(game.pgn);
 
-    // TODO unhardcode
-    let invert_board = chess_game.header().Black === playerName;
+    // Load the PGN for the game into Chess.js so we can manipulate it in JavaScript
+    let mainChessGame = new Chess();
+    mainChessGame.loadPgn(game.pgn);
 
+    // For this application, we will invert the board if the player had the black pieces
+    let invert_board = mainChessGame.header().Black === playerName;
+
+    // This variable tracks whether lines from the repertoire were found at all in the game
     let foundIntersection = false;
 
+    // This variable holds a list of the next moves from the repertoire
+    let repertoireMoves = [];
 
-    let last_moves = [];
+    // This variable tracks the index of the last move from the repertoire
     let finalMoveIndex = 0;
 
     let chess_game_step_by_step = new Chess();
     let checkFurther = false;
 
-    let last_fen = '';
+    let lastFEN = '';
 
     // don't recompute lines
     const gameCache = {};
 
-    // attempt to rewind to last theory spot
-    for (let i = 0; i < chess_game.history().length; i++) {
+    // Play moves until you find a position that's not in the repertoire
+    for (let index = 0; index < mainChessGame.history().length; index++) {
 
-        last_fen = chess_game_step_by_step.fen();
-        let move_made = chess_game_step_by_step.move(chess_game.history()[i]);
+        // Save the last FEN so that we can display it later
+        lastFEN = chess_game_step_by_step.fen();
+        // Get a chess.com move that we can add a red arrow for it later
+        let move_made = chess_game_step_by_step.move(mainChessGame.history()[index]);
 
         let fen = chess_game_step_by_step.fen();
 
+        // If the position was in the repertoire, mark that we found a position in it
         if (repertoire[fen]) {
             // recognized at least one
             checkFurther = true;
         }
+        // If we matched once, but don't match the current position, we have left the repertoire
+        // Save the position details, add the arrows, etc. and break from the loop
         if (checkFurther && !repertoire[fen]) {
             //console.log("Couldn't find ", chess_game_step_by_step.ascii())
-            let lines = repertoire[last_fen] || [];
-            finalMoveIndex = i;
+            let lines = repertoire[lastFEN] || [];
+            finalMoveIndex = index;
 
             //console.log("Lines are", lines);
-            let next_moves = lines.map(line => {
-                let maybeMove;
+            let movesFromRepertoire = lines.map(line => {
+                // This variable gets the rest of the moves from the line after the current position
+                let maybeMoves;
 
                 if (gameCache[line]) {
 
-                    maybeMove = gameCache[line];
-                    maybeMove = maybeMove.history().slice(i, i + 1);
+                    let cachedGame = gameCache[line];
+                    maybeMoves = cachedGame.history().slice(index, index + 1);
 
                 } else {
-                    maybeMove = new Chess();
-                    maybeMove.loadPgn(line)
+                    let tempGame = new Chess();
+                    tempGame.loadPgn(line)
 
-                    gameCache[line] = maybeMove;
+                    // Cache the chess.com game in memory to avoid re-calculation
+                    gameCache[line] = tempGame;
 
-                    maybeMove = maybeMove.history().slice(i, i + 1);
+                    maybeMoves = tempGame.history().slice(index, index + 1);
                 }
 
-                if (maybeMove && maybeMove.length > 0) {
+                if (maybeMoves && maybeMoves.length > 0) {
                     // console.log("")
-                    return maybeMove[0];
+                    return maybeMoves[0];
                 } else {
+                    // If there was not another move for whatever reason
                     return "oops"
                 }
             });
 
-
-            last_moves = [...(next_moves.filter(moveName => moveName !== "oops"))];
+            // Take out any "oops" that may have gotten in
+            // TODO refactor this code so that this is not necessary
+            repertoireMoves = [...(movesFromRepertoire.filter(moveName => moveName !== "oops"))];
 
             foundIntersection = true;
             analysis.foundIntersection = true;
-
-            let [fromX, fromY] = square_to_coordinates(move_made.from);
-            let [toX, toY] = square_to_coordinates(move_made.to);
-
             analysis.invert_board = invert_board;
-            if (invert_board) {
-                toY = 9 - toY;
-                fromY = 9 - fromY;
-                toX = 9 - toX;
-                fromX = 9 - fromX;
-            }
 
-            let arrowConfig = {
-                color: "red",
-                fromX, fromY,
-                destX: toX,
-                destY: toY,
-                san: move_made.san
-            }
+            // This next section adds a red arrow for the move that left book
+            let arrowConfig = generateArrowConfig(move_made, invert_board, "red");
 
             analysis.arrows.push(arrowConfig)
 
@@ -109,68 +120,60 @@ function calculateAnalysis(analysisDatabase, repertoire, game, playerName) {
     }
 
     if (foundIntersection) {
-        last_moves = [...new Set(last_moves)];
+        // De-duplicate to avoid duplicate arrows
+        repertoireMoves = [...new Set(repertoireMoves)];
     }
 
-    last_moves.forEach(last_move => {
-        let cloned_game = new Chess(last_fen);
+    // Add arrows for each of the repertoire moves
+    repertoireMoves.forEach(lastMove => {
+        // Create a chess.com game at the position from the last FEN
+        let clonedGame = new Chess(lastFEN);
 
         let move;
         try {
-            move = cloned_game.move(last_move);
+            // Get a chess.js move so that we can generate an arrow configuration
+            move = clonedGame.move(lastMove);
         } catch (e) {
             console.log("e", e);
-            console.log(last_move);
-            console.log(cloned_game.ascii());
+            console.log(lastMove);
+            console.log(clonedGame.ascii());
             return '';
         }
 
         // console.log("Got a move:", move);
 
-        let [fromX, fromY] = square_to_coordinates(move.from);
-        let [toX, toY] = square_to_coordinates(move.to);
-
-        if (invert_board) {
-            toY = 9 - toY;
-            fromY = 9 - fromY;
-            toX = 9 - toX;
-            fromX = 9 - fromX;
-        }
-
-        const arrowConfig = {
-            color: "green",
-            fromX,
-            fromY,
-            destX: toX,
-            destY: toY,
-            moveSan: move.san
-        }
+        let arrowConfig = generateArrowConfig(move, invert_board, "green")
 
         analysis.arrows.push(arrowConfig);
     });
 
     // console.time("new Chess(last_fen)")
-    let chess_game_display = new Chess(last_fen);
+    let chessGameDisplay = new Chess(lastFEN);
     // console.timeEnd("new Chess(last_fen)")
 
+    // If there was no intersection, store the last position of the game
+    // TODO consider showing the position after move 5
     if (!foundIntersection) {
-        chess_game_display.loadPgn(game.pgn)
+        chessGameDisplay.loadPgn(game.pgn)
         //console.log("No intersection, loaded pgn instead");
-        last_fen = game.pgn
+        lastFEN = game.pgn
     }
 
     let advice = 'No advice found.';
 
-    analysis.result = chess_game.header().Result
+    analysis.result = mainChessGame.header().Result
 
     analysis.finalMoveIndex = finalMoveIndex;
-    analysis.fen_at_departure = chess_game_display.fen();
+    analysis.fen_at_departure = chessGameDisplay.fen();
+
+    // This is tricky, you left book if you were playing the color whose turn it was on departure
     analysis.you_left_book =
         foundIntersection && (
-            chess_game_display.turn() === "w" ?
-                chess_game.header().White === playerName :
-                chess_game.header().Black === playerName);
+            chessGameDisplay.turn() === "w" ?
+                mainChessGame.header().White === playerName :
+                mainChessGame.header().Black === playerName);
 
+    // TODO consider dynamically calculating this at display time
     if (foundIntersection) {
         if (analysis.you_left_book) {
             advice = "You left book on this one. Study the lines from the repertoire."
@@ -185,36 +188,23 @@ function calculateAnalysis(analysisDatabase, repertoire, game, playerName) {
     // console.log(game);
 
     analysis.advice = advice;
-    analysis.displayFEN = chess_game_display.fen();
+    analysis.displayFEN = chessGameDisplay.fen();
 
-    analysis.headers = chess_game.header();
+    analysis.headers = mainChessGame.header();
 
     const path = new URL(analysis.headers.ECOUrl).pathname;
     // Get the last path segment and replace hyphens with spaces
     const openingName = path.split('/').pop().replace(/-/g, ' ').replace(/[0-9].*/g, '');
 
-    analysis.openingFamily = openingName;
+    // analysis.openingFamily = openingName;
+
+    analysis.openingFamily = getOpeningFamily(openingName)
 
     // console.log("Got analysis", analysis)
 
     analysisDatabase[game.url] = analysis;
 
     return analysis;
-}
-
-
-function square_to_coordinates(inputString) {
-    // Check if the input string is valid
-
-    // Extract letter and number
-    const letter = inputString.charAt(0);
-    const number = parseInt(inputString.charAt(1));
-
-    // Calculate the index of the letter (a=1, b=2, ..., h=8)
-    const letterIndex = letter.charCodeAt(0) - 'a'.charCodeAt(0) + 1;
-
-    // Return a list with the calculated values
-    return [letterIndex, number];
 }
 
 export default calculateAnalysis;

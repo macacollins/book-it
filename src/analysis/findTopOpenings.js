@@ -13,7 +13,6 @@ export default function findTopOpenings(games, analysisDatabase) {
         }
     })
 
-
     let openingList = [];
     Object.keys(openingsCounts).forEach(key => {
         openingList.push({opening: key, count: openingsCounts[key]});
