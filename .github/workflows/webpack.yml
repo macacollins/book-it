@@ -32,7 +32,7 @@ jobs:
     - name: Run Unit Tests
       run: |
         npm install --save-dev react-dev-utils
-        npm test -- --coverage -r json-summary
+        npm test -- --coverage
         
     - name: Update Coverage Badge
       # GitHub actions: default branch variable
