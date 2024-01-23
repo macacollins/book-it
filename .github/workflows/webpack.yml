@@ -46,7 +46,7 @@ jobs:
         npm i -g badgen-cli
         export COV=$(node -p 't=require(`./coverage/coverage-summary.json`).total,Math.min(...`lines|statements|functions|branches`.split(`|`).map(k=>t[k].pct))')
         COLOR=$(node -p '+process.env.COV >= 95 ? `green` : `orange`')
-        badgen -j coverage -s $COV% -c $COLOR > build/coverage.svg
+        badgen -j "Test Coverage" -s $COV% -c $COLOR > build/coverage.svg
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
