@@ -5,7 +5,6 @@ import ChessBoard from '../components/ChessBoard';
 import {Chess} from 'chess.js';
 
 
-
 export default function Drills({games = [], analysisDatabase}) {
     const [currentDrillIndex, setCurrentDrillIndex] = useState(0);
     const [currentDrillResult, setCurrentDrillResult] = useState("");
@@ -57,7 +56,7 @@ export default function Drills({games = [], analysisDatabase}) {
                                         drillAnalysisResult
                                             .arrows
                                             .filter(arrow => arrow.color === "green")
-                                            .filter(arrow => arrow.moveSan === move.san);
+                                            .filter(arrow => arrow.san === move.san);
 
                                     if (filtered.length > 0) {
                                         console.log("Success, " + move.san + " was the right move.");
@@ -73,13 +72,18 @@ export default function Drills({games = [], analysisDatabase}) {
                 </div>
                 {/*<p><a href={"https://lichess.org/opening/" + openingName}>{drillAnalysisResult.headers.ECO} {openingName}</a></p>*/}
                 <div className="buttonlist">
-                    <md-text-button onClick={() => window.open(drillAnalysisResult.headers.Link)}>Chess.com
+                    <md-text-button
+                        data-testid={"chess-dot-com-button"}
+                        onClick={() => window.open(drillAnalysisResult.headers.Link)}>
+                        Chess.com
                     </md-text-button>
                     <md-text-button
-                        onClick={() => window.open('https://lichess.org/analysis/' + drillAnalysisResult.displayFEN)}>Lichess
-                        Analysis
+                        data-testid={"lichess-button"}
+                        onClick={() => window.open('https://lichess.org/analysis/' + drillAnalysisResult.displayFEN)}>
+                        Lichess Analysis
                     </md-text-button>
                     <md-text-button
+                        data-testid={"chessable-button"}
                         onClick={() => window.open('https://www.chessable.com/courses/fen/' + drillAnalysisResult.displayFEN)}>Chessable
                         Course Search
                     </md-text-button>
@@ -94,7 +98,9 @@ export default function Drills({games = [], analysisDatabase}) {
         if (currentDrillResult === "Failure") {
             drillCurrentDisplay = <>
                 <p style={{"line-height": "36px"}}>{"Oops, better study on this one."}
-                    <md-filled-button onClick={() => {
+                    <md-filled-button
+                        data-testid={"next-button"}
+                        onClick={() => {
                         setCurrentDrillIndex(currentDrillIndex + 1);
                         setCurrentDrillResult(undefined);
                         madeMove.current = false;
@@ -106,11 +112,15 @@ export default function Drills({games = [], analysisDatabase}) {
         } else if (currentDrillResult === "Success") {
             drillCurrentDisplay = <>
                 <p style={{"line-height": "36px"}}>{"Congrats, you did it!"}
-                    <md-filled-button className={"drill-button"} onClick={() => {
-                        setCurrentDrillIndex(currentDrillIndex + 1);
-                        setCurrentDrillResult(undefined);
-                        madeMove.current = false;
-                    }}>Next
+                    <md-filled-button
+                        data-testid={"next-button"}
+                        className={"drill-button"}
+                        onClick={() => {
+                            setCurrentDrillIndex(currentDrillIndex + 1);
+                            setCurrentDrillResult(undefined);
+                            madeMove.current = false;
+                        }}>
+                        Next
 
                     </md-filled-button>
                 </p>

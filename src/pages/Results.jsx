@@ -25,7 +25,7 @@ export default function Results({
     const [currentOpeningFilter, setCurrentOpeningFilter] = useState("");
 
 
-    let filteredGames = games && games.filter &&
+    let filteredGames = games && games.filter ?
         games.filter(game => {
             if (currentOpeningFilter === "") {
                 if (userLeftBookOnly) {
@@ -40,23 +40,28 @@ export default function Results({
             } else {
                 return false
             }
-        });
+        }) : [];
 
     let listItems = filteredGames.map(singleGame => {
-        if (singleGame) {
-            return <AnalysisResult game={singleGame} analysisDatabase={analysisDatabase}></AnalysisResult>
-        } else {
-            return "No game found"
-        }
-    }) || [];
+        return <AnalysisResult game={singleGame} analysisDatabase={analysisDatabase}></AnalysisResult>
+    });
 
-    const filteredGamesLength = listItems.length
+    const filteredGamesLength = listItems.length;
 
+    const topOpeningsFilteredList = games && games.filter ?
+        games.filter(game => {
+            if (userLeftBookOnly) {
+                return analysisDatabase[game.url] && analysisDatabase[game.url].youLeftBook
+            }
+            return true;
+        }) : [];
 
-    let topOpenings = findTopOpenings(filteredGames || [], analysisDatabase).slice(0, 14);
+    let topOpenings = findTopOpenings(topOpeningsFilteredList, analysisDatabase).slice(0, 14);
 
     let openingFilters = topOpenings.map(({opening, count}) =>
-        <md-select-option value={opening}
+        <md-select-option  data-testid={`opening-${opening}`}
+                           key={opening}
+                          value={opening}
                           onClick={() => {
                               setCurrentOpeningFilter(opening)
                           }}>
@@ -65,15 +70,17 @@ export default function Results({
     );
 
     openingFilters.push(
-        <md-select-option onClick={() => {
+        <md-select-option data-testid={`clear-opening-filter`} key="clear" value={''} onClick={() => {
             setCurrentOpeningFilter('')
         }}>
             Clear Opening Filter
         </md-select-option>)
 
-    openingFilters = <><h3>Opening Filter</h3><md-outlined-select>
-        {openingFilters}
-    </md-outlined-select></>
+    openingFilters = <><h3>Opening Filter</h3>
+        <md-outlined-select>
+            {openingFilters}
+        </md-outlined-select>
+    </>
 
     listItems = listItems.slice(indexOfFirstItem, indexOfFirstItem + itemsPerPage);
 
@@ -81,6 +88,7 @@ export default function Results({
 
     const leftBookCheckbox = userLeftBookOnly ?
         <md-checkbox
+            data-testid="leftBookCheckbox"
             checked={userLeftBookOnly}
             onClick={() => {
                 setCurrentPage(1);
@@ -90,6 +98,7 @@ export default function Results({
         </md-checkbox>
         :
         <md-checkbox
+            data-testid="leftBookCheckbox"
             onClick={() => {
                 setCurrentPage(1);
                 setUserLeftBookOnly(!userLeftBookOnly)
@@ -114,7 +123,7 @@ export default function Results({
                 const className = item === currentPage - 1 ? "currentPage" : '';
 
                 return item < numberPages ?
-                    <text-button key={item} onClick={() => setCurrentPage(item + 1)}  {...{"class": className}}>
+                    <text-button data-testid={`page-${item + 1}-button`} key={item} onClick={() => setCurrentPage(item + 1)}  {...{"class": className}}>
                         {item + 1}
                     </text-button>
                     : ''
@@ -124,7 +133,7 @@ export default function Results({
     // Show buttons for first and last pages
     if (currentPage > 5) {
         paginationButtons.unshift(
-            <text-button key="first" onClick={() => setCurrentPage(1)}>
+            <text-button data-testid={"first-page-button"} key="first" onClick={() => setCurrentPage(1)}>
                 First
             </text-button>
         );
@@ -132,7 +141,7 @@ export default function Results({
 
     if (currentPage < numberPages - 9) {
         paginationButtons.push(
-            <text-button key="last" onClick={() => setCurrentPage(numberPages)}>
+            <text-button data-testid={"last-page-button"} key="last" onClick={() => setCurrentPage(numberPages)}>
                 Last
             </text-button>
         );
@@ -150,12 +159,13 @@ export default function Results({
         {openingFilters}
         <br></br>
         <p>
-            <md-filled-button onClick={() => {
-                refreshGames(games, setGames, playerName)
-            }}>Refresh games
+            <md-filled-button data-testid="refreshGamesButton"
+                              onClick={() => {
+                                  refreshGames(games, setGames, playerName)
+                              }}>Refresh games
             </md-filled-button>
         </p>
-        <p>Found {filteredGamesLength} results.</p>
+        <p>{`Found ${filteredGamesLength} results.`}</p>
         {paginationSection}
         <md-list>
             {listItems}

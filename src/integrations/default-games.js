@@ -12,7 +12,7 @@ function createDefaultGame(pgn, whiteOrBlack) {
     if (whiteOrBlack === 'black') {
         return {
             "url":"https://www.chess.com/game/live/996745" + random5DigitNumber,
-            "pgn":"[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2020.03.15\"]\n[Round \"-\"]\n[White \"opponent\"]\n[Black \"example\"]\n[Result \"1-0\"]\n[CurrentPosition \"" + fen + "\"]\n[Timezone \"UTC\"]\n[ECO \"B10\"]\n[ECOUrl \"https://www.chess.com/openings/Queen's+Gambit+Declined\"]\n[UTCDate \"2020.03.15\"]\n[UTCTime \"14:59:58\"]\n[WhiteElo \"1000\"]\n[BlackElo \"912\"]\n[TimeControl \"300\"]\n[Termination \"opponent won on time\"]\n[StartTime \"14:59:58\"]\n[EndDate \"2020.03.15\"]\n[EndTime \"15:08:13\"]\n[Link \"https://www.chess.com/game/live/996" + random5DigitNumber + "821\"]\n\n" + pgn + " 1-0\n",
+            "pgn":"[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2020.03.15\"]\n[Round \"-\"]\n[White \"opponent\"]\n[Black \"example\"]\n[Result \"1-0\"]\n[CurrentPosition \"" + fen + "\"]\n[Timezone \"UTC\"]\n[ECO \"B10\"]\n[ECOUrl \"https://www.chess.com/openings/Queen's-Gambit-Accepted\"]\n[UTCDate \"2020.03.15\"]\n[UTCTime \"14:59:58\"]\n[WhiteElo \"1000\"]\n[BlackElo \"912\"]\n[TimeControl \"300\"]\n[Termination \"opponent won on time\"]\n[StartTime \"14:59:58\"]\n[EndDate \"2020.03.15\"]\n[EndTime \"15:08:13\"]\n[Link \"https://www.chess.com/game/live/996" + random5DigitNumber + "821\"]\n\n" + pgn + " 1-0\n",
             "time_control":"300",
             "end_time":1705936093,
             "rated":true,
@@ -36,7 +36,7 @@ function createDefaultGame(pgn, whiteOrBlack) {
     } else {
         return {
             "url":"https://www.chess.com/game/live/996745" + random5DigitNumber,
-            "pgn":"[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2020.03.15\"]\n[Round \"-\"]\n[White \"example\"]\n[Black \"opponent\"]\n[Result \"1-0\"]\n[CurrentPosition \"" + fen + "\"]\n[Timezone \"UTC\"]\n[ECO \"B10\"]\n[ECOUrl \"https://www.chess.com/openings/Queen's+Gambit+Declined\"]\n[UTCDate \"2020.03.15\"]\n[UTCTime \"14:59:58\"]\n[WhiteElo \"1000\"]\n[BlackElo \"912\"]\n[TimeControl \"300\"]\n[Termination \"opponent won on time\"]\n[StartTime \"14:59:58\"]\n[EndDate \"2020.03.15\"]\n[EndTime \"15:08:13\"]\n[Link \"https://www.chess.com/game/live/996" + random5DigitNumber + "821\"]\n\n" + pgn + " 1-0\n",
+            "pgn":"[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2020.03.15\"]\n[Round \"-\"]\n[White \"example\"]\n[Black \"opponent\"]\n[Result \"1-0\"]\n[CurrentPosition \"" + fen + "\"]\n[Timezone \"UTC\"]\n[ECO \"B10\"]\n[ECOUrl \"https://www.chess.com/openings/Queen's-Gambit-Declined\"]\n[UTCDate \"2020.03.15\"]\n[UTCTime \"14:59:58\"]\n[WhiteElo \"1000\"]\n[BlackElo \"912\"]\n[TimeControl \"300\"]\n[Termination \"opponent won on time\"]\n[StartTime \"14:59:58\"]\n[EndDate \"2020.03.15\"]\n[EndTime \"15:08:13\"]\n[Link \"https://www.chess.com/game/live/996" + random5DigitNumber + "821\"]\n\n" + pgn + " 1-0\n",
             "time_control":"300",
             "end_time":1705936093,
             "rated":true,

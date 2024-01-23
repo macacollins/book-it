@@ -34,6 +34,7 @@ function ConfigPage({
 
             return <div className="radio-label" key={repertoireName}>
                 <md-radio
+                    data-testid={"repertoireChoiceField" + repertoireName}
                     aria-label={repertoireName}
                     onClick={() => {
 
@@ -50,7 +51,7 @@ function ConfigPage({
 
     let resetGamesButton = <div key={"reset-games-button"}>
         <p> Current Games: {games.length}</p>
-        <md-filled-button className={"drill-button"} onClick={() => {
+        <md-filled-button data-testid={"reset-games-button"} className={"drill-button"} onClick={() => {
             setGames([]);
             setItemDexie("games", []);
         }}>Reset Games
@@ -59,7 +60,7 @@ function ConfigPage({
 
     let resetAnalysisDatabase = <div key={"reset-analysis-button"}>
         <p> Current Analysis Items: {typeof analysisDatabase === 'object' ? Object.keys(analysisDatabase).length : "Not initialized"}</p>
-        <md-filled-button className={"drill-button"} onClick={() => {
+        <md-filled-button data-testid={"reset-analysis-db-button"} className={"drill-button"} onClick={() => {
 
             dispatchAnalysisDatabase({type: 'RESET'});
             setItemDexie("analysisDatabase", {});
@@ -71,7 +72,7 @@ function ConfigPage({
     let resetRepertoires =
         <div key={"reset-repertoires-button"}>
             <p> Current Repertoires: {repertoireList.length}</p>
-            <md-filled-button className={"drill-button"} onClick={() => {
+            <md-filled-button data-testid={"reset-repertoires-button"} className={"drill-button"} onClick={() => {
 
                 setRepertoireChoice({});
                 setItemDexie("repertoireChoice", "");
@@ -97,9 +98,11 @@ function ConfigPage({
 
 
         <md-outlined-text-field
+            data-testid={"chess-dot-com-username"}
             label="chess.com Username"
             value={playerName}
             onInput={e => {
+                console.log(e);
                 setPlayerName(e.target.value);
                 setItemDexie("playerName", e.target.value);
             }}>
@@ -113,6 +116,7 @@ function ConfigPage({
         <h3>Upload New Lines</h3>
 
         <md-outlined-text-field
+            data-testid={"new-repertoire-name-field"}
             label="Repertoire Name"
             value={newRepertoireNameField}
 
@@ -132,21 +136,6 @@ function ConfigPage({
                 repertoireList,
                 setRepertoireList
             }}> </FileUpload>
-
-        <h3>Settings</h3>
-
-        <label>
-            Show lines that have at least this many matching moves
-        </label>
-        <md-outlined-text-field
-            label="Matching Moves"
-            value={matchingMoves}
-            type="number"
-            onInput={e => {
-                setMatchingMoves(e.target.value);
-                setItemDexie("matchingMoves", e.target.value);
-            }}>
-        </md-outlined-text-field>
 
         <h3>Clear Data</h3>
         {buttons}
