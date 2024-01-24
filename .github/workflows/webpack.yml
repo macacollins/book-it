@@ -12,7 +12,6 @@ permissions:
   id-token: write
 
 
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -32,8 +31,7 @@ jobs:
     - name: Run Unit Tests
       run: |
         npm install --save-dev react-dev-utils
-        npm test -- --coverage --coverageReporters="json-summary" 
-
+        npm test -- --coverage --coverageReporters=["text", "json-summary"] 
 
     - name: Build
       run: |
@@ -44,7 +42,7 @@ jobs:
       shell: bash
       run: |
         npm i -g badgen-cli
-        export COV=$(node -p 't=require(`./coverage/coverage-summary.json`).total,Math.min(...`lines|statements|functions|branches`.split(`|`).map(k=>t[k].pct))')
+        export COV=$(node -p 't=require(`./coverage/coverage-summary.json`).total,Math.min(...`lines`.split(`|`).map(k=>t[k].pct))')
         COLOR=$(node -p '+process.env.COV >= 95 ? `green` : `orange`')
         badgen -j "Test Coverage" -s $COV% -c $COLOR > build/coverage.svg
 
@@ -53,6 +51,7 @@ jobs:
       with:
           # Upload build folder only
           path: 'build'
+
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4

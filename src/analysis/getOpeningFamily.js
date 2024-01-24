@@ -50,6 +50,9 @@ const alternates = {
     "Caro-Kann Defense" : [
         "Caro Kann"
     ],
+    "Queen's Gambit Declined" : [
+        "Queens Gambit Declined"
+    ],
     "Réti Opening" : [
         "Reti"
     ],
