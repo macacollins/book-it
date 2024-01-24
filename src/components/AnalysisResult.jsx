@@ -20,16 +20,13 @@ const AnalysisResult = ({analysisDatabase, game, nameOverride = "my-name"}) => {
     let analysis = analysisDatabase[game.url];
 
     if (!analysis) {
-        return <md-list-item>
+        return <md-list-item key={game.url}>
             <div slot="headline">
                 Loading Analysis for game
                 {game.url}
             </div>
         </md-list-item>
     }
-
-    console.log("Got analysis", analysis);
-
 
     let arrows = analysis.arrows.map(arrow => <Arrow {...arrow} ></Arrow>);
 
@@ -40,7 +37,7 @@ const AnalysisResult = ({analysisDatabase, game, nameOverride = "my-name"}) => {
 
     // console.log("Opening was", openingName);
 
-    return <md-list-item>
+    return <md-list-item key={game.url}>
         <div slot="headline">{analysis.headers.White}{' vs '}{analysis.headers.Black}{'\n'}
             {analysis.headers.Result}
         </div>

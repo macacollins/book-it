@@ -240,15 +240,16 @@ function App({
     return (
         <mio-root {...classProps}>
             <md-tabs
+                data-testid={"nav-tabs"}
                 id="nav-tabs"
                 aria-label="A custom themed tab bar">
-                <md-primary-tab id="tab-one" aria-controls="panel-one" {...oneActive}>
+                <md-primary-tab data-testid="configuration-tab" id="tab-one" aria-controls="panel-one" {...oneActive}>
                     Configuration
                 </md-primary-tab>
-                <md-primary-tab id="tab-two" aria-controls="panel-two" {...twoActive}>
+                <md-primary-tab data-testid="games-tab" id="tab-two" aria-controls="panel-two" {...twoActive}>
                     Games
                 </md-primary-tab>
-                <md-primary-tab id="tab-three" aria-controls="panel-three" {...threeActive}>
+                <md-primary-tab data-testid="drills-tab" id="tab-three" aria-controls="panel-three" {...threeActive}>
                     Drill
                 </md-primary-tab>
             </md-tabs>

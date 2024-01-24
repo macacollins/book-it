@@ -26,7 +26,7 @@ export default function Drills({games = [], analysisDatabase}) {
     let drillCurrentDisplay = ''
 
 
-    console.log("Next game", nextGame);
+    // console.log("Next game", nextGame);
     if (nextGame && nextGame.url) {
 
         const drillAnalysisResult = analysisDatabase[nextGame.url];

@@ -18,7 +18,7 @@ beforeAll(() => {
     let analysisDatabase = {};
 
     analysis = calculateAnalysis(analysisDatabase, repertoire, game, playerName);
-    console.log("Result was ", analysis);
+    // console.log("Result was ", analysis);
 });
 
 
