@@ -31,7 +31,7 @@ jobs:
     - name: Run Unit Tests
       run: |
         npm install --save-dev react-dev-utils
-        npm test -- --coverage --coverageReporters=["text", "json-summary"] 
+        npm test -- --coverage --coverageReporters="json-summary" 
 
     - name: Build
       run: |
