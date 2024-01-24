@@ -61,12 +61,11 @@ const AnalysisResult = ({analysisDatabase, game, nameOverride = "my-name"}) => {
                 <md-text-button
                     data-testid={"lichess-button"}
                     onClick={() => window.open('https://lichess.org/analysis/' + analysis.displayFEN)}>Lichess
-                    Analysis
+                    
                 </md-text-button>
                 <md-text-button
                     data-testid={"chessable-button"}
                     onClick={() => window.open('https://www.chessable.com/courses/fen/' + analysis.displayFEN)}>Chessable
-                    Course Search
                 </md-text-button>
                 <br></br>
 

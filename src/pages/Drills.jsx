@@ -80,12 +80,12 @@ export default function Drills({games = [], analysisDatabase}) {
                     <md-text-button
                         data-testid={"lichess-button"}
                         onClick={() => window.open('https://lichess.org/analysis/' + drillAnalysisResult.displayFEN)}>
-                        Lichess Analysis
+                        Lichess
                     </md-text-button>
                     <md-text-button
                         data-testid={"chessable-button"}
                         onClick={() => window.open('https://www.chessable.com/courses/fen/' + drillAnalysisResult.displayFEN)}>Chessable
-                        Course Search
+
                     </md-text-button>
                     <br></br>
 
