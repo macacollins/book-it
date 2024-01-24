@@ -101,7 +101,9 @@
     ],
     "collectCoverageFrom": [
       "src/**",
-      "!src/index.js"
+      "!src/index.js",
+      "!src/storage.js",
+      "!src/worker.js"
     ],
     "testEnvironment": "jsdom",
     "collectCoverage": true,

@@ -19,7 +19,7 @@ function calculateAnalysis(analysisDatabase, repertoire, game, playerName) {
     if (analysisDatabase[game.url]) {
         // skip for now. We can consider reworking this system when analysis is dynamically updated.
         // console.log(`Found analysis for ${game.url}`);
-        return analysisDatabase
+        return analysisDatabase[game.url]
     }
 
     // Load the PGN for the game into Chess.js so we can manipulate it in JavaScript

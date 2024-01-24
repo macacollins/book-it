@@ -11,7 +11,7 @@ const AnalysisResult = ({analysisDatabase, game, nameOverride = "my-name"}) => {
         return <md-list-item>
             <div slot="headline">
                 Loading Analysis for game
-                {game.url}
+                {game}
             </div>
         </md-list-item>
     }
@@ -27,6 +27,8 @@ const AnalysisResult = ({analysisDatabase, game, nameOverride = "my-name"}) => {
             </div>
         </md-list-item>
     }
+
+    console.log("Got analysis", analysis);
 
 
     let arrows = analysis.arrows.map(arrow => <Arrow {...arrow} ></Arrow>);

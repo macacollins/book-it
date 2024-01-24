@@ -38,7 +38,13 @@ const FileUpload = ({
     return <form>
         <label htmlFor="fileInput">Choose a file below.</label>
         <br></br>
-        <input type="file" id="fileInput" name="fileInput" onChange={handleFile}></input>
+        <input
+            data-testid="repertoire-upload"
+            type="file"
+            id="fileInput"
+            name="fileInput"
+            onChange={handleFile}>
+        </input>
     </form>
 }
 

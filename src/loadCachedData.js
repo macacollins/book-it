@@ -17,10 +17,9 @@ async function loadCachedData() {
     let returnObject = {};
     for (let property of properties) {
         console.log("attempting to process", property)
-        if (await getItemDexie(property)) {
-            let gzipped =
-                await getItemDexie(property);
-            returnObject[property + "Storage"] = gzipped;
+        let value = await getItemDexie(property)
+        if (value) {
+            returnObject[property + "Storage"] = value;
         }
     }
 

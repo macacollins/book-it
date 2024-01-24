@@ -32,9 +32,6 @@ const ChessBoard = ({
                     return false;
                 }
 
-                // do not pick up pieces if the game is over
-                if (game.game_over) return false
-
                 // only pick up pieces for the side to move
                 if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
                     (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
@@ -65,11 +62,7 @@ const ChessBoard = ({
                     return 'snapback';
                 }
 
-                // illegal move
-                if (!move) return 'snapback'
-
                 moveCallback(move)
-
             }
 
             const config = {
@@ -90,10 +83,12 @@ const ChessBoard = ({
                     setTimeout(() => {
                         // console.log("Moving", moves);
 
-                        let singleMove = game.move(moves[0]);
                         // console.log("Trying singleMove", singleMove);
 
+                        let singleMove;
                         try {
+                            singleMove = game.move(moves[0]);
+
                             board.move(`${singleMove.from}-${singleMove.to}`);
                         } catch (e) {
                             console.log("Unable to make move", singleMove, " on board", game, e)
