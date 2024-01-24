@@ -1,7 +1,8 @@
 import Drawings from './Drawings';
-import {useEffect} from 'react';
+import {useEffect, useState} from 'react';
 
 import {Chess} from 'chess.js';
+import useWindowSize from '../hooks/useWindowSize';
 
 const ChessBoard = ({
                         name,
@@ -17,7 +18,12 @@ const ChessBoard = ({
                         }),
                         moves = []
                     }) => {
+
+    const [width, height] = useWindowSize();
+
     const finalID = name + game_url.replace(/[^a-zA-Z0-9]/g, '');
+
+    const [ board, setBoard ] = useState(undefined);
 
     // Initialize the board after the component mounts to the DOM
     useEffect(() => {
@@ -62,7 +68,7 @@ const ChessBoard = ({
                     return 'snapback';
                 }
 
-                moveCallback(move)
+                moveCallback(move);
             }
 
             const config = {
@@ -77,6 +83,8 @@ const ChessBoard = ({
             /*global Chessboard */
             // TODO fork and react-ify this library
             const board = Chessboard(finalID, config);
+
+            setBoard(board);
 
             function makeMoves(moves) {
                 if (moves.length) {
@@ -128,12 +136,27 @@ const ChessBoard = ({
         // eslint-disable-next-line
     }, [fen, finalID, invert]);
 
+    // Resize when the window changes width
+    useEffect(() => {
+        if (board) {
+            board.resize()
+        }
+    }, [ width ]);
+
     let drawings = <Drawings arrows={arrows}> </Drawings>
+
+    // let widthOfChessboard = width - 36;
+    let widthOfChessboard = Math.min(width - 36, 393);
+
+    let style = {
+        height: widthOfChessboard + "px",
+        width: widthOfChessboard + "px",
+    }
 
     return (
         <div className="side-by-side">
             {drawings}
-            <div id={finalID} style={{"height": "294px", "width": "294px"}}>
+            <div id={finalID} style={style}>
             </div>
         </div>
     );

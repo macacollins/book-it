@@ -10,6 +10,7 @@ const Arrow = ({fromX, fromY, destX, destY, color = 'red', hidden = false}) => {
 
     let opacity = hidden ? 0 : 1;
 
+
     return <g>
         <g>
             <line opacity={opacity} stroke={color} strokeWidth="0.15625" strokeLinecap="round" markerEnd={markerEnd}

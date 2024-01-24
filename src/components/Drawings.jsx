@@ -2,10 +2,27 @@
 // const Circle = ({x, y}) => {
 //     //return <g><circle stroke="#15781B" stroke-width="0.0625" fill="none" opacity="1" cx="-0.5" cy="2.5" r="0.46875"></circle></g></g>
 // }
+import useWindowSize from "../hooks/useWindowSize";
+
 const Drawings = ({arrows, circles}) => {
 
+    const [width, height] = useWindowSize();
+
+    let widthOfChessboard = Math.min(width - 36, 393);
+
+    let actualChessboardWidth =
+        widthOfChessboard % 8 === 0 ?
+            widthOfChessboard - 8 :
+            widthOfChessboard - (widthOfChessboard % 8);
+
+    let style = {
+        height: actualChessboardWidth + "px",
+        width: actualChessboardWidth + "px",
+        // border: "0px"
+    }
+
     return (
-        <svg className="cg-shapes" viewBox="-4 -4 8 8" preserveAspectRatio="xMidYMid slice">
+        <svg className="cg-shapes" style={style} viewBox="-4 -4 8 8" preserveAspectRatio="xMidYMid slice">
             <defs>
                 <filter id="cg-filter-blur">
                     <feGaussianBlur stdDeviation="0.019"></feGaussianBlur>

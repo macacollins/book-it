@@ -8,9 +8,6 @@ body {
 }
 
 
-
-
-
 h1, h2, h3, p, .text-field, label {
   padding: 5px;
   padding-left:10px;
@@ -35,17 +32,15 @@ md-filled-button.drill-button {
 
 .side-by-side {
     display: block;
-    margin-right: 10px;
+    /*margin-right: 10px;*/
 }
 .cg-shapes {
   pointer-events: none;
   z-index: 1;
   position: absolute;
-  height: 288px;
-  width: 288px;
   float: left;
 
-  border-width: 1.75px;
+  border-width: 2px;
   border-style: solid;
 }
 

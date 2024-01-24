@@ -39,7 +39,6 @@ import ConfigPage from './pages/Configuration';
 import Results from './pages/Results';
 import Drills from './pages/Drills';
 import processNewRepertoire from './integrations/processNewRepertoire';
-
 function App({
                  analysisDatabaseStorage,
                  repertoireStorage,
@@ -71,6 +70,7 @@ function App({
 
     // tab navigation
     const [activeTab, setActiveTab] = useState((typeof activeTabStorage === "string" && activeTabStorage) || "panel-one");
+
 
     // This effect initializes a new repertoire based on some common Queen's Gambit lines if none are found
     useEffect(() => {

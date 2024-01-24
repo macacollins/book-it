@@ -51,6 +51,7 @@ const AnalysisResult = ({analysisDatabase, game, nameOverride = "my-name"}) => {
                             game_url={game.url}
                             arrows={arrows}></ChessBoard>
             </div>
+            <br></br>
             <div className="buttonlist">
                 <md-text-button
                     data-testid={"chess-dot-com-button"}
@@ -70,8 +71,6 @@ const AnalysisResult = ({analysisDatabase, game, nameOverride = "my-name"}) => {
                 <br></br>
 
             </div>
-        </div>
-        <div slot="trailing-supporting-text">
         </div>
     </md-list-item>
 }
