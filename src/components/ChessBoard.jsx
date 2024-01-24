@@ -19,11 +19,11 @@ const ChessBoard = ({
                         moves = []
                     }) => {
 
-    const [width, height] = useWindowSize();
+    const width = useWindowSize()[0];
 
     const finalID = name + game_url.replace(/[^a-zA-Z0-9]/g, '');
 
-    const [ board, setBoard ] = useState(undefined);
+    const [board, setBoard] = useState(undefined);
 
     // Initialize the board after the component mounts to the DOM
     useEffect(() => {
@@ -138,10 +138,14 @@ const ChessBoard = ({
 
     // Resize when the window changes width
     useEffect(() => {
-        if (board) {
-            board.resize()
-        }
-    }, [ width ]);
+            if (board) {
+                board.resize()
+            }
+
+        },
+        // We don't care about the dependency on board; it won't be re-set with the current code
+        // eslint-disable-next-line
+        [width]);
 
     let drawings = <Drawings arrows={arrows}> </Drawings>
 

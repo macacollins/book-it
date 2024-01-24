@@ -6,7 +6,7 @@ import useWindowSize from "../hooks/useWindowSize";
 
 const Drawings = ({arrows, circles}) => {
 
-    const [width, height] = useWindowSize();
+    const width = useWindowSize()[0];
 
     let widthOfChessboard = Math.min(width - 36, 393);
 
