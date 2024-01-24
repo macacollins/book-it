@@ -99,6 +99,7 @@
     "testPathIgnorePatterns": [
       "scripts"
     ],
+
     "collectCoverageFrom": [
       "src/**",
       "!src/index.js",
@@ -111,7 +112,12 @@
       "global": {
         "lines": 95
       }
-    }
+    },
+    "coverageReporters": [
+      "lcov",
+      "text",
+      "json-summary"
+    ]
   },
   "babel": {
     "presets": [
