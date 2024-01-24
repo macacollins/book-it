@@ -8,7 +8,7 @@ Learn your chess openings with precisely targeted exercises based on your recent
 
 ## Import Custom Repertoires
 
-You can upload any set of lines you want to learn. Learning the London and the Caro? Prepare your PGN with the lines you want from those openings and you can use it with this site. 
+You can upload any set of lines you want to learn. Learning the Scandinavian Wombat Attack like everyone else? Prepare your PGN with the lines you want from that opening and you can use it with this site. 
 
 ## Review your games
 

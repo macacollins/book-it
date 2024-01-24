@@ -91,8 +91,6 @@ export default function Drills({games = [], analysisDatabase}) {
 
                 </div>
             </div>
-            <div slot="trailing-supporting-text">
-            </div>
         </md-list-item>
 
         if (currentDrillResult === "Failure") {
