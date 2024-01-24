@@ -29,6 +29,15 @@ beforeEach(() => {
     }
     global.open = jest.fn();
 
+    global.Chessboard = (_, config) => {
+        lastConfig = config;
+
+        return {
+            flip: jest.fn(),
+            move: jest.fn(),
+            position: jest.fn()
+        }
+    }
 });
 
 
