@@ -1,5 +1,3 @@
-import { render, screen } from '@testing-library/react';
-
 import calculateAnalysis from './calculateAnalysis';
 
 import defaultGames from '../integrations/default-games'

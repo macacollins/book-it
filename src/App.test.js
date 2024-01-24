@@ -94,3 +94,23 @@ test('Dark mode switch during app run', async () => {
   })
 
 });
+
+
+
+test('Mocked worker', async () => {
+
+  let postMessage = jest.fn();
+  let worker = { postMessage }
+
+  await act(() => {
+    render(<App worker={worker}/>);
+  });
+
+  expect(postMessage).toHaveBeenCalled();
+
+
+  await act(() => {
+    worker.onmessage({ data: {currentAnalysisDatabase: {}} });
+  });
+
+});
