@@ -28,7 +28,7 @@ const AnalysisResult = ({analysisDatabase, game, index, nameOverride = "my-name"
         </md-list-item>
     }
 
-    let arrows = analysis.arrows.map(arrow => <Arrow {...arrow} ></Arrow>);
+    let arrows = analysis.arrows.map(arrow => <Arrow {...{index, ...arrow}} ></Arrow>);
 
     const path = new URL(analysis.headers.ECOUrl).pathname;
 

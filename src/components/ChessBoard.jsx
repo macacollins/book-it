@@ -96,7 +96,8 @@ const ChessBoard = ({
                         try {
                             singleMove = game.move(moves[0]);
 
-                            board.move(`${singleMove.from}-${singleMove.to}`);
+                            // board.move(`${singleMove.from}-${singleMove.to}`);
+                            board.position(game.fen())
                         } catch (e) {
 
                             // This "shouldn't" ever happen
@@ -119,7 +120,6 @@ const ChessBoard = ({
             if (invert) {
                 board.flip();
             }
-
 
             // Turn off mobile scrolling behavior if they drag inside the board on mobile
             const domBoard = document.getElementById(finalID);

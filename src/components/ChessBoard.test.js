@@ -93,7 +93,6 @@ test('Default Parameter Values', async () => {
 
 });
 
-const delay = ms => new Promise(res => setTimeout(res, ms));
 test('Put some moves in', async () => {
     await act(() => {
         render(

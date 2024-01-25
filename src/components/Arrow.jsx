@@ -1,4 +1,4 @@
-const Arrow = ({fromX, fromY, destX, destY, color = 'red', hidden = false}) => {
+const Arrow = ({fromX, fromY, destX, destY, index= 0, color = 'red', hidden = false}) => {
 
     const targetX1 = fromX - 4.5;
     const targetX2 = destX - 4.5;
@@ -10,8 +10,10 @@ const Arrow = ({fromX, fromY, destX, destY, color = 'red', hidden = false}) => {
 
     let opacity = hidden ? 0 : 1;
 
+    let key = `${index}${fromX}${fromY}${destX}${destY}`;
+    console.log("Setting key to", key);
 
-    return <g key={`${fromX}${fromY}${destX}${destY}`}>
+    return <g key={key}>
             <line opacity={opacity} stroke={color} strokeWidth="0.15625" strokeLinecap="round" markerEnd={markerEnd}
                   x1={targetX1} y1={targetY1} x2={targetX2} y2={targetY2}></line>
         </g>

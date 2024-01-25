@@ -24,6 +24,7 @@ export default function Results({
 
     const [currentOpeningFilter, setCurrentOpeningFilter] = useState("");
 
+    console.log("Top of results render")
 
     let filteredGames = games && games.filter ?
         games.filter(game => {
@@ -42,11 +43,15 @@ export default function Results({
             }
         }) : [];
 
-    let listItems = filteredGames.map((singleGame, index) => {
+    // listItems = listItems;
+    let sliced = filteredGames.slice(indexOfFirstItem, indexOfFirstItem + itemsPerPage);
+
+    let listItems = sliced.map((singleGame, index) => {
+
         return <AnalysisResult game={singleGame} index={index} analysisDatabase={analysisDatabase}></AnalysisResult>
     });
 
-    const filteredGamesLength = listItems.length;
+    const filteredGamesLength = filteredGames.length;
 
     const topOpeningsFilteredList = games && games.filter ?
         games.filter(game => {
@@ -81,8 +86,6 @@ export default function Results({
             {openingFilters}
         </md-outlined-select>
     </>
-
-    listItems = listItems.slice(indexOfFirstItem, indexOfFirstItem + itemsPerPage);
 
     let numberPages = Math.ceil(filteredGamesLength / itemsPerPage)
 

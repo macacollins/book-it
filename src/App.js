@@ -52,6 +52,8 @@ function App({
                  activeTabStorage
              }) {
 
+    console.log("App render")
+
     // Declare main state of application
     // This includes data stored by the application such as the repertoire and player name
     // This application may be a better fit for useReducer due to all the state that we are passing around.
@@ -158,17 +160,20 @@ function App({
     )
 
     // Create the actual pages
-    const resultsPage = <Results {...{
-        games,
-        userLeftBookOnly,
-        setUserLeftBookOnly,
-        playerName,
-        repertoireChoice,
-        analysisDatabase,
-        setGames
-    }}></Results>;
+    const resultsPage = () => {
+        // console.log("Results page function called");
+        return <Results {...{
+            games,
+            userLeftBookOnly,
+            setUserLeftBookOnly,
+            playerName,
+            repertoireChoice,
+            analysisDatabase,
+            setGames
+        }}></Results>;
+    }
 
-    const configPage = <ConfigPage {...{
+    const configPage = () => <ConfigPage {...{
         playerName,
         setPlayerName,
         repertoireChoice,
@@ -187,7 +192,7 @@ function App({
         analysisDatabase
     }}/>
 
-    const drillPage = <Drills {...{games, analysisDatabase}}></Drills>
+    const drillPage = () => <Drills {...{games, analysisDatabase}}></Drills>
 
     // set up tab change listener
     useEffect(() => {
@@ -255,13 +260,13 @@ function App({
             </md-tabs>
 
             <div role="tabpanel" id="panel-one" aria-labelledby="tab-one" {...oneProps}>
-                {activeTab === "panel-one" ? configPage : ''}
+                {activeTab === "panel-one" ? configPage() : ''}
             </div>
             <div role="tabpanel" id="panel-two" aria-labelledby="tab-two" {...twoProps}>
-                {activeTab === "panel-two" ? resultsPage : ""}
+                {activeTab === "panel-two" ? resultsPage() : ""}
             </div>
             <div role="tabpanel" id="panel-three" aria-labelledby="tab-three" {...threeProps}>
-                {activeTab === "panel-three" ? drillPage : ""}
+                {activeTab === "panel-three" ? drillPage() : ""}
             </div>
         </mio-root>
     );

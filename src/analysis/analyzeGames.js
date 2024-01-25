@@ -1,4 +1,5 @@
 import calculateAnalysis from "./calculateAnalysis";
+const delay = ms => new Promise(res => setTimeout(res, ms));
 
 export default async function analyzeGames(message, inProgressListener, finalListener){
     // console.log("Starting to work", message)
@@ -25,6 +26,7 @@ export default async function analyzeGames(message, inProgressListener, finalLis
         // console.timeEnd("calculateAnalysis")
 
         currentAnalysisDatabase[game.url] = analysis;
+        await delay(10);
 
         // Every few items, post back the progress so the UI can use it
         if (index > 0 && index % 10 === 0) {
