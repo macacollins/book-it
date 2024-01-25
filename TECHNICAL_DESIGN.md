@@ -2,6 +2,10 @@
 
 This document will explain some technical features and decisions used to create this application.
 
+## Language
+
+This project uses modern JavaScript and targets the web platform. This allows easy access from any platform with a web browser.
+
 ## Frameworks and Libraries
 
 This project makes use of many libraries and frameworks in order to keep focus on the business logic.
@@ -54,4 +58,17 @@ Web Workers let you to run JavaScript code in a background thread, allowing the 
 ### Media Queries
 
 To support dark mode, the browser provides `window.matchMedia` which allows you to respond to dark mode preferences in JavaScript. This lets us match the operating system preference for dark mode programatically. 
+
+## Data Formats
+
+### PGN
+
+[PGN, or portable game notation](https://en.wikipedia.org/wiki/Portable_Game_Notation), is the standard computer representation of a chess game. It is a list of the moves played by each side in something called  For this application, PGN data for your games is retrieved directly from [chess.com's free API](https://www.chess.com/news/view/published-data-api). 
+
+PGN is also used for the "repertoire", or set of desired starting moves for the chess games. If you upload your own PGN file with a list of the opening lines you want to play, this application will check them against your games and show you the differences.
+
+### FEN
+
+[FEN, or Forsyth Edwards Notation](https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation), is used to represent a single position in a chess game. This is the lingua franca of chess positions. FEN is used to save chess positions in this application's internal memory representation. FEN also powers the Lichess and Chessable links that take you to relevant pages on those other sites.
+
 
