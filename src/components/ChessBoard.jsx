@@ -80,11 +80,17 @@ const ChessBoard = ({
                 onSnapEnd,
             }
 
-            /*global Chessboard */
-            // TODO fork and react-ify this library
-            const board = Chessboard(finalID, config);
+            try {
+                /*global Chessboard */
+                // TODO fork and react-ify this library
+                const board = Chessboard(finalID, config);
 
-            setBoard(board);
+                setBoard(board);
+            } catch (e) {
+                // This fires sometimes when it does not affect the experience
+                console.log("Got exception", e)
+            }
+
             function makeMoves(moves) {
                 if (moves.length) {
                     setTimeout(() => {
