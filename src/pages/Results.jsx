@@ -150,7 +150,7 @@ export default function Results({
             </text-button>
         );
     }
-    const paginationSection = <div className={"pagination"}> {"Page | "}{paginationButtons}</div>
+    const paginationSection = <div className={"pagination"}><div className={"page"}>{"Page | "}</div>{paginationButtons}</div>
 
     const syncingIndicator = syncingGames ? <md-circular-progress indeterminate></md-circular-progress> : '';
 

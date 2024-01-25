@@ -36,8 +36,13 @@ md-filled-button.drill-button {
 
 .side-by-side {
     display: block;
-    /*margin-right: 10px;*/
+    margin-right: 10px;
 }
+
+.side-by-side * {
+  margin: 0 auto;
+}
+
 .cg-shapes {
   pointer-events: none;
   z-index: 1;
@@ -54,7 +59,7 @@ md-filled-button.drill-button {
 }
 
 #panel-one, #panel-two, #panel-three {
-  max-width: 512px;
+  max-width: 550px;
   margin: 0 auto;
 }
 
@@ -86,6 +91,12 @@ md-filled-button.drill-button {
 
 .pagination {
   padding:10px;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.page {
+  padding: 5px;
 }
 
 .pagination text-button {

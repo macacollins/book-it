@@ -26,7 +26,7 @@ export default function Drills({games = [], analysisDatabase}) {
     let drillBoard = '';
     let drillCurrentDisplay = ''
 
-    let widthOfChessboard = Math.min(width - 36, 393);
+    let widthOfChessboard = Math.min(width - 36, 513);
 
     let actualChessboardWidth =
         widthOfChessboard % 8 === 0 ?

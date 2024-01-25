@@ -152,7 +152,7 @@ const ChessBoard = ({
     let drawings = <Drawings arrows={arrows}> </Drawings>
 
     // let widthOfChessboard = width - 36;
-    let widthOfChessboard = Math.min(width - 36, 393);
+    let widthOfChessboard = Math.min(width - 36, 513);
 
     let style = {
         height: widthOfChessboard + "px",

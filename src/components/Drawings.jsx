@@ -8,7 +8,7 @@ const Drawings = ({arrows, circles}) => {
 
     const width = useWindowSize()[0];
 
-    let widthOfChessboard = Math.min(width - 36, 393);
+    let widthOfChessboard = Math.min(width - 36, 513);
 
     let actualChessboardWidth =
         widthOfChessboard % 8 === 0 ?
