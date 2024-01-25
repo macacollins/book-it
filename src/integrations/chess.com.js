@@ -25,7 +25,7 @@ function getYearAndMonthXMonthsAgo(X) {
     return {year: currentYear, month: twoDigitMonth};
 }
 
-async function refreshGames(games, setGames, playerName) {
+async function refreshGames(games, setGames, playerName, setSyncingGames) {
     console.log("Fetching games from chess.com");
 
     // setGames([]);
@@ -61,6 +61,12 @@ async function refreshGames(games, setGames, playerName) {
             .catch((err) => {
                 console.log(err.message);
             });
+    }
+    setSyncingGames(false);
+
+    if (games.length === 0 && playerName === "example") {
+        // For the example, we don't want to clear out the games if they press this
+        return;
     }
 
     if (games.length !== finalGames.length) {

@@ -17,14 +17,14 @@ export default function Results({
                                 }) {
     const [currentPage, setCurrentPage] = useState(1);
 
+    const [syncingGames, setSyncingGames] = useState(false);
+
     const itemsPerPage = 10;
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
 
     const [currentOpeningFilter, setCurrentOpeningFilter] = useState("");
-
-    console.log("Top of results render")
 
     let filteredGames = games && games.filter ?
         games.filter(game => {
@@ -126,7 +126,8 @@ export default function Results({
                 const className = item === currentPage - 1 ? "currentPage" : '';
 
                 return item < numberPages ?
-                    <text-button data-testid={`page-${item + 1}-button`} key={item} onClick={() => setCurrentPage(item + 1)}  {...{"class": className}}>
+                    <text-button data-testid={`page-${item + 1}-button`} key={item}
+                                 onClick={() => setCurrentPage(item + 1)}  {...{"class": className}}>
                         {item + 1}
                     </text-button>
                     : ''
@@ -151,6 +152,8 @@ export default function Results({
     }
     const paginationSection = <div className={"pagination"}> {"Page | "}{paginationButtons}</div>
 
+    const syncingIndicator = syncingGames ? <md-circular-progress indeterminate></md-circular-progress> : '';
+
     return <>
         <h2>Games</h2>
         <p>This is a list of games at the position where they left the book.</p>
@@ -164,9 +167,11 @@ export default function Results({
         <p>
             <md-filled-button data-testid="refreshGamesButton"
                               onClick={() => {
-                                  refreshGames(games, setGames, playerName)
+                                  setSyncingGames(true);
+                                  refreshGames(games, setGames, playerName, setSyncingGames)
                               }}>Refresh games
             </md-filled-button>
+            {syncingIndicator}
         </p>
         <p>{`Found ${filteredGamesLength} results.`}</p>
         {paginationSection}

@@ -86,3 +86,8 @@ md-outlined-select {
   padding: 10px;
 }
 
+md-circular-progress {
+  margin-left: 20px;
+  height: 40px;
+  width: 40px;
+}
