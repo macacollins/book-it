@@ -14,8 +14,6 @@ You can upload any set of lines you want to learn. Learning the Scandinavian Wom
 
 Once you pick your repertoire and import your games from chess.com, you can see where the games left your repertoire lines. By default, this list only shows you the games where you played a different move than the repertoire. This allows you to quickly identify the gaps in your knowledge.
 
-
-
 ![Screenshot of Games tab showing the top. It lists the player name, repertoire, and has a checkbox for filtering for games where you left the repertoire.](images/Games1.png)
 
 In each of the images, the site puts a green arrow on the move you should have played, and a red arrow on the move that you played instead.

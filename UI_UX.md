@@ -1,0 +1,1 @@
+![Dark Mode video showing the UI going to dark mode when the user changes preference to dark mode in settings](images/DarkMode.mov)
