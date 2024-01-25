@@ -80,10 +80,12 @@ const ChessBoard = ({
                 onSnapEnd,
             }
 
+            let board;
+
             try {
                 /*global Chessboard */
                 // TODO fork and react-ify this library
-                const board = Chessboard(finalID, config);
+                board = Chessboard(finalID, config);
 
                 setBoard(board);
             } catch (e) {
