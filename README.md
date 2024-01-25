@@ -8,7 +8,7 @@ You can try it out at [https://macacollins.github.io/book-it/](https://macacolli
 
 Or, check out the documentation in one of the other markdown files:
 - [FEATURES.md](FEATURES.md)
-- [UI_UX.md](UI/UX.md)
+- [UI_UX.md](UI_UX.md)
 - [TECHNICAL_DESIGN.md](TECHNICAL_DESIGN.md)
 
 # Short Demo
