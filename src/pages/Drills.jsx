@@ -49,8 +49,8 @@ export default function Drills({games = [], analysisDatabase}) {
                                     <Arrow {...arrow}></Arrow>) : []}
                                 madeMoveRef={madeMove}
                                 moveCallback={move => {
-                                    console.log(drillAnalysisResult.arrows);
-                                    console.log(move);
+                                    // console.log(drillAnalysisResult.arrows);
+                                    // console.log(move);
 
                                     let filtered =
                                         drillAnalysisResult
@@ -59,10 +59,10 @@ export default function Drills({games = [], analysisDatabase}) {
                                             .filter(arrow => arrow.san === move.san);
 
                                     if (filtered.length > 0) {
-                                        console.log("Success, " + move.san + " was the right move.");
+                                        // console.log("Success, " + move.san + " was the right move.");
                                         setCurrentDrillResult("Success");
                                     } else {
-                                        console.log("failure, was expecting another move")
+                                        // console.log("failure, was expecting another move")
                                         setCurrentDrillResult("Failure")
                                     }
 
@@ -95,7 +95,7 @@ export default function Drills({games = [], analysisDatabase}) {
 
         if (currentDrillResult === "Failure") {
             drillCurrentDisplay = <>
-                <p style={{"line-height": "36px"}}>{"Oops, better study on this one."}
+                <p style={{"lineHeight": "36px"}}>{"Oops, better study on this one."}
                     <md-filled-button
                         data-testid={"next-button"}
                         onClick={() => {
@@ -109,7 +109,7 @@ export default function Drills({games = [], analysisDatabase}) {
 
         } else if (currentDrillResult === "Success") {
             drillCurrentDisplay = <>
-                <p style={{"line-height": "36px"}}>{"Congrats, you did it!"}
+                <p style={{"lineHeight": "36px"}}>{"Congrats, you did it!"}
                     <md-filled-button
                         data-testid={"next-button"}
                         className={"drill-button"}

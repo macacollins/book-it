@@ -42,8 +42,8 @@ export default function Results({
             }
         }) : [];
 
-    let listItems = filteredGames.map(singleGame => {
-        return <AnalysisResult game={singleGame} analysisDatabase={analysisDatabase}></AnalysisResult>
+    let listItems = filteredGames.map((singleGame, index) => {
+        return <AnalysisResult game={singleGame} index={index} analysisDatabase={analysisDatabase}></AnalysisResult>
     });
 
     const filteredGamesLength = listItems.length;
@@ -59,8 +59,8 @@ export default function Results({
     let topOpenings = findTopOpenings(topOpeningsFilteredList, analysisDatabase).slice(0, 14);
 
     let openingFilters = topOpenings.map(({opening, count}) =>
-        <md-select-option  data-testid={`opening-${opening}`}
-                           key={opening}
+        <md-select-option data-testid={`opening-${opening}`}
+                          key={opening}
                           value={opening}
                           onClick={() => {
                               setCurrentOpeningFilter(opening)

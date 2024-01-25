@@ -12,8 +12,6 @@ test('loadCachedData makes the appropriate number of dexie calls', async () => {
     resetKeys();
     await loadCachedData();
 
-    console.log(keysCalledGet);
-
     expect(keysCalledGet.length).toBe(9);
 });
 

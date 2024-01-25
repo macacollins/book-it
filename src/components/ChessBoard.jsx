@@ -85,7 +85,6 @@ const ChessBoard = ({
             const board = Chessboard(finalID, config);
 
             setBoard(board);
-
             function makeMoves(moves) {
                 if (moves.length) {
                     setTimeout(() => {
@@ -99,7 +98,10 @@ const ChessBoard = ({
 
                             board.move(`${singleMove.from}-${singleMove.to}`);
                         } catch (e) {
-                            console.log("Unable to make move", singleMove, " on board", game, e)
+
+                            // This "shouldn't" ever happen
+                            // In the real world this is a good place to log for debugging
+                            console.debug("Unable to make move", singleMove, " on board", game, e)
                         }
                         makeMoves(moves.slice(1));
                     }, 250);

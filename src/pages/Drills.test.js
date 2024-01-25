@@ -40,10 +40,8 @@ test('Page Loads', async () => {
         render(<Drills games={defaultGames} analysisDatabase={analysisDatabase} />);
     });
 
-    const linkElement = screen.getByText(/Lichess Analysis/i);
+    const linkElement = screen.getByText(/Lichess/i);
     expect(linkElement).toBeInTheDocument();
-
-    console.log("LAST PROPS", getLastProps())
 });
 
 
@@ -52,10 +50,9 @@ test('Inputs Work: correct move', async () => {
         render(<Drills games={defaultGames} analysisDatabase={analysisDatabase} />);
     });
 
-    const linkElement = screen.getByText(/Lichess Analysis/i);
+    const linkElement = screen.getByText(/Lichess/i);
     expect(linkElement).toBeInTheDocument();
 
-    console.log("LAST PROPS", getLastProps())
     await act(() => {
         getLastProps().moveCallback({san:"Bd3"});
     });
@@ -69,10 +66,9 @@ test('Inputs Work: wrong move', async () => {
         render(<Drills games={defaultGames} analysisDatabase={analysisDatabase} />);
     });
 
-    const linkElement = screen.getByText(/Lichess Analysis/i);
+    const linkElement = screen.getByText(/Lichess/i);
     expect(linkElement).toBeInTheDocument();
 
-    console.log("LAST PROPS", getLastProps())
     await act(() => {
         getLastProps().moveCallback({san:"Be7"});
     });
@@ -87,10 +83,9 @@ test('Next Works: correct move', async () => {
         render(<Drills games={defaultGames} analysisDatabase={analysisDatabase} />);
     });
 
-    const linkElement = screen.getByText(/Lichess Analysis/i);
+    const linkElement = screen.getByText(/Lichess/i);
     expect(linkElement).toBeInTheDocument();
 
-    console.log("LAST PROPS", getLastProps())
     await act(() => {
         getLastProps().moveCallback({san:"Bd3"});
     });
@@ -112,10 +107,9 @@ test('Next Works: wrong move', async () => {
         render(<Drills games={defaultGames} analysisDatabase={analysisDatabase} />);
     });
 
-    const linkElement = screen.getByText(/Lichess Analysis/i);
+    const linkElement = screen.getByText(/Lichess/i);
     expect(linkElement).toBeInTheDocument();
 
-    console.log("LAST PROPS", getLastProps())
     await act(() => {
         getLastProps().moveCallback({san:"Be7"});
     });
@@ -136,10 +130,9 @@ test('Links work', async () => {
         render(<Drills games={defaultGames} analysisDatabase={analysisDatabase} />);
     });
 
-    const linkElement = screen.getByText(/Lichess Analysis/i);
+    const linkElement = screen.getByText(/Lichess/i);
     expect(linkElement).toBeInTheDocument();
 
-    console.log("LAST PROPS", getLastProps())
     await act(() => {
         getLastProps().moveCallback({san:"Be7"});
     });

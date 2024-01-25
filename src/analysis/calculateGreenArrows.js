@@ -20,9 +20,9 @@ export function calculateGreenArrows(repertoireMoves, lastFEN, invert_board) {
             // Get a chess.js move so that we can generate an arrow configuration
             move = clonedGame.move(lastMove);
         } catch (e) {
-            console.log("e", e);
-            console.log(lastMove);
-            console.log(clonedGame.ascii());
+            console.info("e", e);
+            console.info(lastMove);
+            console.info(clonedGame.ascii());
             return '';
         }
 

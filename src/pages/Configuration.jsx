@@ -102,7 +102,7 @@ function ConfigPage({
             label="chess.com Username"
             value={playerName}
             onInput={e => {
-                console.log(e);
+                // console.log(e);
                 setPlayerName(e.target.value);
                 setItemDexie("playerName", e.target.value);
             }}>
@@ -122,8 +122,7 @@ function ConfigPage({
 
             onInput={e => {
                 setNewRepertoireNameField(e.target.value);
-                console.log("set it to ", e.target.value);
-
+                // console.log("set it to ", e.target.value);
             }}>
         </md-outlined-text-field>
         <br></br>

@@ -11,7 +11,7 @@ test('Result length is correct', () => {
 
 test('Error handling is ok (drop invalid moves)', () => {
 
-    console.log("About to attempt illegal move a6 from start position. Expecting it to log an exception")
+    console.debug("About to attempt illegal move a6 from start position. Expecting it to log an exception")
     let greenArrows = calculateGreenArrows(["a6", "b4", "c4"], "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", false)
 
     expect(greenArrows.length).toEqual(2);

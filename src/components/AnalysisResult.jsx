@@ -5,10 +5,10 @@ import '@material/web/list/list.js';
 
 import '@material/web/list/list-item.js';
 
-const AnalysisResult = ({analysisDatabase, game, nameOverride = "my-name"}) => {
+const AnalysisResult = ({analysisDatabase, game, index, nameOverride = "my-name"}) => {
 
     if (typeof game === "undefined") {
-        return <md-list-item>
+        return <md-list-item key={index}>
             <div slot="headline">
                 Loading Analysis for game
                 {game}
@@ -20,7 +20,7 @@ const AnalysisResult = ({analysisDatabase, game, nameOverride = "my-name"}) => {
     let analysis = analysisDatabase[game.url];
 
     if (!analysis) {
-        return <md-list-item key={game.url}>
+        return <md-list-item key={index}>
             <div slot="headline">
                 Loading Analysis for game
                 {game.url}
@@ -37,7 +37,7 @@ const AnalysisResult = ({analysisDatabase, game, nameOverride = "my-name"}) => {
 
     // console.log("Opening was", openingName);
 
-    return <md-list-item key={game.url}>
+    return <md-list-item key={index}>
         <div slot="headline">{analysis.headers.White}{' vs '}{analysis.headers.Black}{'\n'}
             {analysis.headers.Result}
         </div>
@@ -61,7 +61,7 @@ const AnalysisResult = ({analysisDatabase, game, nameOverride = "my-name"}) => {
                 <md-text-button
                     data-testid={"lichess-button"}
                     onClick={() => window.open('https://lichess.org/analysis/' + analysis.displayFEN)}>Lichess
-                    
+
                 </md-text-button>
                 <md-text-button
                     data-testid={"chessable-button"}

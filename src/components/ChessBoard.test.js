@@ -66,8 +66,12 @@ test('Basic Component Load', async () => {
             }} />
         );
     });
+    await act(() => {
 
-    jest.runOnlyPendingTimers()
+        jest.runOnlyPendingTimers()
+
+    });
+
 });
 
 
@@ -80,8 +84,12 @@ test('Default Parameter Values', async () => {
             }} />
         );
     });
+    await act(() => {
 
-    jest.runOnlyPendingTimers()
+        jest.runOnlyPendingTimers()
+
+    });
+
 
 });
 
@@ -96,8 +104,12 @@ test('Put some moves in', async () => {
             }} />
         );
     });
+    await act(() => {
 
-    jest.runOnlyPendingTimers()
+        jest.runOnlyPendingTimers()
+
+    });
+
 });
 
 
@@ -112,10 +124,13 @@ test('Inverted', async () => {
             }} />
         );
     });
+    await act(() => {
 
-    jest.runOnlyPendingTimers()
-    jest.runOnlyPendingTimers()
-    jest.runOnlyPendingTimers()
+
+        jest.runOnlyPendingTimers()
+        jest.runOnlyPendingTimers()
+        jest.runOnlyPendingTimers()
+    });
 
 });
 
@@ -133,10 +148,13 @@ test('Chessboard call failure case', async () => {
             }} />
         );
     });
+    await act(() => {
 
-    jest.runOnlyPendingTimers()
-    jest.runOnlyPendingTimers()
-    jest.runOnlyPendingTimers()
+        jest.runOnlyPendingTimers()
+        jest.runOnlyPendingTimers()
+        jest.runOnlyPendingTimers()
+    });
+
 
 });
 
@@ -163,10 +181,13 @@ test('Exception during move does not crash the application', async () => {
             }} />
         );
     });
+    await act(() => {
 
-    // Each move requires one call to this function in addition to one required to start the moves at all
-    jest.runOnlyPendingTimers()
-    jest.runOnlyPendingTimers()
+
+        // Each move requires one call to this function in addition to one required to start the moves at all
+        jest.runOnlyPendingTimers()
+        jest.runOnlyPendingTimers()
+    });
 
 
 
@@ -183,8 +204,11 @@ test('Exception during move does not crash the application', async () => {
             }} />
         );
     });
+    await act(() => {
 
-    jest.runOnlyPendingTimers()
+        jest.runOnlyPendingTimers()
+    });
+
 });
 
 
@@ -200,13 +224,16 @@ test('Test Callbacks', async () => {
                 moves: []
             }} />
         );
+
     });
+    await act(() => {
 
-    jest.runOnlyPendingTimers()
+        jest.runOnlyPendingTimers()
 
-    lastConfig.onDragStart();
-    lastConfig.onDrop();
-    lastConfig.onSnapEnd();
+        lastConfig.onDragStart();
+        lastConfig.onDrop();
+        lastConfig.onSnapEnd();
+    });
 });
 
 test('No move if the game is finished', async () => {
@@ -223,14 +250,17 @@ test('No move if the game is finished', async () => {
 
         );
     });
+    await act(() => {
 
-    // Play all the moves
-    for (let index = 0; index < 9; index++) {
-        jest.runOnlyPendingTimers()
-    }
 
-    lastConfig.onDragStart("", "b", "", "");
-    lastConfig.onDragStart("", "w", "", "");
+        // Play all the moves
+        for (let index = 0; index < 9; index++) {
+            jest.runOnlyPendingTimers()
+        }
+
+        lastConfig.onDragStart("", "b", "", "");
+        lastConfig.onDragStart("", "w", "", "");
+    });
 });
 
 
@@ -245,17 +275,19 @@ test("Test onDragStart as white's move", async () => {
                 madeMoveRef: { current : false },
                 moves: ["e4", "e5", "Bc4", "a6", "Qh5", "a5"]
             }} />
-
         );
     });
+    await act(() => {
 
-    // Play all the moves
-    for (let index = 0; index < 9; index++) {
-        jest.runOnlyPendingTimers()
-    }
 
-    lastConfig.onDragStart("", "b", "", "");
-    lastConfig.onDragStart("", "w", "", "");
+        // Play all the moves
+        for (let index = 0; index < 9; index++) {
+            jest.runOnlyPendingTimers()
+        }
+
+        lastConfig.onDragStart("", "b", "", "");
+        lastConfig.onDragStart("", "w", "", "");
+    });
 });
 
 
@@ -267,19 +299,20 @@ test('Play a move', async () => {
                 name,
                 game_url: "test",
                 draggable: true,
-                madeMoveRef: { current : false },
+                madeMoveRef: {current: false},
                 moves: ["e4", "e5", "Bc4", "a6", "Qh5", "a5"]
             }} />
-
         );
     });
+    await act(() => {
 
-    // Play all the moves
-    for (let index = 0; index < 9; index++) {
-        jest.runOnlyPendingTimers()
-    }
+        // Play all the moves
+        for (let index = 0; index < 9; index++) {
+            jest.runOnlyPendingTimers()
+        }
 
-    lastConfig.onDrop("h5", "f7");
+        lastConfig.onDrop("h5", "f7");
+    });
 });
 
 test('Play an invalid move', async () => {
@@ -293,14 +326,16 @@ test('Play an invalid move', async () => {
                 madeMoveRef: { current : false },
                 moves: ["e4", "e5", "Bc4", "a6", "Qh5", "a5"]
             }} />
-
         );
     });
+    await act(() => {
 
-    // Play all the moves
-    for (let index = 0; index < 9; index++) {
-        jest.runOnlyPendingTimers()
-    }
 
-    lastConfig.onDrop("h5", "f8");
+        // Play all the moves
+        for (let index = 0; index < 9; index++) {
+            jest.runOnlyPendingTimers()
+        }
+
+        lastConfig.onDrop("h5", "f8");
+    });
 });

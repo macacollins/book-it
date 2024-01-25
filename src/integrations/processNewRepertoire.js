@@ -13,7 +13,7 @@ export default function processNewRepertoire(fileContents, {
     const lines = fileContents.split('\n');
 
     let fenRepo = calculateRepertoire(lines);
-    console.log("Setting current repertoire to new repertoire ", newRepertoireNameField);
+    console.debug("Setting current repertoire to new repertoire ", newRepertoireNameField);
 
     // Add the repertoire to the repertoire map
     // "Repertoire" here is the fenRepo mapping of position -> list of moves in the repertoire

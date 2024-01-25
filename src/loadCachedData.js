@@ -16,7 +16,7 @@ async function loadCachedData() {
 
     let returnObject = {};
     for (let property of properties) {
-        console.log("attempting to process", property)
+        // console.log("attempting to process", property)
         let value = await getItemDexie(property)
         if (value) {
             returnObject[property + "Storage"] = value;
