@@ -23,7 +23,6 @@ export default function Drills({games = [], analysisDatabase}) {
             filteredGames[currentDrillIndex] :
             undefined;
 
-
     let drillBoard = '';
     let drillCurrentDisplay = ''
 

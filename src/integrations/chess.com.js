@@ -64,7 +64,7 @@ async function refreshGames(games, setGames, playerName, setSyncingGames) {
     }
     setSyncingGames(false);
 
-    if (games.length === 0 && playerName === "example") {
+    if (finalGames.length === 0 && playerName === "example") {
         // For the example, we don't want to clear out the games if they press this
         return;
     }
