@@ -157,10 +157,12 @@ export default function Results({
     return <>
         <h2>Games</h2>
         <p>This is a list of games at the position where they left the book.</p>
-        <label>
-            Show only lines where you left book first
-            {leftBookCheckbox}
-        </label>
+        <p>
+            <label>
+                Show only lines where you left book first
+                {leftBookCheckbox}
+            </label>
+        </p>
         <br></br>
         {openingFilters}
         <br></br>

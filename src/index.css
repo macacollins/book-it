@@ -8,7 +8,7 @@ body {
 }
 
 
-h1, h2, h3, p, .text-field, label {
+h1, h2, h3, p, .text-field {
   padding: 5px;
   padding-left:10px;
 }
@@ -19,6 +19,10 @@ md-outlined-text-field, md-filled-button, form {
 
 md-filled-button {
   left: 10px;
+}
+
+md-checkbox {
+  padding-left: 5px;
 }
 
 code {
@@ -47,6 +51,21 @@ md-filled-button.drill-button {
 #root, #panel-one, #panel-two, #panel-three, mio-root, body {
   background: var(--md-sys-color-background);
   color: var(--md-sys-color-on-surface)
+}
+
+#panel-one, #panel-two, #panel-three {
+  max-width: 512px;
+  margin: 0 auto;
+}
+
+.buttonlist md-text-button {
+  margin: 0 auto;
+}
+
+.buttonlist {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 /*body {*/

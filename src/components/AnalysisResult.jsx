@@ -4,8 +4,10 @@ import ChessBoard from './ChessBoard';
 import '@material/web/list/list.js';
 
 import '@material/web/list/list-item.js';
+import useWindowSize from "../hooks/useWindowSize";
 
 const AnalysisResult = ({analysisDatabase, game, index, nameOverride = "my-name"}) => {
+    const width = useWindowSize()[0];
 
     if (typeof game === "undefined") {
         return <md-list-item key={index}>
@@ -37,6 +39,19 @@ const AnalysisResult = ({analysisDatabase, game, index, nameOverride = "my-name"
 
     // console.log("Opening was", openingName);
 
+
+
+    let widthOfChessboard = Math.min(width - 36, 393);
+
+    let actualChessboardWidth =
+        widthOfChessboard % 8 === 0 ?
+            widthOfChessboard - 8 :
+            widthOfChessboard - (widthOfChessboard % 8);
+
+    let buttonStyles = {
+        "width": actualChessboardWidth + "px"
+    }
+
     return <md-list-item key={index}>
         <div slot="headline">{analysis.headers.White}{' vs '}{analysis.headers.Black}{'\n'}
             {analysis.headers.Result}
@@ -52,7 +67,7 @@ const AnalysisResult = ({analysisDatabase, game, index, nameOverride = "my-name"
                             arrows={arrows}></ChessBoard>
             </div>
             <br></br>
-            <div className="buttonlist">
+            <div className="buttonlist" style={buttonStyles}>
                 <md-text-button
                     data-testid={"chess-dot-com-button"}
                     onClick={() => window.open(analysis.headers.Link)}>
