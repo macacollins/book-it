@@ -52,8 +52,6 @@ function App({
                  activeTabStorage
              }) {
 
-    console.log("App render")
-
     // Declare main state of application
     // This includes data stored by the application such as the repertoire and player name
     // This application may be a better fit for useReducer due to all the state that we are passing around.
@@ -160,9 +158,8 @@ function App({
     )
 
     // Create the actual pages
-    const resultsPage = () => {
-        // console.log("Results page function called");
-        return <Results {...{
+    const resultsPage = () =>
+        <Results {...{
             games,
             userLeftBookOnly,
             setUserLeftBookOnly,
@@ -171,7 +168,6 @@ function App({
             analysisDatabase,
             setGames
         }}></Results>;
-    }
 
     const configPage = () => <ConfigPage {...{
         playerName,

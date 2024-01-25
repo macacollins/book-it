@@ -70,6 +70,7 @@ export default function Drills({games = [], analysisDatabase}) {
                                 }}
                     ></ChessBoard>
                 </div>
+                <br></br>
                 {/*<p><a href={"https://lichess.org/opening/" + openingName}>{drillAnalysisResult.headers.ECO} {openingName}</a></p>*/}
                 <div className="buttonlist">
                     <md-text-button

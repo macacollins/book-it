@@ -11,7 +11,6 @@ const Arrow = ({fromX, fromY, destX, destY, index= 0, color = 'red', hidden = fa
     let opacity = hidden ? 0 : 1;
 
     let key = `${index}${fromX}${fromY}${destX}${destY}`;
-    console.log("Setting key to", key);
 
     return <g key={key}>
             <line opacity={opacity} stroke={color} strokeWidth="0.15625" strokeLinecap="round" markerEnd={markerEnd}
