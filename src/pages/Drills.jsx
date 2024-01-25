@@ -3,9 +3,11 @@ import {useState, useRef} from 'react';
 import Arrow from '../components/Arrow';
 import ChessBoard from '../components/ChessBoard';
 import {Chess} from 'chess.js';
-
+import useWindowSize from '../hooks/useWindowSize'
 
 export default function Drills({games = [], analysisDatabase}) {
+    const width = useWindowSize()[0];
+
     const [currentDrillIndex, setCurrentDrillIndex] = useState(0);
     const [currentDrillResult, setCurrentDrillResult] = useState("");
 
@@ -25,6 +27,16 @@ export default function Drills({games = [], analysisDatabase}) {
     let drillBoard = '';
     let drillCurrentDisplay = ''
 
+    let widthOfChessboard = Math.min(width - 36, 393);
+
+    let actualChessboardWidth =
+        widthOfChessboard % 8 === 0 ?
+            widthOfChessboard - 8 :
+            widthOfChessboard - (widthOfChessboard % 8);
+
+    let buttonStyles = {
+        "width": actualChessboardWidth + "px"
+    }
 
     // console.log("Next game", nextGame);
     if (nextGame && nextGame.url) {
@@ -72,7 +84,7 @@ export default function Drills({games = [], analysisDatabase}) {
                 </div>
                 <br></br>
                 {/*<p><a href={"https://lichess.org/opening/" + openingName}>{drillAnalysisResult.headers.ECO} {openingName}</a></p>*/}
-                <div className="buttonlist">
+                <div className="buttonlist" style={buttonStyles}>
                     <md-text-button
                         data-testid={"chess-dot-com-button"}
                         onClick={() => window.open(drillAnalysisResult.headers.Link)}>
