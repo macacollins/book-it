@@ -83,8 +83,15 @@ const ChessBoard = ({
             let board;
 
             try {
-                /*global Chessboard */
                 // TODO fork and react-ify this library
+
+                const domElement = document.getElementById(finalID);
+
+                if (!domElement) {
+                    console.log("DOM element was not present. App will not call Chessboard to avoid an alert() call.")
+                    return;
+                }
+                /*global Chessboard */
                 board = Chessboard(finalID, config);
 
                 setBoard(board);
