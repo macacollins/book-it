@@ -1,5 +1,6 @@
 import {useState, useRef} from 'react';
 
+import Game from '../types/Game';
 import Arrow from '../components/Arrow';
 import ChessBoard from '../components/ChessBoard';
 import {Chess} from 'chess.js';
@@ -14,17 +15,18 @@ export default function Drills({games = [], analysisDatabase}) {
     const madeMove = useRef(false);
 
     const filteredGames = games && games.filter &&
-        games.filter(nextGame => {
+        games.filter((nextGame: Game) => {
             return analysisDatabase[nextGame.url] && analysisDatabase[nextGame.url].youLeftBook && analysisDatabase[nextGame.url].foundIntersection
         })
 
-    const nextGame =
+    const maybeNextGame : Game | undefined = 
         filteredGames.length > currentDrillIndex ?
             filteredGames[currentDrillIndex] :
             undefined;
 
-    let drillBoard = '';
-    let drillCurrentDisplay = ''
+
+    let drillBoard = <></>;
+    let drillCurrentDisplay = <></>;
 
     let widthOfChessboard = Math.min(width - 36, 513);
 
@@ -38,7 +40,8 @@ export default function Drills({games = [], analysisDatabase}) {
     }
 
     // console.log("Next game", nextGame);
-    if (nextGame && nextGame.url) {
+    if (typeof maybeNextGame !== "undefined") {
+        const nextGame: Game = maybeNextGame;
 
         const drillAnalysisResult = analysisDatabase[nextGame.url];
 
@@ -112,7 +115,7 @@ export default function Drills({games = [], analysisDatabase}) {
                         data-testid={"next-button"}
                         onClick={() => {
                         setCurrentDrillIndex(currentDrillIndex + 1);
-                        setCurrentDrillResult(undefined);
+                        setCurrentDrillResult("");
                         madeMove.current = false;
                     }}>Next
                     </md-filled-button>
@@ -127,7 +130,7 @@ export default function Drills({games = [], analysisDatabase}) {
                         className={"drill-button"}
                         onClick={() => {
                             setCurrentDrillIndex(currentDrillIndex + 1);
-                            setCurrentDrillResult(undefined);
+                            setCurrentDrillResult("")
                             madeMove.current = false;
                         }}>
                         Next
