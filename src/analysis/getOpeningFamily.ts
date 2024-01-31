@@ -46,7 +46,9 @@ const openings =  [ "Alekhine's Defense",
     ];
 
 // Address some inconsistencies in spelling
-const alternates = {
+const alternates: {
+    [key: string]: string[]
+} = {
     "Caro-Kann Defense" : [
         "Caro Kann"
     ],
@@ -60,14 +62,14 @@ const alternates = {
 
 // Get the shorter name of the family rather than the full variation
 // This allows more grouping of similar openings
-export default function getOpeningFamily(name) {
+export default function getOpeningFamily(name: string) {
 
     for (let opening of openings) {
         if (name.indexOf(opening) !== -1) {
             // If the main entry matches, just return it
             return opening
 
-        } else if (alternates[opening]) {
+        } else if (opening in alternates) {
             // Otherwise, check the alternative names
             for (let alternativeName of alternates[opening]) {
                 if (name.indexOf(alternativeName) !== -1) {

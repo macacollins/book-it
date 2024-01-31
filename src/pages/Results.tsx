@@ -2,9 +2,21 @@ import AnalysisResult from "../components/AnalysisResult";
 import {setItemDexie} from "../storage";
 import refreshGames from "../integrations/chess.com";
 
-import {useState} from 'react';
+import {Dispatch, SetStateAction, useState} from 'react';
 import findTopOpenings from "../analysis/findTopOpenings";
+import AnalysisDatabase from "../types/AnalysisDatabase";
+import Game from "../types/Game";
 
+
+interface ResultsProps {
+    games: Game[],
+    userLeftBookOnly: boolean,
+    setUserLeftBookOnly: Dispatch<SetStateAction<boolean>>,
+    playerName: string,
+    repertoireChoice: string,
+    analysisDatabase: AnalysisDatabase,
+    setGames: (newValue: Game[]) => void
+}
 
 export default function Results({
                                     games,
@@ -14,7 +26,7 @@ export default function Results({
                                     repertoireChoice,
                                     analysisDatabase,
                                     setGames
-                                }) {
+                                }: ResultsProps) {
     const [currentPage, setCurrentPage] = useState(1);
 
     const [syncingGames, setSyncingGames] = useState(false);
@@ -48,7 +60,7 @@ export default function Results({
 
     let listItems = sliced.map((singleGame, index) => {
 
-        return <AnalysisResult game={singleGame} index={index} analysisDatabase={analysisDatabase}></AnalysisResult>
+        return <AnalysisResult game={singleGame} index={index} analysisDatabase={analysisDatabase} nameOverride=""></AnalysisResult>
     });
 
     const filteredGamesLength = filteredGames.length;
@@ -81,7 +93,7 @@ export default function Results({
             Clear Opening Filter
         </md-select-option>)
 
-    openingFilters = <><h3>Opening Filter</h3>
+    const openingFiltersFull = <><h3>Opening Filter</h3>
         <md-outlined-select>
             {openingFilters}
         </md-outlined-select>
@@ -164,7 +176,7 @@ export default function Results({
             </label>
         </p>
         <br></br>
-        {openingFilters}
+        {openingFiltersFull}
         <br></br>
         <p>
             <md-filled-button data-testid="refreshGamesButton"

@@ -1,6 +1,25 @@
 import {setItemDexie} from "../storage";
 import FileUpload from "../components/FileUpload";
+import AnalysisDatabase from '../types/AnalysisDatabase';
+import Repertoire from '../types/Repertoire';
+import Game from '../types/Game';
 
+interface ConfigPageProps {
+    playerName: string,
+    setPlayerName: (newValue: string) => void,
+    repertoireChoice: string,
+    setRepertoireChoice: (newValue: string) => void,
+    newRepertoireNameField: string,
+    setNewRepertoireNameField: (newValue: string) => void,
+    setRepertoire: (newValue: { [name: string]: Repertoire }) => void,
+    repertoire: { [name: string]: Repertoire },
+    repertoireList: string[]
+    setRepertoireList: (newValue: string[]) => void,
+    dispatchAnalysisDatabase: any,
+    setGames: (newValue: Game[]) => void,
+    games: Game[],
+    analysisDatabase: AnalysisDatabase
+}
 
 function ConfigPage({
                         playerName,
@@ -13,18 +32,15 @@ function ConfigPage({
                         repertoire,
                         repertoireList,
                         setRepertoireList,
-                        matchingMoves,
-                        setMatchingMoves,
-                        setCurrentGames,
                         dispatchAnalysisDatabase,
                         setGames,
                         games,
                         analysisDatabase
-                    }) {
+                    }: ConfigPageProps) {
 
     // Make the checkbox items for repertoire selection
     const checkboxItems =
-        ((repertoireList && repertoireList.map) ? repertoireList : []).map(repertoireName => {
+        (repertoireList ? repertoireList : []).map(repertoireName => {
             const props = repertoireName === repertoireChoice ? ({
                 "checked": true,
                 "touch-target": "wrapper"
@@ -74,10 +90,10 @@ function ConfigPage({
             <p> Current Repertoires: {repertoireList.length}</p>
             <md-filled-button data-testid={"reset-repertoires-button"} className={"drill-button"} onClick={() => {
 
-                setRepertoireChoice({});
+                setRepertoireChoice("");
                 setItemDexie("repertoireChoice", "");
 
-                setRepertoireList({});
+                setRepertoireList([]);
                 setItemDexie("repertoireList", []);
 
                 setRepertoire({});
@@ -101,7 +117,7 @@ function ConfigPage({
             data-testid={"chess-dot-com-username"}
             label="chess.com Username"
             value={playerName}
-            onInput={e => {
+            onInput={(e: { target: { value: string }}) => {
                 // console.log(e);
                 setPlayerName(e.target.value);
                 setItemDexie("playerName", e.target.value);
@@ -120,7 +136,7 @@ function ConfigPage({
             label="Repertoire Name"
             value={newRepertoireNameField}
 
-            onInput={e => {
+            onInput={(e: { target: { value: string }}) => {
                 setNewRepertoireNameField(e.target.value);
                 // console.log("set it to ", e.target.value);
             }}>

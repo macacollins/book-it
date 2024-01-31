@@ -1,6 +1,6 @@
 import {Chess} from "chess.js";
 
-export function getRepertoireMove(gameCache, index) {
+export function getRepertoireMove(gameCache: { [index: string] : Chess }, index: number): (newValue: string) => string {
     return line => {
         // This variable gets the rest of the moves from the line after the current position
         let maybeMoves;

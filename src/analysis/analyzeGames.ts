@@ -1,7 +1,26 @@
+import AnalysisDatabase from "../types/AnalysisDatabase";
+import Game from "../types/Game";
+import Repertoire from "../types/Repertoire";
 import calculateAnalysis from "./calculateAnalysis";
-const delay = ms => new Promise(res => setTimeout(res, ms));
 
-export default async function analyzeGames(message, inProgressListener, finalListener){
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+
+export interface AnalyzeGamesExpectedMessage {
+    data: InnerAnalyzeGamesExpectedMessage
+}
+
+export interface InnerAnalyzeGamesExpectedMessage {
+
+    analysisDatabase: AnalysisDatabase, 
+    repertoire: Repertoire, 
+    games: Game[], 
+    playerName: string
+}
+
+export default async function analyzeGames(
+        message : AnalyzeGamesExpectedMessage, 
+        inProgressListener: (value: AnalysisDatabase) => void, 
+        finalListener: (value: AnalysisDatabase) => void){
     // console.log("Starting to work", message)
     // { data: { analysisDatabase, repertoire, games, playerName } }
     // This format comes from the web worker message format

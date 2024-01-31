@@ -1,6 +1,8 @@
+import { Move } from "chess.js";
+import { ArrowConfig } from "../types/ArrowConfig";
 
 
-export default function generateArrowConfig(move_made, invert_board, color) {
+export default function generateArrowConfig(move_made: Move, invert_board: boolean, color: "red" | "green"): ArrowConfig {
     let [fromX, fromY] = squareToCoordinates(move_made.from);
     let [toX, toY] = squareToCoordinates(move_made.to);
 
@@ -21,7 +23,7 @@ export default function generateArrowConfig(move_made, invert_board, color) {
     return arrowConfig;
 }
 
-function squareToCoordinates(inputString) {
+function squareToCoordinates(inputString: string) {
     // Check if the input string is valid
 
     // Extract letter and number

@@ -1,4 +1,6 @@
-const Arrow = ({fromX, fromY, destX, destY, index= 0, color = 'red', hidden = false}) => {
+import { ArrowConfig } from "../types/ArrowConfig";
+
+const Arrow = ({fromX, fromY, destX, destY, index= 0, color, hidden}: ArrowConfig & { index: number, hidden: boolean }) => {
 
     const targetX1 = fromX - 4.5;
     const targetX2 = destX - 4.5;

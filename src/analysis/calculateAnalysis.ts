@@ -4,6 +4,11 @@ import {calculateOpeningFamily} from "./calculateOpeningFamily";
 import {calculateFinalPosition} from "./calculateFinalPosition";
 import {calculateGreenArrows} from "./calculateGreenArrows";
 import {stepThroughMoves} from "./stepThroughMoves";
+import AnalysisDatabase from '../types/AnalysisDatabase';
+import Repertoire from '../types/Repertoire';
+import Game from '../types/Game';
+import AnalysisResult from '../types/AnalysisResult';
+import { ArrowConfig } from '../types/ArrowConfig';
 
 // Calculate analysis:
 // - Who left the repertoire, you or the opponent?
@@ -13,7 +18,7 @@ import {stepThroughMoves} from "./stepThroughMoves";
 //   - Red if it is the move that was played
 // - What chess opening was used in this game?
 // - Also cache chess.com headers and URL
-function calculateAnalysis(analysisDatabase, repertoire, game, playerName) {
+function calculateAnalysis(analysisDatabase: AnalysisDatabase, repertoire: Repertoire, game: Game, playerName: string): AnalysisResult {
 
     // If we already have the game analyzed, just return
     if (analysisDatabase[game.url]) {
@@ -27,30 +32,45 @@ function calculateAnalysis(analysisDatabase, repertoire, game, playerName) {
     mainChessGame.loadPgn(game.pgn);
 
     // this is single analysis for one game
-    const analysis = {arrows: [], notes: "No notes found."}
     // For this application, we will invert the board if the player had the black pieces
-    analysis.invert_board = mainChessGame.header().Black === playerName;
-    const { lastFEN, repertoireMoves } = stepThroughMoves(mainChessGame, repertoire, analysis);
+    const invert_board = mainChessGame.header().Black === playerName;
+    const { lastFEN, repertoireMoves, finalMoveIndex, foundIntersection, arrow } = 
+            stepThroughMoves(mainChessGame, repertoire, invert_board);
 
-    analysis.arrows = [...analysis.arrows, ...calculateGreenArrows(repertoireMoves, lastFEN, analysis.invert_board)];
+    let finalArrows: ArrowConfig[] = calculateGreenArrows(repertoireMoves, lastFEN, invert_board);
 
-    const chessGameDisplay = calculateFinalPosition(lastFEN, analysis.foundIntersection, game);
+    if (arrow) {
+        finalArrows.push(arrow);
+    }
 
-    analysis.result = mainChessGame.header().Result
+    const chessGameDisplay = calculateFinalPosition(lastFEN, foundIntersection, game);
+
+    const result = mainChessGame.header().Result
 
     // This is tricky, you left book if you were playing the color whose turn it was on departure
-    analysis.youLeftBook =
-        analysis.foundIntersection && (
+    const youLeftBook =
+        foundIntersection && (
             chessGameDisplay.turn() === "w" ?
                 mainChessGame.header().White === playerName :
                 mainChessGame.header().Black === playerName);
 
-    analysis.advice = calculateAdvice(analysis);
-    analysis.displayFEN = chessGameDisplay.fen();
-    analysis.headers = mainChessGame.header();
-    analysis.openingFamily = calculateOpeningFamily(analysis);
+    const advice = calculateAdvice(foundIntersection, youLeftBook);
+    const displayFEN = chessGameDisplay.fen();
+    const headers = mainChessGame.header();
+    const openingFamily = calculateOpeningFamily(headers);
 
-    return analysis;
+    return {
+        invert_board,
+        advice,
+        displayFEN,
+        openingFamily,
+        headers,
+        arrows: finalArrows,
+        finalMoveIndex,
+        result,
+        youLeftBook,
+        foundIntersection
+    };
 }
 
 export default calculateAnalysis;

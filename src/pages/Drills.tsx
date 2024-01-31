@@ -1,12 +1,16 @@
 import {useState, useRef} from 'react';
 
+import AnalysisDatabase from '../types/AnalysisDatabase';
 import Game from '../types/Game';
 import Arrow from '../components/Arrow';
 import ChessBoard from '../components/ChessBoard';
 import {Chess} from 'chess.js';
 import useWindowSize from '../hooks/useWindowSize'
 
-export default function Drills({games = [], analysisDatabase}) {
+export default function Drills(props:{analysisDatabase: AnalysisDatabase, games: any} ) {
+    const analysisDatabase: AnalysisDatabase = props.analysisDatabase;
+    const games = props.games;
+
     const width = useWindowSize()[0];
 
     const [currentDrillIndex, setCurrentDrillIndex] = useState(0);
@@ -14,10 +18,10 @@ export default function Drills({games = [], analysisDatabase}) {
 
     const madeMove = useRef(false);
 
-    const filteredGames = games && games.filter &&
+    const filteredGames = (games && games.filter &&
         games.filter((nextGame: Game) => {
             return analysisDatabase[nextGame.url] && analysisDatabase[nextGame.url].youLeftBook && analysisDatabase[nextGame.url].foundIntersection
-        })
+        })) || []
 
     const maybeNextGame : Game | undefined = 
         filteredGames.length > currentDrillIndex ?
@@ -59,7 +63,7 @@ export default function Drills({games = [], analysisDatabase}) {
                                 name={"drill-board" + currentDrillIndex}
                                 game_url={nextGame.url + "drillresult"}
                                 draggable={!currentDrillResult}
-                                arrows={currentDrillResult ? drillAnalysisResult.arrows.map(arrow =>
+                                arrows={currentDrillResult ? drillAnalysisResult.arrows.map((arrow: any) =>
                                     <Arrow {...arrow}></Arrow>) : []}
                                 madeMoveRef={madeMove}
                                 moveCallback={move => {
@@ -69,8 +73,8 @@ export default function Drills({games = [], analysisDatabase}) {
                                     let filtered =
                                         drillAnalysisResult
                                             .arrows
-                                            .filter(arrow => arrow.color === "green")
-                                            .filter(arrow => arrow.san === move.san);
+                                            .filter((arrow: any) => arrow.color === "green")
+                                            .filter((arrow: any) => arrow.san === move.san);
 
                                     if (filtered.length > 0) {
                                         // console.log("Success, " + move.san + " was the right move.");

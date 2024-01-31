@@ -4,7 +4,7 @@
 // }
 import useWindowSize from "../hooks/useWindowSize";
 
-const Drawings = ({arrows, circles}) => {
+const Drawings = ({arrows, circles}: any) => {
 
     const width = useWindowSize()[0];
 
@@ -21,6 +21,9 @@ const Drawings = ({arrows, circles}) => {
         // border: "0px"
     }
 
+    let marker1Props = { "cgKey": "g2" };
+    let marker2Props = { cgKey: "pb2" }
+
     return (
         <svg className="cg-shapes" style={style} viewBox="-4 -4 8 8" preserveAspectRatio="xMidYMid slice">
             <defs>
@@ -28,11 +31,11 @@ const Drawings = ({arrows, circles}) => {
                     <feGaussianBlur stdDeviation="0.019"></feGaussianBlur>
                 </filter>
                 <marker id="arrowhead-g" orient="auto" overflow="visible" markerWidth="4" markerHeight="4" refX="2.05"
-                        refY="2" cgKey="g2">
+                        refY="2" {...marker1Props}>
                     <path d="M0,0 V4 L3,2 Z" fill="green"></path>
                 </marker>
                 <marker id="arrowhead-r" orient="auto" overflow="visible" markerWidth="4" markerHeight="4" refX="2.05"
-                        refY="2" cgKey="pb2">
+                        refY="2" {...marker2Props}>
                     <path d="M0,0 V4 L3,2 Z" fill="red"></path>
                 </marker>
             </defs>

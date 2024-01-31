@@ -1,13 +1,20 @@
 import {Chess} from "chess.js";
 import {getRepertoireMove} from "./getRepertoireMove";
 import generateArrowConfig from "./generateArrowConfig";
+import Repertoire from "../types/Repertoire";
+import { ArrowConfig } from "../types/ArrowConfig";
 
-export function stepThroughMoves(mainChessGame, repertoire, analysis) {
+export function stepThroughMoves(mainChessGame: Chess, repertoire: Repertoire, invert_board: boolean):
+        {lastFEN: string, repertoireMoves: string[], finalMoveIndex: number, foundIntersection: boolean, arrow: ArrowConfig | undefined} {
 
     let chessGameStepByStep = new Chess();
     let checkFurther = false;
     const gameCache = {};
-    let repertoireMoves = [];
+    let repertoireMoves: string[] = [];
+
+    let finalMoveIndex = 0;
+    let foundIntersection = false;
+    let arrow: ArrowConfig | undefined = undefined;
 
     let lastFEN = '';
 
@@ -31,7 +38,7 @@ export function stepThroughMoves(mainChessGame, repertoire, analysis) {
         if (checkFurther && !repertoire[fen]) {
             //console.log("Couldn't find ", chess_game_step_by_step.ascii())
             let lines = repertoire[lastFEN] || [];
-            analysis.finalMoveIndex = index;
+            finalMoveIndex = index;
 
             // console.log("Lines are", lines);
             let movesFromRepertoire = lines.map(getRepertoireMove(gameCache, index));
@@ -40,15 +47,15 @@ export function stepThroughMoves(mainChessGame, repertoire, analysis) {
             // TODO refactor this code so that this is not necessary
             repertoireMoves = [...(movesFromRepertoire.filter(moveName => moveName !== "oops"))];
 
-            analysis.foundIntersection = true;
+            foundIntersection = true;
 
             // This next section adds a red arrow for the move that left book
-            let arrowConfig = generateArrowConfig(move_made, analysis.invert_board, "red");
+            let arrowConfig = generateArrowConfig(move_made, invert_board, "red");
 
-            analysis.arrows.push(arrowConfig)
+            arrow = arrowConfig;
 
             break;
         }
     }
-    return {lastFEN, repertoireMoves};
+    return {lastFEN, repertoireMoves, finalMoveIndex, foundIntersection, arrow};
 }

@@ -6,7 +6,17 @@ import '@material/web/list/list.js';
 import '@material/web/list/list-item.js';
 import useWindowSize from "../hooks/useWindowSize";
 
-const AnalysisResult = ({analysisDatabase, game, index, nameOverride = "my-name"}) => {
+import Game from '../types/Game';
+import AnalysisDatabase from '../types/AnalysisDatabase';
+
+interface AnalysisResultPropTypes {
+  analysisDatabase: AnalysisDatabase,
+  game: Game,
+  index: number,
+  nameOverride: string
+}
+
+const AnalysisResult = ({analysisDatabase, game, index, nameOverride = "my-name"}: AnalysisResultPropTypes) => {
     const width = useWindowSize()[0];
 
     if (typeof game === "undefined") {
@@ -30,16 +40,12 @@ const AnalysisResult = ({analysisDatabase, game, index, nameOverride = "my-name"
         </md-list-item>
     }
 
-    let arrows = analysis.arrows.map(arrow => <Arrow {...{index, ...arrow}} ></Arrow>);
+    let arrows = analysis.arrows.map((arrow) => <Arrow {...{index, hidden: false, ...arrow}} ></Arrow>);
 
     const path = new URL(analysis.headers.ECOUrl).pathname;
 
     // Get the last path segment and replace hyphens with spaces
-    const openingName = path.split('/').pop().replace(/-/g, ' ');
-
-    // console.log("Opening was", openingName);
-
-
+    const openingName = path.split('/')?.pop()?.replace(/-/g, ' ');
 
     let widthOfChessboard = Math.min(width - 36, 513);
 
