@@ -45,7 +45,7 @@ export default async function analyzeGames(
         // console.timeEnd("calculateAnalysis")
 
         currentAnalysisDatabase[game.url] = analysis;
-        await delay(10);
+        // await delay(10);
 
         // Every few items, post back the progress so the UI can use it
         if (index > 0 && index % 10 === 0) {

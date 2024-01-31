@@ -3,8 +3,9 @@ import {getRepertoireMove} from "./getRepertoireMove";
 import generateArrowConfig from "./generateArrowConfig";
 import Repertoire from "../types/Repertoire";
 import { ArrowConfig } from "../types/ArrowConfig";
+import { ParsedPGN } from "pgn-parser";
 
-export function stepThroughMoves(mainChessGame: Chess, repertoire: Repertoire, invert_board: boolean):
+export function stepThroughMoves(mainChessGame: ParsedPGN, repertoire: Repertoire, invert_board: boolean):
         {lastFEN: string, repertoireMoves: string[], finalMoveIndex: number, foundIntersection: boolean, arrow: ArrowConfig | undefined} {
 
     let chessGameStepByStep = new Chess();
@@ -19,12 +20,12 @@ export function stepThroughMoves(mainChessGame: Chess, repertoire: Repertoire, i
     let lastFEN = '';
 
     // Play moves until you find a position that's not in the repertoire
-    for (let index = 0; index < mainChessGame.history().length; index++) {
+    for (let index = 0; index < mainChessGame.moves.length; index++) {
 
         // Save the last FEN so that we can display it later
         lastFEN = chessGameStepByStep.fen();
         // Get a chess.com move that we can add a red arrow for it later
-        let move_made = chessGameStepByStep.move(mainChessGame.history()[index]);
+        let move_made = chessGameStepByStep.move(mainChessGame.moves[index].move);
 
         let fen = chessGameStepByStep.fen();
 
