@@ -1,8 +1,9 @@
 
 import {Chess} from "chess.js";
 import generateArrowConfig from "./generateArrowConfig";
+import { ArrowConfig } from "../types/ArrowConfig";
 
-export function calculateGreenArrows(repertoireMoves, lastFEN, invert_board) {
+export function calculateGreenArrows(repertoireMoves: string[], lastFEN: string, invert_board: boolean): ArrowConfig[] {
 
     if (!repertoireMoves || !repertoireMoves.map) {
         return [];
@@ -10,8 +11,9 @@ export function calculateGreenArrows(repertoireMoves, lastFEN, invert_board) {
 
     let deduplicated = [...new Set(repertoireMoves)]
 
-    // Add arrows for each of the repertoire moves
-    return deduplicated.map(lastMove => {
+    let arrowConfigs : ArrowConfig[] = [];
+
+    deduplicated.forEach(lastMove => {
         // Create a chess.com game at the position from the last FEN
         let clonedGame = new Chess(lastFEN);
 
@@ -23,13 +25,16 @@ export function calculateGreenArrows(repertoireMoves, lastFEN, invert_board) {
             console.info("e", e);
             console.info(lastMove);
             console.info(clonedGame.ascii());
-            return '';
+            return;
         }
 
         // console.log("Got a move:", move);
 
         let arrowConfig = generateArrowConfig(move, invert_board, "green")
 
-        return arrowConfig;
-    }).filter(arrow => arrow !== '');
+        arrowConfigs.push(arrowConfig);
+    });
+
+    // Add arrows for each of the repertoire moves
+    return arrowConfigs
 }

@@ -1,7 +1,24 @@
+import AnalysisDatabase from "../types/AnalysisDatabase";
+import Game from "../types/Game";
+import Repertoire from "../types/Repertoire";
 import calculateAnalysis from "./calculateAnalysis";
-const delay = ms => new Promise(res => setTimeout(res, ms));
 
-export default async function analyzeGames(message, inProgressListener, finalListener){
+export interface AnalyzeGamesExpectedMessage {
+    data: InnerAnalyzeGamesExpectedMessage
+}
+
+export interface InnerAnalyzeGamesExpectedMessage {
+
+    analysisDatabase: AnalysisDatabase, 
+    repertoire: Repertoire, 
+    games: Game[], 
+    playerName: string
+}
+
+export default async function analyzeGames(
+        message : AnalyzeGamesExpectedMessage, 
+        inProgressListener: (value: AnalysisDatabase) => void, 
+        finalListener: (value: AnalysisDatabase) => void){
     // console.log("Starting to work", message)
     // { data: { analysisDatabase, repertoire, games, playerName } }
     // This format comes from the web worker message format
@@ -26,7 +43,7 @@ export default async function analyzeGames(message, inProgressListener, finalLis
         // console.timeEnd("calculateAnalysis")
 
         currentAnalysisDatabase[game.url] = analysis;
-        await delay(10);
+        // await delay(10);
 
         // Every few items, post back the progress so the UI can use it
         if (index > 0 && index % 10 === 0) {

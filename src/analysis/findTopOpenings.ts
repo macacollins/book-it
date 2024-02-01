@@ -1,5 +1,10 @@
-export default function findTopOpenings(games, analysisDatabase) {
-    let openingsCounts = {};
+import AnalysisDatabase from "../types/AnalysisDatabase";
+import Game from "../types/Game";
+
+export default function findTopOpenings(games: Game[], analysisDatabase: AnalysisDatabase) {
+    let openingsCounts: {
+        [openingFamilyName: string] : number
+    } = {};
 
     games.forEach(game => {
         const analysis = analysisDatabase[game.url];
@@ -13,13 +18,13 @@ export default function findTopOpenings(games, analysisDatabase) {
         }
     })
 
-    let openingList = [];
+    let openingList: {opening: string, count: number}[] = [];
     Object.keys(openingsCounts).forEach(key => {
         openingList.push({opening: key, count: openingsCounts[key]});
     })
 
     // Custom function to calculate a sorting criterion
-    function customSort(item) {
+    function customSort(item: { count: number}) {
         // For example, sorting based on the 'value' property
         return item.count;
     }

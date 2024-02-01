@@ -1,22 +1,40 @@
 import processNewRepertoire from '../integrations/processNewRepertoire';
 
+import Repertoire from '../types/Repertoire';
+
+interface FileUploadProps {
+    repertoire: { [name: string]: Repertoire },
+    setRepertoire: (newValue: { [name: string]: Repertoire }) => void,
+    newRepertoireNameField : string,
+    setNewRepertoireNameField: (newValue: string) => void,
+    repertoireList: string[],
+    setRepertoireList: (newValue: string[]) => void,
+    children: string
+}
+
 const FileUpload = ({
                         repertoire,
                         setRepertoire,
                         newRepertoireNameField,
                         setNewRepertoireNameField,
                         repertoireList,
-                        setRepertoireList
-                    }) => {
-    function handleFile(event) {
+                        setRepertoireList,
+                        children
+                    }: FileUploadProps) => {
+    function handleFile(event: { target: { files: FileList | null } }) {
         const fileInput = event.target;
+
+        if (!fileInput.files || fileInput.files.length === 0) {
+            return;
+        }
+
         const file = fileInput.files[0];
 
         if (file) {
             const reader = new FileReader();
 
             reader.onload = function (e) {
-                const fileContents = e.target.result;
+                const fileContents = e.target?.result;
                 //console.log("File Contents as String:", fileContents);
 
                 processNewRepertoire(fileContents, {

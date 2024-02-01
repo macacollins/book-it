@@ -1,12 +1,12 @@
 import './App.css';
 
-import {useState, useEffect, useReducer} from 'react';
+import {useState, useEffect, useReducer, Dispatch, SetStateAction} from 'react';
 import {setItemDexie} from './storage';
 
 import defaultGames from './integrations/default-games'
 
 import analysisDatabaseReducer from './reducers/analysisDatabase';
-import analyzeGames from './analysis/analyzeGames';
+import analyzeGames, { AnalyzeGamesExpectedMessage, InnerAnalyzeGamesExpectedMessage } from './analysis/analyzeGames';
 
 import './css/colors.module.css';
 import './css/theme.css';
@@ -14,6 +14,7 @@ import './css/theme.dark.css';
 import './css/theme.light.css';
 import './css/tokens.css';
 import './css/typography.module.css';
+import './intrinsics';
 
 // index.js
 import '@material/web/button/filled-button.js';
@@ -40,18 +41,36 @@ import ConfigPage from './pages/Configuration';
 import Results from './pages/Results';
 import Drills from './pages/Drills';
 import processNewRepertoire from './integrations/processNewRepertoire';
+
+import AnalysisDatabase from './types/AnalysisDatabase';
+import Repertoire from './types/Repertoire';
+import Game from './types/Game';
+
+
+interface AppProps {
+    analysisDatabaseStorage: AnalysisDatabase, 
+    repertoireStorage: { [name: string]: Repertoire },
+    gamesStorage: Game[],
+    playerNameStorage: string,
+    repertoireListStorage: string[],
+    userLeftBookOnlyStorage : boolean,
+    repertoireChoiceStorage : string,
+    // Do this later
+    worker: any,
+    activeTabStorage: string
+}
+
 function App({
                  analysisDatabaseStorage,
                  repertoireStorage,
                  gamesStorage,
                  playerNameStorage,
                  repertoireListStorage,
-                 matchingMovesStorage,
                  userLeftBookOnlyStorage,
                  repertoireChoiceStorage,
                  worker,
                  activeTabStorage
-             }) {
+             }: AppProps) {
 
     // Declare main state of application
     // This includes data stored by the application such as the repertoire and player name
@@ -59,15 +78,18 @@ function App({
     // The useState effect makes code very explicit about state stuff which is good
     const [playerName, setPlayerName] = useState(playerNameStorage || "")
 
-    const [repertoire, setRepertoire] = useState(repertoireStorage || {});
+    const [repertoire, setRepertoire]: 
+        [{ [name: string]: Repertoire }, Dispatch<SetStateAction<{ [name: string]: Repertoire }>>] 
+        = useState(repertoireStorage || {});
+
     const [repertoireChoice, setRepertoireChoice] = useState(repertoireChoiceStorage);
     const [repertoireList, setRepertoireList] = useState(repertoireListStorage || []);
 
     const [games, setGames] = useState(gamesStorage || []);
 
     const [newRepertoireNameField, setNewRepertoireNameField] = useState("");
-    const [userLeftBookOnly, setUserLeftBookOnly] = useState(userLeftBookOnlyStorage || true);
-    const [matchingMoves, setMatchingMoves] = useState(matchingMovesStorage || 3)
+
+    const [userLeftBookOnly, setUserLeftBookOnly] = useState(userLeftBookOnlyStorage);
 
     // tab navigation
     const [activeTab, setActiveTab] = useState((typeof activeTabStorage === "string" && activeTabStorage) || "panel-one");
@@ -100,7 +122,11 @@ function App({
         })()
     });
 
-    const [analysisDatabase, dispatchAnalysisDatabase] = useReducer(analysisDatabaseReducer, analysisDatabaseStorage);
+
+
+    const [analysisDatabase, dispatchAnalysisDatabase]
+        : [ AnalysisDatabase, (newValue: { type: string, data: AnalysisDatabase}) => void]
+        = useReducer(analysisDatabaseReducer, analysisDatabaseStorage);
 
     // If the repertoire or games change, start performing analysis on the games
     useEffect(() => {
@@ -113,7 +139,7 @@ function App({
 
             let currentRepertoire = repertoire[repertoireChoice];
 
-            function customSort(item) {
+            function customSort(item: Game) {
                 // For example, sorting based on the 'value' property
                 return item.end_time;
             }
@@ -123,11 +149,16 @@ function App({
                 return customSort(a) - customSort(b);
             }).reverse();
 
-            let payload = {analysisDatabase: analysisDatabase || {}, repertoire: currentRepertoire || {}, games: sortedGames || [], playerName};
+            let payload: InnerAnalyzeGamesExpectedMessage = {
+                analysisDatabase: analysisDatabase || {}, 
+                repertoire: currentRepertoire || {}, 
+                games: sortedGames || [], 
+                playerName
+            };
             // console.log("Sending ", payload);
             if (worker) {
                 worker.postMessage(payload);
-                worker.onmessage = (message) => {
+                worker.onmessage = (message: { data: { currentAnalysisDatabase: AnalysisDatabase }}) => {
                     // console.log("answer from worker", message);
 
                     dispatchAnalysisDatabase({
@@ -140,7 +171,7 @@ function App({
                 console.log("Worker was not available. Starting synchronous analysis");
                 // Do it synchronously
 
-                function reportBack(currentAnalysisDatabase) {
+                function reportBack(currentAnalysisDatabase: AnalysisDatabase) {
                     // console.log("answer from worker", message);
 
                     dispatchAnalysisDatabase({
@@ -149,7 +180,9 @@ function App({
                     })
                 }
 
-                analyzeGames({data: payload}, reportBack, reportBack)
+                let message : AnalyzeGamesExpectedMessage = { data: payload };
+
+                analyzeGames(message, reportBack, reportBack)
 
             }
         },
@@ -159,8 +192,8 @@ function App({
     )
 
     // Create the actual pages
-    const resultsPage = () =>
-        <Results {...{
+    const resultsPage = () => {
+        return <Results{...{
             games,
             userLeftBookOnly,
             setUserLeftBookOnly,
@@ -169,6 +202,7 @@ function App({
             analysisDatabase,
             setGames
         }}></Results>;
+    }
 
     const configPage = () => <ConfigPage {...{
         playerName,
@@ -181,25 +215,31 @@ function App({
         repertoire,
         repertoireList,
         setRepertoireList,
-        matchingMoves,
-        setMatchingMoves,
         dispatchAnalysisDatabase,
         setGames,
         games,
         analysisDatabase
-    }}/>
+    }}></ConfigPage>;
 
-    const drillPage = () => <Drills {...{games, analysisDatabase}}></Drills>
+    const drillPage = () => <Drills {...{games, analysisDatabase}}></Drills>;
 
     // set up tab change listener
     useEffect(() => {
 
-        const tabs = document.querySelector("#nav-tabs");
-        tabs.addEventListener('change', () => {
-            const panelId = tabs.activeTab?.getAttribute('aria-controls');
-            setActiveTab(panelId);
-            setItemDexie("activeTab", panelId);
-        });
+        interface SpecialElement extends Element {
+            activeTab: Element
+        }
+
+        const tabs: SpecialElement | null = document.querySelector("#nav-tabs");
+        if (tabs) {
+            tabs.addEventListener('change', () => {
+                const panelId = tabs.activeTab?.getAttribute('aria-controls');
+                if (panelId) {
+                    setActiveTab(panelId);
+                    setItemDexie("activeTab", panelId);
+                }
+            });
+        }
 
     }, []);
 
@@ -218,9 +258,10 @@ function App({
     const [ colorScheme, setColorScheme ] = useState(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 
     useEffect(() => {
+        const body = document.querySelector('body');
 
-        if (colorScheme === 'dark') {
-            document.querySelector('body').className = "dark-mode";
+        if (body && colorScheme === 'dark') {
+            body.className = "dark-mode";
         }
 
         window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').addListener(event => {
@@ -229,17 +270,21 @@ function App({
 
             setColorScheme(newColorScheme);
 
-            if (newColorScheme === 'dark') {
-                document.querySelector('body').className = "dark-mode";
-            } else {
-                document.querySelector('body').className = "";
+            
+
+            if (body) {
+                if (newColorScheme === 'dark') {
+                    body.className = "dark-mode";
+                } else {
+                    body.className = "";
+                }
             }
         });
     }, [colorScheme])
 
     let classProps = colorScheme === 'dark' ? { "class": "dark-mode"} : {};
 
-    return (
+    return <>
         <mio-root {...classProps}>
             <md-tabs
                 data-testid={"nav-tabs"}
@@ -266,7 +311,7 @@ function App({
                 {activeTab === "panel-three" ? drillPage() : ""}
             </div>
         </mio-root>
-    );
+    </>;
 }
 
 export default App;
