@@ -37,7 +37,7 @@ function calculateAnalysis(analysisDatabase: AnalysisDatabase, repertoire: Reper
 
     if (!mainChessGame) {
         // we are in trouble
-        throw "Broke"
+        throw new Error("Unable to parse PGN for game.");
     }
 
     const headers : { [ headerName: string ] : string } = {};

@@ -182,7 +182,7 @@ function App({
 
                 let message : AnalyzeGamesExpectedMessage = { data: payload };
 
-                analyzeGames({data: payload}, reportBack, reportBack)
+                analyzeGames(message, reportBack, reportBack)
 
             }
         },

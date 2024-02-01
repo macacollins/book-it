@@ -3,8 +3,6 @@ import Game from "../types/Game";
 import Repertoire from "../types/Repertoire";
 import calculateAnalysis from "./calculateAnalysis";
 
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-
 export interface AnalyzeGamesExpectedMessage {
     data: InnerAnalyzeGamesExpectedMessage
 }
