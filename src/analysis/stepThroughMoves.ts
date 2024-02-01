@@ -10,7 +10,6 @@ export function stepThroughMoves(mainChessGame: ParsedPGN, repertoire: Repertoir
 
     let chessGameStepByStep = new Chess();
     let checkFurther = false;
-    const gameCache = {};
     let repertoireMoves: string[] = [];
 
     let finalMoveIndex = 0;
@@ -42,7 +41,7 @@ export function stepThroughMoves(mainChessGame: ParsedPGN, repertoire: Repertoir
             finalMoveIndex = index;
 
             // console.log("Lines are", lines);
-            let movesFromRepertoire = lines.map(getRepertoireMove(gameCache, index));
+            let movesFromRepertoire = lines.map(getRepertoireMove(index));
 
             // Take out any "oops" that may have gotten in
             // TODO refactor this code so that this is not necessary

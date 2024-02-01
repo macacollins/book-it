@@ -1,4 +1,4 @@
-import {Chess} from 'chess.js'
+
 import {calculateAdvice} from "./calculateAdvice";
 import {calculateOpeningFamily} from "./calculateOpeningFamily";
 import {calculateFinalPosition} from "./calculateFinalPosition";
