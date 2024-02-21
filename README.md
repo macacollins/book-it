@@ -4,6 +4,8 @@
 
 Learn your chess openings with precisely targeted exercises based on your recent Chess.com games.
 
+Beginners in chess often get the advice to play the same moves at the start of every game (the "opening.") One way to practice your openings is to get a list of opening moves (a "book"), then play games and compare what you played in the game with that list. Chess is a complex game with many options for both sides, so it can be hard to remember what to do based on your opponent's moves. This application will automatically compare your games on chess.com with a list of opening moves that you provide. It will also allow you to practice the moves that you played that "left book", meaning that you didn't play the move from your list.
+
 You can try it out at [https://macacollins.github.io/book-it/](https://macacollins.github.io/book-it/).
 
 Or, check out the documentation in one of the other markdown files:
