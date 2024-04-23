@@ -1,6 +1,7 @@
 import AnalysisResult from "../components/AnalysisResult";
 import {setItemDexie} from "../storage";
-import refreshGames from "../integrations/chess.com";
+// import refreshGames from "../integrations/chess.com";
+import refreshGames from "../integrations/lichess.org";
 
 import {Dispatch, SetStateAction, useState} from 'react';
 import findTopOpenings from "../analysis/findTopOpenings";

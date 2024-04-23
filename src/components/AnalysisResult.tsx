@@ -42,10 +42,15 @@ const AnalysisResult = ({analysisDatabase, game, index, nameOverride = "my-name"
 
     let arrows = analysis.arrows.map((arrow) => <Arrow {...{index, hidden: false, ...arrow}} ></Arrow>);
 
-    const path = new URL(analysis.headers.ECOUrl).pathname;
+    let openingName;
+    if (analysis.headers.ECOUrl) {
+        const path = new URL(analysis.headers.ECOUrl).pathname;
 
-    // Get the last path segment and replace hyphens with spaces
-    const openingName = path.split('/')?.pop()?.replace(/-/g, ' ');
+        // Get the last path segment and replace hyphens with spaces
+        openingName = path.split('/')?.pop()?.replace(/-/g, ' ');
+    } else {
+        openingName = '';
+    }
 
     let widthOfChessboard = Math.min(width - 36, 513);
 
