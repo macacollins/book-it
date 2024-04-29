@@ -7,6 +7,7 @@ async function loadCachedData() {
             "repertoire",
             "games",
             "playerName",
+            "lichessPlayerName",
             "repertoireList",
             "matchingMoves",
             "userLeftBookOnly",

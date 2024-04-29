@@ -33,7 +33,7 @@ export default function getGameFromPGN(inputPGN: ParsedPGN): Game | null {
         });
 
         var someDate = new Date(headersObject["UTCDate"] + " " + headersObject["UTCTime"] + "Z");
-        const end_time = someDate.getTime();
+        const end_time = someDate.getTime() / 1000;
 
         return {
             url : headersObject["Site"] || "",
@@ -46,6 +46,7 @@ export default function getGameFromPGN(inputPGN: ParsedPGN): Game | null {
     return null;
 }
 
+// this is silly
 function rePGNLine(parsedPgn: ParsedPGN): string {
 
     let headerPGN = '';

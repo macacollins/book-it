@@ -1,4 +1,4 @@
-import {setItemDexie} from '../storage';
+import {getItemDexie, setItemDexie} from '../storage';
 
 // Function to get the year and month X months back
 function getYearAndMonthXMonthsAgo(X) {
@@ -64,14 +64,39 @@ async function refreshGames(games, setGames, playerName, setSyncingGames) {
     }
     setSyncingGames(false);
 
+    console.log("Got " + finalGames.length + " from chess.com.")
+
+
     if (finalGames.length === 0 && playerName === "example") {
         // For the example, we don't want to clear out the games if they press this
         return;
     }
 
-    if (games.length !== finalGames.length) {
-        setGames(finalGames);
-        setItemDexie('games', finalGames);
+    let storageGames = await getItemDexie('games');
+
+    const chessDotComGames = storageGames.filter(game => {
+        return game.url.indexOf("chess.com") !== -1;
+    })
+
+    const otherGames = storageGames.filter(game => {
+        return game.url.indexOf("chess.com") === -1;
+    })
+
+    if (chessDotComGames.length !== finalGames.length) {
+
+        let actualFinalGames = [ ... finalGames, ... otherGames ] 
+
+        function customSort(item) {
+            // For example, sorting based on the 'value' property
+            return item.end_time;
+        }
+
+        actualFinalGames = actualFinalGames.sort(function (a, b) {
+            return customSort(a) - customSort(b);
+        }).reverse();
+
+        setGames(actualFinalGames);
+        setItemDexie('games', actualFinalGames);
     }
 }
 
