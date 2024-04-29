@@ -5,8 +5,16 @@ import Repertoire from "../types/Repertoire";
 import { ArrowConfig } from "../types/ArrowConfig";
 import { ParsedPGN } from "pgn-parser";
 
-export function stepThroughMoves(mainChessGame: ParsedPGN, repertoire: Repertoire, invert_board: boolean):
-        {lastFEN: string, repertoireMoves: string[], finalMoveIndex: number, foundIntersection: boolean, arrow: ArrowConfig | undefined} {
+interface Result {
+    lastFEN: string, 
+    repertoireMoves: string[], 
+    finalMoveIndex: number, 
+    foundIntersection: boolean, 
+    arrow: ArrowConfig | undefined
+};
+
+export function stepThroughMoves(mainChessGame: ParsedPGN, repertoire: Repertoire, invert_board: boolean): Result
+         {
 
     let chessGameStepByStep = new Chess();
     let checkFurther = false;
@@ -17,6 +25,10 @@ export function stepThroughMoves(mainChessGame: ParsedPGN, repertoire: Repertoir
     let arrow: ArrowConfig | undefined = undefined;
 
     let lastFEN = '';
+
+    let lastMatch;
+
+    let numberMatchingSegments = 0;
 
     // Play moves until you find a position that's not in the repertoire
     for (let index = 0; index < mainChessGame.moves.length; index++) {
@@ -29,10 +41,12 @@ export function stepThroughMoves(mainChessGame: ParsedPGN, repertoire: Repertoir
         let fen = chessGameStepByStep.fen();
 
         // If the position was in the repertoire, mark that we found a position in it
-        if (repertoire[fen]) {
+        if (!checkFurther && repertoire[fen]) {
             // recognized at least one
             checkFurther = true;
+            numberMatchingSegments++;
         }
+
         // If we matched once, but don't match the current position, we have left the repertoire
         // Save the position details, add the arrows, etc. and break from the loop
         if (checkFurther && !repertoire[fen]) {
@@ -42,6 +56,7 @@ export function stepThroughMoves(mainChessGame: ParsedPGN, repertoire: Repertoir
 
             // console.log("Lines are", lines);
             let movesFromRepertoire = lines.map(getRepertoireMove(index));
+
 
             // Take out any "oops" that may have gotten in
             // TODO refactor this code so that this is not necessary
@@ -54,8 +69,15 @@ export function stepThroughMoves(mainChessGame: ParsedPGN, repertoire: Repertoir
 
             arrow = arrowConfig;
 
-            break;
+            lastMatch = {lastFEN, repertoireMoves, finalMoveIndex, foundIntersection, arrow};
+            checkFurther = false;
+            console.log("Setting check further to false but continuing.", numberMatchingSegments)
         }
     }
-    return {lastFEN, repertoireMoves, finalMoveIndex, foundIntersection, arrow};
+
+    if (lastMatch) {
+        return lastMatch;
+    } else {
+        return {lastFEN, repertoireMoves, finalMoveIndex, foundIntersection, arrow}
+    };
 }

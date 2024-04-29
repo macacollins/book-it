@@ -56,17 +56,20 @@ export function calculateRepertoire(lines) {
                 continue;
             }
             
+            const trimmedFEN = stepByStepHistory.fen();
+
             // Add the result to fenRepo
-            if (fenRepo[stepByStepHistory.fen()]) {
-                fenRepo[stepByStepHistory.fen()].push(rePGNLine(game));
+            if (fenRepo[trimmedFEN]) {
+                fenRepo[trimmedFEN].push(rePGNLine(game));
             } else {
-                fenRepo[stepByStepHistory.fen()] = [rePGNLine(game)];
+                fenRepo[trimmedFEN] = [rePGNLine(game)];
             }
         }
 
     }
     return fenRepo;
 }
+
 
 function rePGNLine(parsedPgn) {
     let currentNumber = 1;

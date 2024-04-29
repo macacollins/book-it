@@ -29,7 +29,6 @@ function calculateAnalysis(analysisDatabase: AnalysisDatabase, repertoire: Reper
         return analysisDatabase[game.url]
     }
 
-
     // Load the PGN for the game into Chess.js so we can manipulate it in JavaScript
     // let mainChessGame = new Chess();
     // mainChessGame.loadPgn(game.pgn);
