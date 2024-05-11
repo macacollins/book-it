@@ -11,7 +11,7 @@ beforeAll(() => {
 
     let playerName = "example";
 
-    let repertoire = calculateRepertoire(defaultLines);
+    let repertoire = calculateRepertoire(defaultLines.split("\n"));
 
     let analysisDatabase = {};
 

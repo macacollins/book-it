@@ -15,12 +15,21 @@ beforeAll(() => {
 
     let playerName = "example";
 
-    let repertoire = calculateRepertoire(defaultLines);
+    const linesSplit = defaultLines.split("\n");
+
+    console.log("Defualt lines ", linesSplit);
+    console.log("Defualt lines ", typeof linesSplit);
+
+    let repertoire = calculateRepertoire(linesSplit);
 
     for (let game of defaultGames) {
         let analysis = calculateAnalysis(analysisDatabase, repertoire, game, playerName);
         analysisDatabase[game.url] = analysis;
     }
+
+
+    console.log("Repertoire", repertoire)
+    console.log("Analysis db", analysisDatabase)
 
     global.Chessboard = jest.fn();
     global.fetch = jest.fn(() => Promise.resolve());
