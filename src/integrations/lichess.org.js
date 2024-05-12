@@ -4,32 +4,6 @@ import pgnParser, { ParsedPGN } from 'pgn-parser';
 
 import getGameFromPGN from './getGameFromPGN';
 
-
-// Function to get the year and month X months back
-function getYearAndMonthXMonthsAgo(X) {
-    const currentDate = new Date();
-    const targetDate = new Date(currentDate);
-
-    let currentYear = targetDate.getFullYear();
-    let currentMonth = targetDate.getMonth();
-
-    for (let i = 0; i < X; i++) {
-        if (currentMonth === 0) {
-            currentMonth = 11;
-            currentYear = currentYear - 1;
-        } else {
-            currentMonth = currentMonth - 1;
-        }
-    }
-
-    currentMonth += 1;
-
-    const twoDigitMonth =
-        currentMonth > 9 ? currentMonth : "0" + currentMonth;
-
-    return {year: currentYear, month: twoDigitMonth};
-}
-
 async function refreshGames(games, setGames, playerName, setSyncingGames) {
     console.log("Fetching games from lichess.org");
 
