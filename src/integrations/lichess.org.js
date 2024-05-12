@@ -1,6 +1,6 @@
 import {getItemDexie, setItemDexie} from '../storage';
 
-import pgnParser, { ParsedPGN } from 'pgn-parser';
+import pgnParser from 'pgn-parser';
 
 import getGameFromPGN from './getGameFromPGN';
 
@@ -29,12 +29,6 @@ async function refreshGames(games, setGames, playerName, setSyncingGames) {
                 const games = pgnParser.parse(data);
 
                 finalGames = games.map(getGameFromPGN)
-
-                const thisMonthGames = data.games || [];
-
-                const newGames = thisMonthGames.reverse();
-
-                // const fullGameList = [...new Set([...finalGames, ...newGames])];
 
                 function customSort(item) {
                     // For example, sorting based on the 'value' property
@@ -70,7 +64,7 @@ async function refreshGames(games, setGames, playerName, setSyncingGames) {
 
     if (lichessDotOrgGames.length !== finalGames.length) {
 
-        let actualFinalGames = [ ... finalGames, ... otherGames ] 
+        let actualFinalGames = [ ...finalGames, ...otherGames ] 
 
         function customSort(item) {
             // For example, sorting based on the 'value' property

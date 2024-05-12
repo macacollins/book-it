@@ -84,7 +84,7 @@ async function refreshGames(games, setGames, playerName, setSyncingGames) {
 
     if (chessDotComGames.length !== finalGames.length) {
 
-        let actualFinalGames = [ ... finalGames, ... otherGames ] 
+        let actualFinalGames = [ ...finalGames, ...otherGames ] 
 
         function customSort(item) {
             // For example, sorting based on the 'value' property

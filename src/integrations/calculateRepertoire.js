@@ -1,14 +1,9 @@
 // This function takes in a list of games in PGN format
 import {Chess} from "chess.js";
-import pgnParser, { ParsedPGN } from 'pgn-parser';
+import pgnParser from 'pgn-parser';
 
 
 export function calculateRepertoire(lines) {
-
-    let linesArray =
-        typeof lines === 'string' ? lines.split("\n") :
-        lines.map ? lines
-            : [];
 
     let parsed = [];
     // let allLines = new Chess();
@@ -35,10 +30,6 @@ export function calculateRepertoire(lines) {
     // then put the FEN and line in the fenRepo map. This allows us to quickly pull up
     // the repertoire lines for the given position.
     for (let game of parsed) {
-
-        // Load up the game using the Chess.js library
-        // This allows us to navigate through the game in JS code
-        let fullGame = new Chess();
 
         // Create a new Chess.js game so that we can play the moves one by one
         // NOTE: The undo() function in Chess.js did not generate FEN in the expected fashion
