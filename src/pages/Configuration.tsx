@@ -7,6 +7,8 @@ import Game from '../types/Game';
 interface ConfigPageProps {
     playerName: string,
     setPlayerName: (newValue: string) => void,
+    lichessPlayerName: string,
+    setLichessPlayerName: (newValue: string) => void,
     repertoireChoice: string,
     setRepertoireChoice: (newValue: string) => void,
     newRepertoireNameField: string,
@@ -24,6 +26,8 @@ interface ConfigPageProps {
 function ConfigPage({
                         playerName,
                         setPlayerName,
+                        lichessPlayerName,
+                        setLichessPlayerName,
                         repertoireChoice,
                         setRepertoireChoice,
                         newRepertoireNameField,
@@ -111,8 +115,6 @@ function ConfigPage({
 
         <h3>User</h3>
         <p>Please enter your chess.com username</p>
-
-
         <md-outlined-text-field
             data-testid={"chess-dot-com-username"}
             label="chess.com Username"
@@ -121,6 +123,18 @@ function ConfigPage({
                 // console.log(e);
                 setPlayerName(e.target.value);
                 setItemDexie("playerName", e.target.value);
+            }}>
+        </md-outlined-text-field>
+
+        <p>Please enter your lichess.org username</p>
+        <md-outlined-text-field
+            data-testid={"lichess-dot-org-username"}
+            label="lichess.org Username"
+            value={lichessPlayerName}
+            onInput={(e: { target: { value: string }}) => {
+                // console.log(e);
+                setLichessPlayerName(e.target.value);
+                setItemDexie("lichessPlayerName", e.target.value);
             }}>
         </md-outlined-text-field>
 

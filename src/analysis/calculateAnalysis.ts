@@ -20,7 +20,7 @@ import pgnParser, { ParsedPGN } from 'pgn-parser';
 //   - Red if it is the move that was played
 // - What chess opening was used in this game?
 // - Also cache chess.com headers and URL
-function calculateAnalysis(analysisDatabase: AnalysisDatabase, repertoire: Repertoire, game: Game, playerName: string): AnalysisResult {
+function calculateAnalysis(analysisDatabase: AnalysisDatabase, repertoire: Repertoire, game: Game, playerName: string, lichessPlayerName: string): AnalysisResult {
 
     // If we already have the game analyzed, just return
     if (analysisDatabase[game.url]) {
@@ -45,9 +45,11 @@ function calculateAnalysis(analysisDatabase: AnalysisDatabase, repertoire: Reper
         headers[header.name] = header.value;
     }
 
+    let realPlayerName = headers["Site"]?.indexOf("lichess") === -1 ? playerName : lichessPlayerName;
+
     // this is single analysis for one game
     // For this application, we will invert the board if the player had the black pieces
-    const invert_board = headers.Black === playerName;
+    const invert_board = headers.Black === realPlayerName;
     const { lastFEN, repertoireMoves, finalMoveIndex, foundIntersection, arrow } = 
             stepThroughMoves(mainChessGame, repertoire, invert_board);
 
@@ -63,8 +65,8 @@ function calculateAnalysis(analysisDatabase: AnalysisDatabase, repertoire: Reper
     const youLeftBook =
         foundIntersection && (
             chessGameDisplay.turn() === "w" ?
-                headers.White === playerName :
-                headers.Black === playerName);
+                headers.White === realPlayerName :
+                headers.Black === realPlayerName);
 
     const advice = calculateAdvice(foundIntersection, youLeftBook);
     const displayFEN = chessGameDisplay.fen();

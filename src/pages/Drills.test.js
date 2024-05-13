@@ -18,7 +18,7 @@ beforeAll(() => {
 
     let playerName = "example";
 
-    let repertoire = calculateRepertoire(defaultLines);
+    let repertoire = calculateRepertoire(defaultLines.split("\n"));
 
     for (let game of defaultGames) {
         let analysis = calculateAnalysis(analysisDatabase, repertoire, game, playerName);

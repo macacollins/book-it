@@ -1,6 +1,8 @@
 import AnalysisResult from "../components/AnalysisResult";
 import {setItemDexie} from "../storage";
-import refreshGames from "../integrations/chess.com";
+// import refreshGames from "../integrations/chess.com";
+import refreshGamesLichess from "../integrations/lichess.org";
+import refreshGamesChessCom from "../integrations/chess.com";
 
 import {Dispatch, SetStateAction, useState} from 'react';
 import findTopOpenings from "../analysis/findTopOpenings";
@@ -13,6 +15,7 @@ interface ResultsProps {
     userLeftBookOnly: boolean,
     setUserLeftBookOnly: Dispatch<SetStateAction<boolean>>,
     playerName: string,
+    playerNameLichess: string,
     repertoireChoice: string,
     analysisDatabase: AnalysisDatabase,
     setGames: (newValue: Game[]) => void
@@ -24,12 +27,14 @@ export default function Results({
                                     setUserLeftBookOnly,
                                     playerName,
                                     repertoireChoice,
+                                    playerNameLichess,
                                     analysisDatabase,
                                     setGames
                                 }: ResultsProps) {
     const [currentPage, setCurrentPage] = useState(1);
 
     const [syncingGames, setSyncingGames] = useState(false);
+    const [syncingGamesLichess, setSyncingGamesLichess] = useState(false);
 
     const itemsPerPage = 10;
 
@@ -165,6 +170,7 @@ export default function Results({
     const paginationSection = <div className={"pagination"}><div className={"page"}>{"Page | "}</div>{paginationButtons}</div>
 
     const syncingIndicator = syncingGames ? <md-circular-progress indeterminate></md-circular-progress> : '';
+    const syncingIndicator2 = syncingGamesLichess ? <md-circular-progress indeterminate></md-circular-progress> : '';
 
     return <>
         <h2>Games</h2>
@@ -182,10 +188,12 @@ export default function Results({
             <md-filled-button data-testid="refreshGamesButton"
                               onClick={() => {
                                   setSyncingGames(true);
-                                  refreshGames(games, setGames, playerName, setSyncingGames)
+                                  setSyncingGamesLichess(true);
+                                  refreshGamesChessCom(games, setGames, playerName, setSyncingGames)
+                                  refreshGamesLichess(games, setGames, playerNameLichess, setSyncingGamesLichess)
                               }}>Refresh games
             </md-filled-button>
-            {syncingIndicator}
+            {syncingIndicator}{syncingIndicator2}
         </p>
         <p>{`Found ${filteredGamesLength} results.`}</p>
         {paginationSection}
