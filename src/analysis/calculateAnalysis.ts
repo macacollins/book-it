@@ -71,7 +71,7 @@ function calculateAnalysis(analysisDatabase: AnalysisDatabase, repertoire: Reper
     const advice = calculateAdvice(foundIntersection, youLeftBook);
     const displayFEN = chessGameDisplay.fen();
 
-    const openingFamily = calculateOpeningFamily(headers);
+    const openingFamily = calculateOpeningFamily(headers, mainChessGame);
 
     const result = headers.Result;
 

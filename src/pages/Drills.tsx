@@ -1,4 +1,4 @@
-import {useState, useRef, Dispatch, SetStateAction} from 'react';
+import {useState, useRef, useEffect, Dispatch, SetStateAction} from 'react';
 
 import AnalysisDatabase from '../types/AnalysisDatabase';
 import Game from '../types/Game';
@@ -28,21 +28,81 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
     const [ currentDrillMode, setCurrentDrillMode ] = 
             useState('Unselected');
 
-
-
-
     const frequencyTable: ({ [fen: string] : number }) = {};
     const gameLookup: ({ [fen: string] : Game }) = {};
 
 
-    let finalGames: Game[] = [];
+    const [ exerciseGames, setExerciseGames ]: [Game[], any] = useState([]);
 
-    let normalGames = (games && games.filter &&
-        games.filter((nextGame: Game) => {
-            return analysisDatabase[nextGame.url] && analysisDatabase[nextGame.url].youLeftBook && analysisDatabase[nextGame.url].foundIntersection
-        })) || [];
+    // cache drills to run to avoid re-computing each time
+    useEffect(() => {
 
+        let finalGames: Game[] = [];
+
+        let normalGames = (games && games.filter &&
+            games.filter((nextGame: Game) => {
+                return analysisDatabase[nextGame.url] && analysisDatabase[nextGame.url].youLeftBook && analysisDatabase[nextGame.url].foundIntersection
+            })) || [];
+
+        if (currentDrillMode === 'Time') {
+            finalGames = normalGames
+    
+        } else if (currentDrillMode === 'FromPosition') {
+    
+            finalGames = normalGames.filter((game: Game) => {
+                return analysisDatabase[game.url].openingFamily === currentOpeningFilter;
+            })
+    
+        } else if (currentDrillMode === 'Frequency') {
+            if (games && games.filter) {
+    
+                games.filter((nextGame: Game) => {
+                    return analysisDatabase[nextGame.url] && analysisDatabase[nextGame.url].youLeftBook && analysisDatabase[nextGame.url].foundIntersection
+                }).forEach( (game: Game) => {
+    
+                    let activeFEN = analysisDatabase[game.url].displayFEN;
+    
+                    if (frequencyTable[activeFEN]) {
+                        frequencyTable[activeFEN] = frequencyTable[activeFEN] + 1
+                    } else {
+                        frequencyTable[activeFEN] = 1
+                        gameLookup[activeFEN] = game;
+                    }
+                })
+    
+                function frequencyComparison(a: string, b: string) {
+                    return frequencyTable[b] - frequencyTable[a]
+                }
+    
+                finalGames = Object.keys(gameLookup).sort(frequencyComparison).map(fen => gameLookup[fen]);
+            }
+    
+            console.log("Got sorted games. Top 3 games below.")
+    
+            let firstGameAscii = new Chess(finalGames[0].fen).ascii();
+    
+            console.log(`With ${frequencyTable[finalGames[0].fen]} results`, firstGameAscii)
+    
+            if (finalGames.length > 2) {
+                let secondGameAscii = new Chess(finalGames[1].fen).ascii();
+                let thirdGameAscii = new Chess(finalGames[2].fen).ascii();
+    
+                console.log(`With ${frequencyTable[finalGames[1].fen]} results`, secondGameAscii)
+                console.log(`With ${frequencyTable[finalGames[2].fen]} results`, thirdGameAscii)
+            }
+        }
+
+        setExerciseGames(finalGames);
+
+    }, [currentDrillMode])
+
+    // TODO separate into menu component?
     if (currentDrillMode === 'Unselected') {
+
+        let normalGames = (games && games.filter &&
+            games.filter((nextGame: Game) => {
+                return analysisDatabase[nextGame.url] && analysisDatabase[nextGame.url].youLeftBook && analysisDatabase[nextGame.url].foundIntersection
+            })) || [];
 
         let topOpenings = findTopOpenings(normalGames, analysisDatabase).slice(0, 14);
 
@@ -94,56 +154,12 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
 
             { openingFiltersFull }
         </>)
-    } else if (currentDrillMode === 'Time') {
-        finalGames = normalGames
-    } else if (currentDrillMode === 'FromPosition') {
-        finalGames = normalGames.filter((game: Game) => {
-            return analysisDatabase[game.url].openingFamily === currentOpeningFilter;
-        })
-    } else if (currentDrillMode === 'Frequency') {
-        // TODO take this out of the render loop; a useEffect hook with buttons for what type of drill
-        // is prolly the right way to do it
-        if (games && games.filter) {
 
-            games.filter((nextGame: Game) => {
-                return analysisDatabase[nextGame.url] && analysisDatabase[nextGame.url].youLeftBook && analysisDatabase[nextGame.url].foundIntersection
-            }).forEach( (game: Game) => {
-
-                let activeFEN = analysisDatabase[game.url].displayFEN;
-
-                if (frequencyTable[activeFEN]) {
-                    frequencyTable[activeFEN] = frequencyTable[activeFEN] + 1
-                } else {
-                    frequencyTable[activeFEN] = 1
-                    gameLookup[activeFEN] = game;
-                }
-            })
-
-            function frequencyComparison(a: string, b: string) {
-                return frequencyTable[b] - frequencyTable[a]
-            }
-
-            finalGames = Object.keys(gameLookup).sort(frequencyComparison).map(fen => gameLookup[fen]);
-        }
-
-        console.log("Got sorted games. Top 3 games below.")
-
-        let firstGameAscii = new Chess(finalGames[0].fen).ascii();
-
-        console.log(`With ${frequencyTable[finalGames[0].fen]} results`, firstGameAscii)
-
-        if (finalGames.length > 2) {
-            let secondGameAscii = new Chess(finalGames[1].fen).ascii();
-            let thirdGameAscii = new Chess(finalGames[2].fen).ascii();
-
-            console.log(`With ${frequencyTable[finalGames[1].fen]} results`, secondGameAscii)
-            console.log(`With ${frequencyTable[finalGames[2].fen]} results`, thirdGameAscii)
-        }
     }
 
     const maybeNextGame : Game | undefined = 
-        finalGames.length > currentDrillIndex ?
-            finalGames[currentDrillIndex] :
+        exerciseGames.length > currentDrillIndex ?
+        exerciseGames[currentDrillIndex] :
             undefined;
 
     let drillBoard = <></>;
