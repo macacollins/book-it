@@ -1,4 +1,4 @@
-import {useState, useRef} from 'react';
+import {useState, useRef, Dispatch, SetStateAction} from 'react';
 
 import AnalysisDatabase from '../types/AnalysisDatabase';
 import Game from '../types/Game';
@@ -6,6 +6,11 @@ import Arrow from '../components/Arrow';
 import ChessBoard from '../components/ChessBoard';
 import {Chess} from 'chess.js';
 import useWindowSize from '../hooks/useWindowSize'
+
+import findTopOpenings from '../analysis/findTopOpenings';
+
+// TODO make this happen 
+type DrillMode = 'Unselected' | 'Frequency' | 'Time' | 'FromPosition';
 
 export default function Drills(props:{analysisDatabase: AnalysisDatabase, games: any} ) {
     const analysisDatabase: AnalysisDatabase = props.analysisDatabase;
@@ -16,18 +21,130 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
     const [currentDrillIndex, setCurrentDrillIndex] = useState(0);
     const [currentDrillResult, setCurrentDrillResult] = useState("");
 
+    const [currentOpeningFilter, setCurrentOpeningFilter] = useState("");
     const madeMove = useRef(false);
 
-    const filteredGames = (games && games.filter &&
+    //[{ [name: string]: Repertoire }, Dispatch<SetStateAction<{ [name: string]: Repertoire }>>] 
+    const [ currentDrillMode, setCurrentDrillMode ] = 
+            useState('Unselected');
+
+
+
+
+    const frequencyTable: ({ [fen: string] : number }) = {};
+    const gameLookup: ({ [fen: string] : Game }) = {};
+
+
+    let finalGames: Game[] = [];
+
+    let normalGames = (games && games.filter &&
         games.filter((nextGame: Game) => {
             return analysisDatabase[nextGame.url] && analysisDatabase[nextGame.url].youLeftBook && analysisDatabase[nextGame.url].foundIntersection
-        })) || []
+        })) || [];
+
+    if (currentDrillMode === 'Unselected') {
+
+        let topOpenings = findTopOpenings(normalGames, analysisDatabase).slice(0, 14);
+
+        let openingFilters = topOpenings.map(({opening, count}) =>
+            <md-select-option data-testid={`opening-${opening}`}
+                            key={opening}
+                            value={opening}
+                            onClick={() => {
+                                setCurrentOpeningFilter(opening)
+                            }}>
+                {opening} {count}
+            </md-select-option>
+        );
+
+        const openingFiltersFull = <><h3>Opening Filter</h3>
+            <md-outlined-select>
+                {openingFilters}
+            </md-outlined-select>
+        </>
+        
+        return (<>
+
+            <md-filled-button
+                data-testid={"time-button"}
+                className={"time-button"}
+                onClick={() => {
+                    setCurrentDrillMode('Time');
+                }}>
+                Time
+            </md-filled-button>
+
+            <md-filled-button
+                data-testid={"frequency-button"}
+                className={"frequency-button"}
+                onClick={() => {
+                    setCurrentDrillMode('Frequency');
+                }}>
+                Frequency
+            </md-filled-button>
+
+            <md-filled-button
+                data-testid={"from-position-button"}
+                className={"from-position-button"}
+                onClick={() => {
+                    setCurrentDrillMode('FromPosition');
+                }}>
+                From Position
+            </md-filled-button>
+
+            { openingFiltersFull }
+        </>)
+    } else if (currentDrillMode === 'Time') {
+        finalGames = normalGames
+    } else if (currentDrillMode === 'FromPosition') {
+        finalGames = normalGames.filter((game: Game) => {
+            return analysisDatabase[game.url].openingFamily === currentOpeningFilter;
+        })
+    } else if (currentDrillMode === 'Frequency') {
+        // TODO take this out of the render loop; a useEffect hook with buttons for what type of drill
+        // is prolly the right way to do it
+        if (games && games.filter) {
+
+            games.filter((nextGame: Game) => {
+                return analysisDatabase[nextGame.url] && analysisDatabase[nextGame.url].youLeftBook && analysisDatabase[nextGame.url].foundIntersection
+            }).forEach( (game: Game) => {
+
+                let activeFEN = analysisDatabase[game.url].displayFEN;
+
+                if (frequencyTable[activeFEN]) {
+                    frequencyTable[activeFEN] = frequencyTable[activeFEN] + 1
+                } else {
+                    frequencyTable[activeFEN] = 1
+                    gameLookup[activeFEN] = game;
+                }
+            })
+
+            function frequencyComparison(a: string, b: string) {
+                return frequencyTable[b] - frequencyTable[a]
+            }
+
+            finalGames = Object.keys(gameLookup).sort(frequencyComparison).map(fen => gameLookup[fen]);
+        }
+
+        console.log("Got sorted games. Top 3 games below.")
+
+        let firstGameAscii = new Chess(finalGames[0].fen).ascii();
+
+        console.log(`With ${frequencyTable[finalGames[0].fen]} results`, firstGameAscii)
+
+        if (finalGames.length > 2) {
+            let secondGameAscii = new Chess(finalGames[1].fen).ascii();
+            let thirdGameAscii = new Chess(finalGames[2].fen).ascii();
+
+            console.log(`With ${frequencyTable[finalGames[1].fen]} results`, secondGameAscii)
+            console.log(`With ${frequencyTable[finalGames[2].fen]} results`, thirdGameAscii)
+        }
+    }
 
     const maybeNextGame : Game | undefined = 
-        filteredGames.length > currentDrillIndex ?
-            filteredGames[currentDrillIndex] :
+        finalGames.length > currentDrillIndex ?
+            finalGames[currentDrillIndex] :
             undefined;
-
 
     let drillBoard = <></>;
     let drillCurrentDisplay = <></>;
@@ -106,6 +223,7 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
                         onClick={() => window.open('https://www.chessable.com/courses/fen/' + drillAnalysisResult.displayFEN)}>Chessable
 
                     </md-text-button>
+                    {frequencyTable[drillAnalysisResult.displayFEN]}
                     <br></br>
 
                 </div>
