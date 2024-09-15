@@ -8,9 +8,10 @@ import {Chess} from 'chess.js';
 import useWindowSize from '../hooks/useWindowSize'
 
 import findTopOpenings from '../analysis/findTopOpenings';
+import speakMoves from '../speech/speak';
 
 // TODO make this happen 
-type DrillMode = 'Unselected' | 'Frequency' | 'Time' | 'FromPosition';
+type DrillMode = 'Unselected' | 'Frequency' | 'Time' | 'Blind' | 'FromPosition';
 
 export default function Drills(props:{analysisDatabase: AnalysisDatabase, games: any} ) {
     const analysisDatabase: AnalysisDatabase = props.analysisDatabase;
@@ -22,6 +23,9 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
     const [currentDrillResult, setCurrentDrillResult] = useState("");
 
     const [currentOpeningFilter, setCurrentOpeningFilter] = useState("");
+
+    const [showBlindfoldAnswer, setShowBlindfoldAnswer ] = useState(false);
+
     const madeMove = useRef(false);
 
     //[{ [name: string]: Repertoire }, Dispatch<SetStateAction<{ [name: string]: Repertoire }>>] 
@@ -44,8 +48,16 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
                 return analysisDatabase[nextGame.url] && analysisDatabase[nextGame.url].youLeftBook && analysisDatabase[nextGame.url].foundIntersection
             })) || [];
 
-        if (currentDrillMode === 'Time') {
+        if (currentDrillMode === 'Time' || currentDrillMode === 'Blindfold') {
             finalGames = normalGames
+
+            if (currentOpeningFilter) {
+                    
+                finalGames = normalGames.filter((game: Game) => {
+                    return analysisDatabase[game.url].openingFamily === currentOpeningFilter;
+                })
+    
+            }
     
         } else if (currentDrillMode === 'FromPosition') {
     
@@ -150,6 +162,15 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
                     setCurrentDrillMode('FromPosition');
                 }}>
                 From Position
+            </md-filled-button>
+
+            <md-filled-button
+                data-testid={"from-position-button"}
+                className={"from-position-button"}
+                onClick={() => {
+                    setCurrentDrillMode('Blindfold');
+                }}>
+                Blindfold
             </md-filled-button>
 
             { openingFiltersFull }
@@ -278,6 +299,64 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
             </>
 
         }
+    }
+
+    const blindfoldButtons = <>
+        <md-filled-button
+            data-testid={"speak-button"}
+            onClick={() => {
+             // TODO
+             if (maybeNextGame) {
+                const nextGame: Game = maybeNextGame;
+
+                const drillAnalysisResult = analysisDatabase[nextGame.url];
+    
+                const chessJSGame = new Chess();
+                chessJSGame.loadPgn(nextGame.pgn);
+    
+                const moves = chessJSGame.history().slice(0, drillAnalysisResult.finalMoveIndex);
+
+                speakMoves(moves, drillAnalysisResult.invert_board);
+             }
+
+        }}>Speak
+        </md-filled-button>
+        { showBlindfoldAnswer ? 
+            <md-filled-button
+                data-testid={"hide-answer-button"}
+                onClick={() => {
+                    setShowBlindfoldAnswer(false);
+            }}>Hide answer
+            </md-filled-button> :
+            <md-filled-button
+            data-testid={"see-answer-button"}
+            onClick={() => {
+                setShowBlindfoldAnswer(true);
+            }}>See answer
+            </md-filled-button>
+            }
+        <md-filled-button
+            data-testid={"next-button"}
+            onClick={() => {
+            setCurrentDrillIndex(currentDrillIndex + 1);
+            setCurrentDrillResult("");
+            setShowBlindfoldAnswer(false);
+        }}>Next
+        </md-filled-button>
+    </>
+    const drillAnalysisResult = maybeNextGame && analysisDatabase[maybeNextGame?.url];
+
+    let filtered: any =
+    drillAnalysisResult
+        ?.arrows
+        .filter((arrow: any) => arrow.color === "green")[0]
+
+    const blindfoldDisplay = <>
+        { showBlindfoldAnswer ? filtered?.san : ""}
+    </>
+
+    if (currentDrillMode === "Blindfold") {
+        drillBoard = <>{blindfoldDisplay} {blindfoldButtons} </>
     }
 
     return <>

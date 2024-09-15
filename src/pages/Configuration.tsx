@@ -1,4 +1,4 @@
-import {setItemDexie} from "../storage";
+import {clearAllGames, setItemDexie} from "../storage";
 import FileUpload from "../components/FileUpload";
 import AnalysisDatabase from '../types/AnalysisDatabase';
 import Repertoire from '../types/Repertoire';
@@ -74,6 +74,7 @@ function ConfigPage({
         <md-filled-button data-testid={"reset-games-button"} className={"drill-button"} onClick={() => {
             setGames([]);
             setItemDexie("games", []);
+            clearAllGames();
         }}>Reset Games
         </md-filled-button>
     </div>;

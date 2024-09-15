@@ -12,7 +12,7 @@ export function calculateRepertoire(lines) {
         parsed = pgnParser.parse(lines.join("\n"));
         // console.log("Got full single pgn", parsed);
     } catch (e) {
-        console.log("Encountered e while parsing all lines. On to the next one.", e);
+        //console.log("Encountered e while parsing all lines. On to the next one.", e);
     }
 
     // { [fen]: [ line, line, line, line ] }

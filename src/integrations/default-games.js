@@ -21,6 +21,7 @@ function createDefaultGame(pgn, whiteOrBlack) {
             "fen":fen,
             "time_class":"blitz",
             "rules":"chess",
+            origin: 'chess.com',
             "white": {
                 "rating":1000,
                 "result":"win",
@@ -45,6 +46,8 @@ function createDefaultGame(pgn, whiteOrBlack) {
             "fen":fen,
             "time_class":"blitz",
             "rules":"chess",
+            origin: 'chess.com',
+
             "white": {
                 "rating":1000,
                 "result":"win",

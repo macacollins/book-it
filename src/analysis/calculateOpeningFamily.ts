@@ -3,11 +3,13 @@ import getOpeningFamily from "./getOpeningFamily";
 
 export function calculateOpeningFamily(headers: Record<string, string>, parsedPgn: ParsedPGN) {
 
+    /*
     if (headers["Site"]?.indexOf("lichess") === -1) {
         console.log("Opening for chess.com");
     } else {
         console.log("opening for lichess");
     }
+    */
 
     let openingName = "Not Found"
 

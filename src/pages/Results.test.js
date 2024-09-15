@@ -11,6 +11,8 @@ import calculateAnalysis from "../analysis/calculateAnalysis";
 
 let analysisDatabase = {};
 
+
+
 beforeAll(() => {
 
     let playerName = "example";

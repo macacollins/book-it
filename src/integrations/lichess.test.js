@@ -1,5 +1,6 @@
 jest.mock('../storage');
 
+import { clearLatestLichessTimestamp, setLatestLichessTimestamp } from '../__mocks__/storage';
 import refreshGames from './lichess.org';
 
 const mockData = `
@@ -56,10 +57,34 @@ beforeEach(() => {
 
 
 test('Parses lichess mock data', async () => {
+  const setGames = jest.fn();
+  const playerName = "test";
+  const setSyncingGames = jest.fn();
+  const games = [];
+
+  await setLatestLichessTimestamp(100);
+
+  await refreshGames(setGames, playerName, setSyncingGames);
+  await clearLatestLichessTimestamp();
+});
+
+test('Parses lichess mock data 2', async () => {
     const setGames = jest.fn();
     const playerName = "test";
     const setSyncingGames = jest.fn();
     const games = [];
 
-    await refreshGames(games, setGames, playerName, setSyncingGames);
+    await setLatestLichessTimestamp(NaN);
+
+    await refreshGames(setGames, playerName, setSyncingGames);
+    await clearLatestLichessTimestamp();
+});
+
+test('Parses lichess mock data 3', async () => {
+  const setGames = jest.fn();
+  const playerName = "test";
+  const setSyncingGames = jest.fn();
+  const games = [];
+
+  await refreshGames(setGames, playerName, setSyncingGames);
 });

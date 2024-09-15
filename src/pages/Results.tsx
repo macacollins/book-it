@@ -9,7 +9,6 @@ import findTopOpenings from "../analysis/findTopOpenings";
 import AnalysisDatabase from "../types/AnalysisDatabase";
 import Game from "../types/Game";
 
-
 interface ResultsProps {
     games: Game[],
     userLeftBookOnly: boolean,
@@ -189,8 +188,8 @@ export default function Results({
                               onClick={() => {
                                   setSyncingGames(true);
                                   setSyncingGamesLichess(true);
-                                  refreshGamesChessCom(games, setGames, playerName, setSyncingGames)
-                                  refreshGamesLichess(games, setGames, playerNameLichess, setSyncingGamesLichess)
+                                  refreshGamesChessCom(setGames, playerName, setSyncingGames)
+                                  refreshGamesLichess(setGames, playerNameLichess, setSyncingGamesLichess)
                               }}>Refresh games
             </md-filled-button>
             {syncingIndicator}{syncingIndicator2}

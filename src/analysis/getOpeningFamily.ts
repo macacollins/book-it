@@ -68,8 +68,6 @@ const alternates: {
 // This allows more grouping of similar openings
 export default function getOpeningFamily(name: string, pgn: ParsedPGN) {
 
-
-
     for (let opening of openings) {
         if (name.indexOf(opening) !== -1) {
             // If the main entry matches, just return it
@@ -85,7 +83,8 @@ export default function getOpeningFamily(name: string, pgn: ParsedPGN) {
         }
     }
 
-    // Didn't find it based on the URL
+    // Didn't find it based on the URL. Go thru each opening and compare
+    // TODO switch to a tree structure for better lookup performance
     let moves = pgn.moves.map(move => move.move);
 
     let maxScore = 0;

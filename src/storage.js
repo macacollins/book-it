@@ -1,8 +1,57 @@
 import Dexie from 'dexie';
+
+const gamesDB = new Dexie('Games');
+
+gamesDB.version(1).stores({
+    games: '&url',
+    analysis: '&url',
+})
+
+export async function getLatestLichessTimestamp() {
+    const items = await gamesDB.games.filter((game) => /lichess/i.test(game.origin)).sortBy("end_time");
+    return items && (items.reverse()[0]?.end_time + 1000) * 1000;
+}
+
+export async function clearAllGames() {
+    await gamesDB.games.clear();
+}
+
+export async function addGamesBulk(games) {
+    await gamesDB.games.bulkPut(games);
+}
+
+export async function addGame(game) {
+    await gamesDB.games.add(game).then(function (updated) {
+        if (updated) {
+            console.log("New record inserted for " + game.url);
+        } else {
+            console.log("Nothing was updated - there were no item with primary key: " + game.url);
+        }
+    });
+}
+
+export async function addAnalysisBulk(analysisList) {
+    await gamesDB.analysis.bulkPut(analysisList);
+}
+
+export async function addAnalysis(analysis) {
+    await gamesDB.analysis.put(analysis).then(function (updated) {
+        if (updated) {
+            console.log("New analysis inserted for " + analysis.url);
+        } else {
+            console.log("Nothing was updated - there were no item with primary key: " + analysis.url);
+        }
+    });
+}
+
+export async function getAllGames() {
+    const games = await gamesDB.games.filter((game) => true).sortBy("end_time");
+    return games && games.reverse();
+}
+
 /*
 This application currently uses Dexie as a key-value store.
 */
-
 const db = new Dexie('AppDatabase');
 
 // Declare tables, IDs and indexes

@@ -18,5 +18,5 @@ test('Parses chess.com mock data', async () => {
     const setSyncingGames = jest.fn();
     const games = [];
 
-    await refreshGames(games, setGames, playerName, setSyncingGames);
+    await refreshGames(setGames, playerName, setSyncingGames);
 });

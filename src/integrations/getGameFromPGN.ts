@@ -20,7 +20,7 @@ import Game from '../types/Game';
 
 // 1. e4 c6 2. d4 d5 3. exd5 cxd5 4. Bd3 Nc6 5. c3 a6 6. Nf3 Bg4 7. O-O e6 8. h3 Bxf3 9. Qxf3 Nge7 10. Nd2 b5 11. b4 Rc8 12. Nb3 Nf5 13. Bxf5 exf5 14. Qxf5 Be7 15. Qg4 h6 16. Nc5 Bg5 17. Re1+ Ne7 18. Bxg5 hxg5 19. Qxg5 O-O 20. Rxe7 f6 21. Qxg7# 1-0
 
-export default function getGameFromPGN(inputPGN: ParsedPGN): Game | null {
+export default function getGameFromPGN(inputPGN: ParsedPGN, origin?: string): Game | null {
 
     const headers = inputPGN.headers
 
@@ -45,7 +45,8 @@ export default function getGameFromPGN(inputPGN: ParsedPGN): Game | null {
             url : headersObject["Site"] || "",
             pgn: rePGNLine(inputPGN),
             end_time,
-            fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+            fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+            origin: origin || 'chess.com'
         }
     }
 
