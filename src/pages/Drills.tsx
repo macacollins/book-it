@@ -1,4 +1,4 @@
-import {useState, useRef, useEffect, Dispatch, SetStateAction} from 'react';
+import {useState, useRef, useEffect} from 'react';
 
 import AnalysisDatabase from '../types/AnalysisDatabase';
 import Game from '../types/Game';
@@ -11,7 +11,6 @@ import findTopOpenings from '../analysis/findTopOpenings';
 import speakMoves from '../speech/speak';
 
 // TODO make this happen 
-type DrillMode = 'Unselected' | 'Frequency' | 'Time' | 'Blind' | 'FromPosition';
 
 export default function Drills(props:{analysisDatabase: AnalysisDatabase, games: any} ) {
     const analysisDatabase: AnalysisDatabase = props.analysisDatabase;
@@ -105,7 +104,7 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
         }
 
         setExerciseGames(finalGames);
-
+    // eslint-disable-next-line
     }, [currentDrillMode])
 
     // TODO separate into menu component?

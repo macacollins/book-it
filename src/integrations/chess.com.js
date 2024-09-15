@@ -1,4 +1,4 @@
-import {addGamesBulk, getAllGames, getItemDexie, setItemDexie} from '../storage';
+import {addGamesBulk, getAllGames} from '../storage';
 
 // Function to get the year and month X months back
 function getYearAndMonthXMonthsAgo(X) {

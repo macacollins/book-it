@@ -1,4 +1,4 @@
-import pgnParser, { ParsedPGN } from "pgn-parser";
+import { ParsedPGN } from "pgn-parser";
 
 
 // Based on the full text of the opening name, guess the family
