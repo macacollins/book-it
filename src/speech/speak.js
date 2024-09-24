@@ -61,7 +61,7 @@ export default function speakMoves(moves, inverted) {
         }
 
 
-        finalString = finalString.replace("+", "plus");
+        finalString = finalString.replace("+", "-check");
 
         const utterance = getUtterance(finalString);
 
