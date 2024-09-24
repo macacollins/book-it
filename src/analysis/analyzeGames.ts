@@ -12,7 +12,8 @@ export interface InnerAnalyzeGamesExpectedMessage {
     analysisDatabase: AnalysisDatabase, 
     repertoire: Repertoire, 
     games: Game[], 
-    playerName: string
+    playerName: string,
+    lichessPlayerName: string
 }
 
 export default async function analyzeGames(
@@ -22,7 +23,7 @@ export default async function analyzeGames(
     // console.log("Starting to work", message)
     // { data: { analysisDatabase, repertoire, games, playerName } }
     // This format comes from the web worker message format
-    let {data: {analysisDatabase, repertoire, games, playerName}} = message;
+    let {data: {analysisDatabase, repertoire, games, playerName, lichessPlayerName}} = message;
     let currentAnalysisDatabase = typeof analysisDatabase === "object" ? analysisDatabase : {};
 
     if (typeof repertoire !== "object" || Object.keys(repertoire).length === 0) {
@@ -39,7 +40,7 @@ export default async function analyzeGames(
 
         // You can use the commented out code below to time the analysis
         // console.time("calculateAnalysis")
-        let analysis = calculateAnalysis(currentAnalysisDatabase, repertoire, game, playerName);
+        let analysis = calculateAnalysis(currentAnalysisDatabase, repertoire, game, playerName, lichessPlayerName);
         // console.timeEnd("calculateAnalysis")
 
         currentAnalysisDatabase[game.url] = analysis;

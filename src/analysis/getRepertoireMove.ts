@@ -6,7 +6,7 @@ export function getRepertoireMove(index: number): (newValue: string) => string {
         // This variable gets the rest of the moves from the line after the current position
         let maybeMoves;
 
-        console.log(line);
+        // console.log(line);
 
         // This library wants the asterisk at the end to signify the end of the line
         const finalThing = line.trim() + " *";

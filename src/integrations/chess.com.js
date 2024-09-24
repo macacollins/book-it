@@ -1,4 +1,4 @@
-import {setItemDexie} from '../storage';
+import {addGamesBulk, getAllGames} from '../storage';
 
 // Function to get the year and month X months back
 function getYearAndMonthXMonthsAgo(X) {
@@ -25,7 +25,7 @@ function getYearAndMonthXMonthsAgo(X) {
     return {year: currentYear, month: twoDigitMonth};
 }
 
-async function refreshGames(games, setGames, playerName, setSyncingGames) {
+async function refreshGames(setGames, playerName, setSyncingGames) {
     console.log("Fetching games from chess.com");
 
     // setGames([]);
@@ -64,15 +64,16 @@ async function refreshGames(games, setGames, playerName, setSyncingGames) {
     }
     setSyncingGames(false);
 
+    console.log("Got " + finalGames.length + " from chess.com.")
+
     if (finalGames.length === 0 && playerName === "example") {
         // For the example, we don't want to clear out the games if they press this
         return;
     }
 
-    if (games.length !== finalGames.length) {
-        setGames(finalGames);
-        setItemDexie('games', finalGames);
-    }
+    addGamesBulk(finalGames);
+
+    setGames(await getAllGames())
 }
 
 

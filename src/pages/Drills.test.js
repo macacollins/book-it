@@ -14,11 +14,21 @@ import calculateAnalysis from "../analysis/calculateAnalysis";
 let analysisDatabase = {};
 jest.mock("../components/ChessBoard")
 
+const clickTime = async (button = /Time/i) => {
+
+    let timeButton = screen.getByText(button);
+    expect(timeButton).toBeInTheDocument();
+
+    await act(() => {
+        fireEvent.click(timeButton);
+    });
+}
+
 beforeAll(() => {
 
     let playerName = "example";
 
-    let repertoire = calculateRepertoire(defaultLines);
+    let repertoire = calculateRepertoire(defaultLines.split("\n"));
 
     for (let game of defaultGames) {
         let analysis = calculateAnalysis(analysisDatabase, repertoire, game, playerName);
@@ -40,8 +50,31 @@ test('Page Loads', async () => {
         render(<Drills games={defaultGames} analysisDatabase={analysisDatabase} />);
     });
 
+    await clickTime();
+
     const linkElement = screen.getByText(/Lichess/i);
     expect(linkElement).toBeInTheDocument();
+});
+
+
+test('Page Loads frequency button', async () => {
+    await act(() => {
+        render(<Drills games={defaultGames} analysisDatabase={analysisDatabase} />);
+    });
+
+    await clickTime(/Frequency/i);
+
+    const linkElement = screen.getByText(/Lichess/i);
+    expect(linkElement).toBeInTheDocument();
+});
+
+
+test('Page Loads from position', async () => {
+    await act(() => {
+        render(<Drills games={defaultGames} analysisDatabase={analysisDatabase} repertoire={{'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1' : []}}/>);
+    });
+
+    await clickTime(/From Position/i);
 });
 
 
@@ -49,6 +82,8 @@ test('Inputs Work: correct move', async () => {
     await act(() => {
         render(<Drills games={defaultGames} analysisDatabase={analysisDatabase} />);
     });
+
+    await clickTime();
 
     const linkElement = screen.getByText(/Lichess/i);
     expect(linkElement).toBeInTheDocument();
@@ -66,6 +101,8 @@ test('Inputs Work: wrong move', async () => {
         render(<Drills games={defaultGames} analysisDatabase={analysisDatabase} />);
     });
 
+    await clickTime();
+
     const linkElement = screen.getByText(/Lichess/i);
     expect(linkElement).toBeInTheDocument();
 
@@ -82,6 +119,8 @@ test('Next Works: correct move', async () => {
     await act(() => {
         render(<Drills games={defaultGames} analysisDatabase={analysisDatabase} />);
     });
+
+    await clickTime();
 
     const linkElement = screen.getByText(/Lichess/i);
     expect(linkElement).toBeInTheDocument();
@@ -107,6 +146,8 @@ test('Next Works: wrong move', async () => {
         render(<Drills games={defaultGames} analysisDatabase={analysisDatabase} />);
     });
 
+    await clickTime();
+
     const linkElement = screen.getByText(/Lichess/i);
     expect(linkElement).toBeInTheDocument();
 
@@ -129,6 +170,8 @@ test('Links work', async () => {
     await act(() => {
         render(<Drills games={defaultGames} analysisDatabase={analysisDatabase} />);
     });
+
+    await clickTime();
 
     const linkElement = screen.getByText(/Lichess/i);
     expect(linkElement).toBeInTheDocument();

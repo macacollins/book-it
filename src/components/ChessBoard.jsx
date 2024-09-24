@@ -64,7 +64,7 @@ const ChessBoard = ({
                         // promotion: 'q' // NOTE: always promote to a queen for example simplicity
                     });
                 } catch (e) {
-                    console.log("Invalid move attempted", e)
+                    //console.log("Invalid move attempted", e)
                     return 'snapback';
                 }
 
@@ -77,7 +77,7 @@ const ChessBoard = ({
                 dropOffBoard,
                 onDragStart,
                 onDrop,
-                onSnapEnd,
+                onSnapEnd
             }
 
             let board;

@@ -1,12 +1,12 @@
-import {getItemDexie} from './storage';
+import {getItemDexie, getAllGames} from './storage';
 
 async function loadCachedData() {
 
     const properties =
         ["analysisDatabase",
             "repertoire",
-            "games",
             "playerName",
+            "lichessPlayerName",
             "repertoireList",
             "matchingMoves",
             "userLeftBookOnly",
@@ -23,7 +23,9 @@ async function loadCachedData() {
         }
     }
 
-    return returnObject;
+    const games = await getAllGames();
+
+    return {...returnObject, gamesStorage: games};
 }
 
 export default loadCachedData;

@@ -52,6 +52,7 @@ interface AppProps {
     repertoireStorage: { [name: string]: Repertoire },
     gamesStorage: Game[],
     playerNameStorage: string,
+    lichessPlayerNameStorage: string,
     repertoireListStorage: string[],
     userLeftBookOnlyStorage : boolean,
     repertoireChoiceStorage : string,
@@ -65,6 +66,7 @@ function App({
                  repertoireStorage,
                  gamesStorage,
                  playerNameStorage,
+                 lichessPlayerNameStorage,
                  repertoireListStorage,
                  userLeftBookOnlyStorage,
                  repertoireChoiceStorage,
@@ -77,6 +79,7 @@ function App({
     // This application may be a better fit for useReducer due to all the state that we are passing around.
     // The useState effect makes code very explicit about state stuff which is good
     const [playerName, setPlayerName] = useState(playerNameStorage || "")
+    const [lichessPlayerName, setLichessPlayerName] = useState(lichessPlayerNameStorage || "")
 
     const [repertoire, setRepertoire]: 
         [{ [name: string]: Repertoire }, Dispatch<SetStateAction<{ [name: string]: Repertoire }>>] 
@@ -153,7 +156,8 @@ function App({
                 analysisDatabase: analysisDatabase || {}, 
                 repertoire: currentRepertoire || {}, 
                 games: sortedGames || [], 
-                playerName
+                playerName,
+                lichessPlayerName
             };
             // console.log("Sending ", payload);
             if (worker) {
@@ -198,6 +202,7 @@ function App({
             userLeftBookOnly,
             setUserLeftBookOnly,
             playerName,
+            playerNameLichess: lichessPlayerName,
             repertoireChoice,
             analysisDatabase,
             setGames
@@ -207,6 +212,8 @@ function App({
     const configPage = () => <ConfigPage {...{
         playerName,
         setPlayerName,
+        lichessPlayerName,
+        setLichessPlayerName,
         repertoireChoice,
         setRepertoireChoice,
         newRepertoireNameField,
@@ -221,7 +228,7 @@ function App({
         analysisDatabase
     }}></ConfigPage>;
 
-    const drillPage = () => <Drills {...{games, analysisDatabase}}></Drills>;
+    const drillPage = () => <Drills {...{games, analysisDatabase, repertoire: repertoire[repertoireChoice]}}></Drills>;
 
     // set up tab change listener
     useEffect(() => {

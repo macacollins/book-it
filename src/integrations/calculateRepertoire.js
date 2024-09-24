@@ -1,14 +1,21 @@
 // This function takes in a list of games in PGN format
 import {Chess} from "chess.js";
+import pgnParser from 'pgn-parser';
+
 
 export function calculateRepertoire(lines) {
 
-    let linesArray =
-        typeof lines === 'string' ? lines.split("\n") :
-        lines.map ? lines
-            : [];
+    let parsed = [];
+    // let allLines = new Chess();
+    try {
+        // allLines.loadPgn(lines.join("\n"));
+        parsed = pgnParser.parse(lines.join("\n"));
+        // console.log("Got full single pgn", parsed);
+    } catch (e) {
+        //console.log("Encountered e while parsing all lines. On to the next one.", e);
+    }
 
-    // { [fen]: [ line, line, line, line ] }d
+    // { [fen]: [ line, line, line, line ] }
     // This object uses FEN strings, which is a string representation of a chess position, as keys
     // https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
     // Each position has a corresponding value which is a list of the PGN lines
@@ -22,18 +29,7 @@ export function calculateRepertoire(lines) {
     // Use the chess.com library to generate the FEN at each position in the game,
     // then put the FEN and line in the fenRepo map. This allows us to quickly pull up
     // the repertoire lines for the given position.
-    for (let line of linesArray) {
-        const currentLine = line.trim();
-
-        // Load up the game using the Chess.js library
-        // This allows us to navigate through the game in JS code
-        let fullGame = new Chess();
-        fullGame.loadPgn(currentLine);
-
-        // console.log(this_chess);
-
-        // Get a list of all of the moves
-        let history = fullGame.history();
+    for (let game of parsed) {
 
         // Create a new Chess.js game so that we can play the moves one by one
         // NOTE: The undo() function in Chess.js did not generate FEN in the expected fashion
@@ -41,18 +37,46 @@ export function calculateRepertoire(lines) {
         let stepByStepHistory = new Chess();
 
         // For each move in the game's history, play it on the board
-        for (let historyMove of history) {
+        for (let historyMove of game.moves) {
 
-            stepByStepHistory.move(historyMove);
+            try {
+                stepByStepHistory.move(historyMove.move);
+            } catch (e) {
+                // oops
+                console.log("Got an error", e);
+                continue;
+            }
+            
+            const trimmedFEN = stepByStepHistory.fen();
 
             // Add the result to fenRepo
-            if (fenRepo[stepByStepHistory.fen()]) {
-                fenRepo[stepByStepHistory.fen()].push(currentLine);
+            if (fenRepo[trimmedFEN]) {
+                fenRepo[trimmedFEN].push(rePGNLine(game));
             } else {
-                fenRepo[stepByStepHistory.fen()] = [currentLine];
+                fenRepo[trimmedFEN] = [rePGNLine(game)];
             }
         }
 
     }
     return fenRepo;
+}
+
+
+function rePGNLine(parsedPgn) {
+    let currentNumber = 1;
+    let fullPGN = '1.';
+    for (let move of parsedPgn.moves) {
+        if (typeof move.move_number === "undefined") {
+            fullPGN = `${fullPGN} ${move.move}`;
+        } else if (move.move_number !== currentNumber) {
+            fullPGN = `${fullPGN} ${move.move_number}. ${move.move}`;
+            currentNumber = move.move_number;
+        } else {
+            fullPGN = `${fullPGN} ${move.move}`;
+        }
+    }
+
+    // console.log("Returning pgn " + fullPGN);
+
+    return fullPGN;
 }
