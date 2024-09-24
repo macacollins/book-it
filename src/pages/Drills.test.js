@@ -71,10 +71,10 @@ test('Page Loads frequency button', async () => {
 
 test('Page Loads from position', async () => {
     await act(() => {
-        render(<Drills games={defaultGames} analysisDatabase={analysisDatabase} />);
+        render(<Drills games={defaultGames} analysisDatabase={analysisDatabase} repertoire={{'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1' : []}}/>);
     });
 
-    await clickTime(/From/i);
+    await clickTime(/From Position/i);
 });
 
 

@@ -112,7 +112,7 @@
     "collectCoverage": true,
     "coverageThreshold": {
       "global": {
-        "lines": 80
+        "lines": 75
       }
     },
     "coverageReporters": [

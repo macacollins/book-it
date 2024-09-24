@@ -59,6 +59,10 @@ export default function speakMoves(moves, inverted) {
 
             console.log(finalString);
         }
+
+
+        finalString = finalString.replace("+", "plus");
+
         const utterance = getUtterance(finalString);
 
         utterance.rate = .7

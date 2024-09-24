@@ -9,13 +9,20 @@ import useWindowSize from '../hooks/useWindowSize'
 
 import findTopOpenings from '../analysis/findTopOpenings';
 import speakMoves from '../speech/speak';
+import Repertoire from '../types/Repertoire';
+
+import pgnParser, { Move, ParsedPGN } from 'pgn-parser';
+import { ArrowConfig } from '../types/ArrowConfig';
+import AnalysisResult from '../types/AnalysisResult';
+import generateArrowConfig from '../analysis/generateArrowConfig';
 
 // TODO make this happen 
 
-export default function Drills(props:{analysisDatabase: AnalysisDatabase, games: any} ) {
+export default function Drills(props:{analysisDatabase: AnalysisDatabase, games: any, repertoire: Repertoire} ) {
     const analysisDatabase: AnalysisDatabase = props.analysisDatabase;
     const games = props.games;
-
+    const repertoire = props.repertoire;
+    
     const width = useWindowSize()[0];
 
     const [currentDrillIndex, setCurrentDrillIndex] = useState(0);
@@ -37,6 +44,13 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
 
     const [ exerciseGames, setExerciseGames ]: [Game[], any] = useState([]);
 
+    const [ blindfold, setBlindfold ] = useState<boolean>(false);
+    const [ depth, setDepth ] = useState<number>(1);
+    const [ color, setColor ] = useState<string>("White");
+    const [ moves, setMoves ] = useState<string[]>([]);
+    let newMoves = [...moves];
+
+
     // cache drills to run to avoid re-computing each time
     useEffect(() => {
 
@@ -57,12 +71,64 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
                 })
     
             }
-    
-        } else if (currentDrillMode === 'FromPosition') {
+        
+        } else if (currentDrillMode === 'FromOpening') {
     
             finalGames = normalGames.filter((game: Game) => {
                 return analysisDatabase[game.url].openingFamily === currentOpeningFilter;
             })
+    
+        } else if (currentDrillMode === 'FromPosition') {
+
+
+            let chessGame = new Chess();
+
+            moves.forEach(move => chessGame.move(move));
+
+            let finalFEN = chessGame.fen();
+
+            const repertoireLines = repertoire[finalFEN];
+            const almostTargetDepth = moves.length + depth * 2;
+
+            const targetDepth = 
+                color === "White" ? 
+                    (almostTargetDepth % 2 === 0 ?
+                        almostTargetDepth :
+                        almostTargetDepth - 1)
+                    :
+                    (almostTargetDepth % 2 === 1 ?
+                        almostTargetDepth :
+                        almostTargetDepth - 1)
+            console.log("Depth is ", depth, "current moves are", moves.length, "target is", targetDepth)
+
+            let tempMap: Record<string, Game> = {};
+            repertoireLines.forEach(line => {
+
+                let parsedPGN = pgnParser.parse(line + " *")[0];
+
+                let result = parsedPGN.moves.slice(0, targetDepth)
+                parsedPGN.moves = result;
+
+                let innerChessGame = new Chess();
+
+                result.forEach((move: Move) => innerChessGame.move(move.move));
+
+                let finalFEN = innerChessGame.fen();
+
+                tempMap[finalFEN] = {
+                    url: "none",
+                    pgn: rePGNLine(parsedPGN),
+                    end_time: 3,
+                    fen: finalFEN,
+                    origin: "repertoire"
+                };
+            })
+
+            const finalFinalLines = Object.values(tempMap);
+
+            console.log("FinalFEN", finalFEN, "finalLines", finalFinalLines);
+    
+            finalGames = finalFinalLines
     
         } else if (currentDrillMode === 'Frequency') {
             if (games && games.filter) {
@@ -107,6 +173,7 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
     // eslint-disable-next-line
     }, [currentDrillMode])
 
+
     // TODO separate into menu component?
     if (currentDrillMode === 'Unselected') {
 
@@ -133,9 +200,60 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
                 {openingFilters}
             </md-outlined-select>
         </>
-        
-        return (<>
 
+
+        const side = <><h3>Color</h3>
+            <md-outlined-select>
+                <md-select-option data-testid={`opening-white`}
+                                key={"White"}
+                                value={"White"}
+                                onClick={() => {
+                                    setColor(color)
+                                }}>
+                    White
+                </md-select-option>            
+                <md-select-option data-testid={`opening-black`}
+                                key={"Black"}
+                                value={"Black"}
+                                onClick={() => {
+                                    setColor("Black")
+                                }}>
+                    Black
+                </md-select-option>            
+            </md-outlined-select>
+        </>
+
+        let depthSelections = [1,2,3,4,5,6,7,8,9,10,11].map(number =>
+            <md-select-option data-testid={`opening-${number}`}
+                            value={number}
+                            key={JSON.stringify(number)}
+                            onClick={() => {
+                                setDepth(number)
+                            }}>
+                number
+            </md-select-option>
+        );
+
+        const depthFull = <><h3>Depth</h3>
+            <md-outlined-select>
+                {depthSelections}
+            </md-outlined-select>
+        </>
+
+        return (<>
+            <br></br>
+            <b>Blindfold</b>
+            <md-checkbox
+                data-testid={"blindfold-button"}
+                className={"blindfold-button"}
+                value={blindfold}
+                onClick={(e: any) => {
+                    setBlindfold(!blindfold);
+                }}>
+                Blindfold
+            </md-checkbox>
+
+            <br></br>
             <md-filled-button
                 data-testid={"time-button"}
                 className={"time-button"}
@@ -158,23 +276,43 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
                 data-testid={"from-position-button"}
                 className={"from-position-button"}
                 onClick={() => {
+
+                    
                     setCurrentDrillMode('FromPosition');
                 }}>
                 From Position
             </md-filled-button>
 
             <md-filled-button
-                data-testid={"from-position-button"}
-                className={"from-position-button"}
+                data-testid={"from-opening-button"}
+                className={"from-opening-button"}
                 onClick={() => {
-                    setCurrentDrillMode('Blindfold');
+                    setCurrentDrillMode('FromOpening');
                 }}>
-                Blindfold
+                From Opening
             </md-filled-button>
 
-            { openingFiltersFull }
-        </>)
+            { depthFull }
 
+            {side}
+
+            { openingFiltersFull }
+
+            <ChessBoard name="exercise-filter"
+                        game_url="exercise-filter"
+                        fen='start'
+                        draggable={true}
+                        madeMoveRef={{current: false}}
+                        dropOffBoard='snapback'
+                        moveCallback={move => {
+                            newMoves= [ ...newMoves, move.san];
+                            console.log("Got move", move.san, "moves", moves, "newMoves", newMoves);
+                            setMoves(newMoves)
+                        }}/>
+            <pre>{JSON.stringify(moves, undefined, 2)}</pre>
+            <pre>{depth}</pre>
+            <pre>{blindfold ? "true" : "false"}</pre>
+        </>)
     }
 
     const maybeNextGame : Game | undefined = 
@@ -200,12 +338,18 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
     if (typeof maybeNextGame !== "undefined") {
         const nextGame: Game = maybeNextGame;
 
-        const drillAnalysisResult = analysisDatabase[nextGame.url];
+
+        let drillAnalysisResult = getDrillAnalysisResult(currentDrillMode, nextGame, repertoire, color, analysisDatabase);
 
         const chessJSGame = new Chess();
         chessJSGame.loadPgn(nextGame.pgn);
 
-        const moves = chessJSGame.history().slice(0, drillAnalysisResult.finalMoveIndex);
+        let moves;
+        if (currentDrillMode === 'FromPosition') {
+            moves = chessJSGame.history();
+        } else {
+            moves = chessJSGame.history().slice(0, drillAnalysisResult.finalMoveIndex);
+        }
 
         drillBoard = <md-list-item>
             <div slot="supporting-text">
@@ -308,7 +452,7 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
              if (maybeNextGame) {
                 const nextGame: Game = maybeNextGame;
 
-                const drillAnalysisResult = analysisDatabase[nextGame.url];
+                const drillAnalysisResult = getDrillAnalysisResult(currentDrillMode, maybeNextGame, repertoire, color, analysisDatabase);
     
                 const chessJSGame = new Chess();
                 chessJSGame.loadPgn(nextGame.pgn);
@@ -343,18 +487,18 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
         }}>Next
         </md-filled-button>
     </>
-    const drillAnalysisResult = maybeNextGame && analysisDatabase[maybeNextGame?.url];
+    const drillAnalysisResult = maybeNextGame && getDrillAnalysisResult(currentDrillMode, maybeNextGame, repertoire, color, analysisDatabase);
 
     let filtered: any =
-    drillAnalysisResult
-        ?.arrows
-        .filter((arrow: any) => arrow.color === "green")[0]
+        drillAnalysisResult
+            ?.arrows
+            .filter((arrow: any) => arrow.color === "green")[0]
 
     const blindfoldDisplay = <>
         { showBlindfoldAnswer ? filtered?.san : ""}
     </>
 
-    if (currentDrillMode === "Blindfold") {
+    if (blindfold) {
         drillBoard = <>{blindfoldDisplay} {blindfoldButtons} </>
     }
 
@@ -363,3 +507,87 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
         {drillCurrentDisplay}
     </>
 };
+
+function getDrillAnalysisResult(currentDrillMode: string, nextGame: Game, repertoire: Repertoire, color: string, analysisDatabase: AnalysisDatabase) {
+    if (currentDrillMode === 'FromPosition') {
+
+        let arrows: ArrowConfig[] = [];
+        let parsedPGN = pgnParser.parse(nextGame.pgn)[0];
+        let length = parsedPGN.moves.length;
+
+        repertoire[nextGame.fen].forEach(pgn => {
+            let innerParsedPGN = pgnParser.parse(pgn + " *")[0];
+            let lastMove = innerParsedPGN.moves.slice(length)[0];
+
+            if (innerParsedPGN.moves.length === length) {
+                console.log("Skipping pgn", pgn);
+                return;
+            }
+
+            if (!lastMove) {
+                console.log("The fuck");
+            }
+
+            let chessGame = new Chess();
+
+            innerParsedPGN.moves.slice(0, length).forEach(move => chessGame.move(move.move));
+
+            let result = chessGame.move(lastMove.move);
+
+            arrows.push(generateArrowConfig(result, color === "Black", "green"));
+        });
+
+        const tempResult: AnalysisResult = {
+            invert_board: color === "Black",
+            arrows: arrows,
+            result: "unknown",
+            finalMoveIndex: 1000,
+
+            youLeftBook: true,
+            foundIntersection: true,
+            advice: "",
+            displayFEN: nextGame.fen,
+            headers: [],
+            openingFamily: "Unknown"
+        };
+
+        return tempResult;
+
+    } else {
+        return analysisDatabase[nextGame.url];
+    }
+}
+
+// this is silly
+function rePGNLine(parsedPgn: ParsedPGN): string {
+
+    let headerPGN = '';
+    let result = "*";
+
+    if (parsedPgn.headers) {
+        for (let header of parsedPgn.headers) {
+            headerPGN = `${headerPGN}\n[${header.name} "${header.value}"]`
+
+            if (header.name === "Result") {
+                result = header.value;
+            }
+        }
+    }
+
+    let currentNumber = 1;
+    let gamePGN = '1.';
+    for (let move of parsedPgn.moves) {
+        if (typeof move.move_number === "undefined") {
+            gamePGN = `${gamePGN} ${move.move}`;
+        } else if (move.move_number !== currentNumber) {
+            gamePGN = `${gamePGN} ${move.move_number}. ${move.move}`;
+            currentNumber = move.move_number;
+        } else {
+            gamePGN = `${gamePGN} ${move.move}`;
+        }
+    }
+
+    // console.log("Returning pgn " + fullPGN);
+
+    return `${headerPGN}\n\n${gamePGN} ${result}`;
+}

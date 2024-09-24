@@ -228,7 +228,7 @@ function App({
         analysisDatabase
     }}></ConfigPage>;
 
-    const drillPage = () => <Drills {...{games, analysisDatabase}}></Drills>;
+    const drillPage = () => <Drills {...{games, analysisDatabase, repertoire: repertoire[repertoireChoice]}}></Drills>;
 
     // set up tab change listener
     useEffect(() => {
