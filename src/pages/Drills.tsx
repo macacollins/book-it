@@ -1,4 +1,4 @@
-import {useState, useRef, useEffect} from 'react';
+import {useState, useRef, useEffect, useCallback} from 'react';
 
 import AnalysisDatabase from '../types/AnalysisDatabase';
 import Game from '../types/Game';
@@ -26,6 +26,7 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
     const width = useWindowSize()[0];
 
     const [currentDrillIndex, setCurrentDrillIndex] = useState(0);
+
     const [currentDrillResult, setCurrentDrillResult] = useState("");
 
     const [currentOpeningFilter, setCurrentOpeningFilter] = useState("");
@@ -41,6 +42,10 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
     const frequencyTable: ({ [fen: string] : number }) = {};
     const gameLookup: ({ [fen: string] : Game }) = {};
 
+    const [ repetitions, setRepetitions ] = useState(3);
+    const [ delaySeconds, setDelaySeconds ] = useState(3); 
+
+    const [ autoNext, setAutoNext ] = useState(false);
 
     const [ exerciseGames, setExerciseGames ]: [Game[], any] = useState([]);
 
@@ -203,7 +208,7 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
 
 
         const side = <><h3>Color</h3>
-            <md-outlined-select>
+            <md-outlined-select value={color}>
                 <md-select-option data-testid={`opening-white`}
                                 key={"White"}
                                 value={"White"}
@@ -230,12 +235,12 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
                             onClick={() => {
                                 setDepth(number)
                             }}>
-                number
+                {number}
             </md-select-option>
         );
 
         const depthFull = <><h3>Depth</h3>
-            <md-outlined-select>
+            <md-outlined-select value={depth}>
                 {depthSelections}
             </md-outlined-select>
         </>
@@ -444,24 +449,83 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
         }
     }
 
+    let repetitionSelections = [1,2,3,4,5,6,7,8,9,10,11].map(number =>
+        <md-select-option data-testid={`repetitions-${number}`}
+                        value={number}
+                        key={JSON.stringify(number)}
+                        onClick={() => {
+                            setRepetitions(number)
+                        }}>
+            {number}
+        </md-select-option>
+    );
+
+    const depthFull = <><h3>Repetitions</h3>
+        <md-outlined-select value={repetitions}>
+            {repetitionSelections}
+        </md-outlined-select>
+    </>
+
+    let delaySecondsSelections = [1,2,3,4,5,6,7,8,9,10,11].map(number =>
+        <md-select-option data-testid={`delaySeconds-${number}`}
+                        value={number}
+                        key={JSON.stringify(number)}
+                        onClick={() => {
+                            setDelaySeconds(number)
+                        }}>
+            {number}
+        </md-select-option>
+    );
+
+    const delaySecondsFull = <><h3>Delay (Seconds)</h3>
+        <md-outlined-select value={delaySeconds}>
+            {delaySecondsSelections}
+        </md-outlined-select>
+    </>
+
+    const playNext = async (drillIndex: number) => {
+
+        const maybeNextGame : Game | undefined = 
+            exerciseGames.length > drillIndex ?
+            exerciseGames[drillIndex] :
+                undefined;
+
+        if (maybeNextGame) {
+            const nextGame: Game = maybeNextGame;
+
+            const drillAnalysisResult = getDrillAnalysisResult(currentDrillMode, maybeNextGame, repertoire, color, analysisDatabase);
+
+            const chessJSGame = new Chess();
+            chessJSGame.loadPgn(nextGame.pgn);
+
+            const moves = chessJSGame.history().slice(0, drillAnalysisResult.finalMoveIndex);
+
+            await speakMoves(moves, drillAnalysisResult.invert_board, repetitions, delaySeconds);
+         }
+    }
+
     const blindfoldButtons = <>
+        { currentDrillIndex} / { exerciseGames.length}
+        <br></br>
         <md-filled-button
             data-testid={"speak-button"}
-            onClick={() => {
-             // TODO
-             if (maybeNextGame) {
-                const nextGame: Game = maybeNextGame;
+            onClick={async () => {
+                let drillIndex = currentDrillIndex;
 
-                const drillAnalysisResult = getDrillAnalysisResult(currentDrillMode, maybeNextGame, repertoire, color, analysisDatabase);
-    
-                const chessJSGame = new Chess();
-                chessJSGame.loadPgn(nextGame.pgn);
-    
-                const moves = chessJSGame.history().slice(0, drillAnalysisResult.finalMoveIndex);
+                await playNext(drillIndex);
+                console.log("Finished first play")
 
-                speakMoves(moves, drillAnalysisResult.invert_board);
-             }
+                while (autoNext && (exerciseGames.length > drillIndex)) {
+                    await playNext(drillIndex);
 
+                    console.log("Autoplaying next ")
+                    if (autoNext) {
+                        drillIndex = drillIndex + 1;
+                        setCurrentDrillIndex(currentDrillIndex + 1);
+                        setCurrentDrillResult("");
+                        setShowBlindfoldAnswer(false);
+                    }
+                }
         }}>Speak
         </md-filled-button>
         { showBlindfoldAnswer ? 
@@ -486,6 +550,23 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
             setShowBlindfoldAnswer(false);
         }}>Next
         </md-filled-button>
+        <br></br>
+        {depthFull}
+        {delaySecondsFull}
+        <br></br>
+
+        <b>Auto Next</b>
+        <br></br>
+
+        <md-checkbox
+            data-testid={"autonext-button"}
+            className={"autonext-button"}
+            value={autoNext}
+            onClick={(e: any) => {
+                setAutoNext(!autoNext);
+            }}>
+            Auto Next
+        </md-checkbox>
     </>
     const drillAnalysisResult = maybeNextGame && getDrillAnalysisResult(currentDrillMode, maybeNextGame, repertoire, color, analysisDatabase);
 

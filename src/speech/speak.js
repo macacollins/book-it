@@ -5,7 +5,7 @@ const getUtterance = string => {
     return utterance;
 }
 
-export default function speakMoves(moves, inverted) {
+export default async function speakMoves(moves, inverted, times, delaySeconds) {
     let moveNumber = 0;
     let count = 0;
 
@@ -67,7 +67,38 @@ export default function speakMoves(moves, inverted) {
 
         utterance.rate = .7
         window.speechSynthesis.speak(utterance)
+        await utterancePromise();
     }
 
-    window.speechSynthesis.speak(getUtterance("What do you play for " + color));
+    const utterance = getUtterance("What do you play for " + color);
+
+    window.speechSynthesis.speak(utterance);
+    await utterancePromise();
+
+    if (times > 1) {
+        console.log("Going to sleep")
+        await sleep(delaySeconds * 1000);
+        console.log("Finished sleep")
+
+        await speakMoves(moves, inverted, times - 1, delaySeconds);
+    }
+
+    console.log("Returning from speak function");
+}
+
+const sleep = m => new Promise(r => setTimeout(r, m))
+function timeout(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function utterancePromise() {
+    return new Promise(async resolve => {
+
+        while (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+            await sleep(100);
+        }
+
+        resolve();
+        console.log("Resolved utterance Promise");
+    })
 }
