@@ -16,7 +16,9 @@ const ChessBoard = ({
                         moveCallback = (move => {
                             console.log("Got move", move)
                         }),
-                        moves = []
+                        moves = [],
+                        chessboardRef = { current: undefined },
+                        gameRef = { current: undefined }
                     }) => {
 
     const width = useWindowSize()[0];
@@ -28,7 +30,7 @@ const ChessBoard = ({
     // Initialize the board after the component mounts to the DOM
     useEffect(() => {
         setTimeout(() => {
-            const game = new Chess();
+            gameRef.current = new Chess();
 
             function onDragStart(source, piece, position, orientation) {
                 console.log("onDragStart called, madeMove = ", madeMoveRef);
@@ -39,8 +41,8 @@ const ChessBoard = ({
                 }
 
                 // only pick up pieces for the side to move
-                if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
-                    (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+                if ((gameRef.current.turn() === 'w' && piece.search(/^b/) !== -1) ||
+                    (gameRef.current.turn() === 'b' && piece.search(/^w/) !== -1)) {
                     return false
                 }
             }
@@ -48,7 +50,7 @@ const ChessBoard = ({
             // update the board position after the piece snap
             // for castling, en passant, pawn promotion
             function onSnapEnd() {
-                board.position(game.fen())
+                board.position(gameRef.current.fen())
             }
 
             function onDrop(source, target) {
@@ -58,7 +60,7 @@ const ChessBoard = ({
 
                 try {
                     // see if the move is legal
-                    move = game.move({
+                    move = gameRef.current.move({
                         from: source,
                         to: target,
                         // promotion: 'q' // NOTE: always promote to a queen for example simplicity
@@ -109,15 +111,15 @@ const ChessBoard = ({
 
                         let singleMove;
                         try {
-                            singleMove = game.move(moves[0]);
+                            singleMove = gameRef.current.move(moves[0]);
 
                             // board.move(`${singleMove.from}-${singleMove.to}`);
-                            board.position(game.fen())
+                            board.position(gameRef.current.fen())
                         } catch (e) {
 
                             // This "shouldn't" ever happen
                             // In the real world this is a good place to log for debugging
-                            console.debug("Unable to make move", singleMove, " on board", game, e)
+                            console.debug("Unable to make move", singleMove, " on board", gameRef.current, e)
                         }
                         makeMoves(moves.slice(1));
                     }, 250);
@@ -127,6 +129,8 @@ const ChessBoard = ({
             if (!board) {
                 return;
             }
+
+            chessboardRef.current = board;
 
             setTimeout(() => {
                 makeMoves(moves);

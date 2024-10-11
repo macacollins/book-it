@@ -87,9 +87,6 @@ export default async function speakMoves(moves, inverted, times, delaySeconds) {
 }
 
 const sleep = m => new Promise(r => setTimeout(r, m))
-function timeout(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 async function utterancePromise() {
     return new Promise(async resolve => {

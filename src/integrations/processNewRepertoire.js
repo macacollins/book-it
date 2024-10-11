@@ -1,5 +1,6 @@
-import {setItemDexie} from "../storage";
+import {setItemDexie, setComments} from "../storage";
 import {calculateRepertoire} from "./calculateRepertoire";
+
 
 // Then creates a more convenient data structure to power the UI of the app
 export default function processNewRepertoire(fileContents, {
@@ -12,7 +13,7 @@ export default function processNewRepertoire(fileContents, {
 }) {
     const lines = fileContents.split('\n');
 
-    let fenRepo = calculateRepertoire(lines);
+    let fenRepo = calculateRepertoire(lines, newRepertoireNameField, setComments);
     console.debug("Setting current repertoire to new repertoire ", newRepertoireNameField);
 
     // Add the repertoire to the repertoire map

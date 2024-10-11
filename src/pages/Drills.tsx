@@ -1,4 +1,4 @@
-import {useState, useRef, useEffect, useCallback} from 'react';
+import {useState, useRef, useEffect } from 'react';
 
 import AnalysisDatabase from '../types/AnalysisDatabase';
 import Game from '../types/Game';
@@ -44,8 +44,6 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
 
     const [ repetitions, setRepetitions ] = useState(3);
     const [ delaySeconds, setDelaySeconds ] = useState(3); 
-
-    const [ autoNext, setAutoNext ] = useState(false);
 
     const [ exerciseGames, setExerciseGames ]: [Game[], any] = useState([]);
 
@@ -483,6 +481,13 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
         </md-outlined-select>
     </>
 
+    const drillAnalysisResult = maybeNextGame && getDrillAnalysisResult(currentDrillMode, maybeNextGame, repertoire, color, analysisDatabase);
+
+    let filtered: any =
+        drillAnalysisResult
+            ?.arrows
+            .filter((arrow: any) => arrow.color === "green")[0]
+
     const playNext = async (drillIndex: number) => {
 
         const maybeNextGame : Game | undefined = 
@@ -515,17 +520,6 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
                 await playNext(drillIndex);
                 console.log("Finished first play")
 
-                while (autoNext && (exerciseGames.length > drillIndex)) {
-                    await playNext(drillIndex);
-
-                    console.log("Autoplaying next ")
-                    if (autoNext) {
-                        drillIndex = drillIndex + 1;
-                        setCurrentDrillIndex(currentDrillIndex + 1);
-                        setCurrentDrillResult("");
-                        setShowBlindfoldAnswer(false);
-                    }
-                }
         }}>Speak
         </md-filled-button>
         { showBlindfoldAnswer ? 
@@ -550,30 +544,24 @@ export default function Drills(props:{analysisDatabase: AnalysisDatabase, games:
             setShowBlindfoldAnswer(false);
         }}>Next
         </md-filled-button>
+
+        <md-filled-button
+            data-testid={"lichess-button"}
+            onClick={() => window.open('https://lichess.org/analysis/' + drillAnalysisResult?.displayFEN)}>
+            Lichess
+        </md-filled-button>
+        <md-filled-button
+            data-testid={"chessable-button"}
+            onClick={() => window.open('https://www.chessable.com/courses/fen/' + drillAnalysisResult?.displayFEN)}>Chessable
+
+        </md-filled-button>
         <br></br>
         {depthFull}
         {delaySecondsFull}
         <br></br>
 
-        <b>Auto Next</b>
-        <br></br>
-
-        <md-checkbox
-            data-testid={"autonext-button"}
-            className={"autonext-button"}
-            value={autoNext}
-            onClick={(e: any) => {
-                setAutoNext(!autoNext);
-            }}>
-            Auto Next
-        </md-checkbox>
     </>
-    const drillAnalysisResult = maybeNextGame && getDrillAnalysisResult(currentDrillMode, maybeNextGame, repertoire, color, analysisDatabase);
 
-    let filtered: any =
-        drillAnalysisResult
-            ?.arrows
-            .filter((arrow: any) => arrow.color === "green")[0]
 
     const blindfoldDisplay = <>
         { showBlindfoldAnswer ? filtered?.san : ""}

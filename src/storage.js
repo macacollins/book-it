@@ -5,7 +5,25 @@ const gamesDB = new Dexie('Games');
 gamesDB.version(1).stores({
     games: '&url',
     analysis: '&url',
+    comments: '&compositekey'
 })
+
+export async function setComments(position, repertoire, comments) {
+    if (!comments || !comments.length) {
+        return;
+    }
+
+    gamesDB.comments.put({
+        compositekey: repertoire + position,
+        comments
+    })
+}
+
+export async function getComments(position, repertoire) {
+    const result = await gamesDB.comments.where('compositekey').equals(repertoire + position).toArray();
+
+    return result
+}
 
 export async function getLatestLichessTimestamp() {
     const items = await gamesDB.games.filter((game) => /lichess/i.test(game.origin)).sortBy("end_time");

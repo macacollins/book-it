@@ -7,6 +7,9 @@ export async function setItemDexie(key, value) {
     return Promise.resolve();
 }
 
+export async function setComments(){}
+export async function getComments(){}
+
 export async function getItemDexie(key) {
     // console.log("getItemDexie thing called");
 

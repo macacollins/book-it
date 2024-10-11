@@ -3,7 +3,7 @@ import {Chess} from "chess.js";
 import pgnParser from 'pgn-parser';
 
 
-export function calculateRepertoire(lines) {
+export function calculateRepertoire(lines, repertoireName, setComments) {
 
     let parsed = [];
     // let allLines = new Chess();
@@ -49,6 +49,10 @@ export function calculateRepertoire(lines) {
             
             const trimmedFEN = stepByStepHistory.fen();
 
+            if (historyMove.comments && setComments) {
+                setComments(trimmedFEN, repertoireName, historyMove.comments)
+            }
+
             // Add the result to fenRepo
             if (fenRepo[trimmedFEN]) {
                 fenRepo[trimmedFEN].push(rePGNLine(game));
@@ -74,6 +78,7 @@ function rePGNLine(parsedPgn) {
         } else {
             fullPGN = `${fullPGN} ${move.move}`;
         }
+
     }
 
     // console.log("Returning pgn " + fullPGN);

@@ -45,6 +45,7 @@ import processNewRepertoire from './integrations/processNewRepertoire';
 import AnalysisDatabase from './types/AnalysisDatabase';
 import Repertoire from './types/Repertoire';
 import Game from './types/Game';
+import Viewer from './pages/Viewer';
 
 
 interface AppProps {
@@ -228,6 +229,27 @@ function App({
         analysisDatabase
     }}></ConfigPage>;
 
+
+    const viewerPage = () => <Viewer {...{
+        playerName,
+        setPlayerName,
+        lichessPlayerName,
+        setLichessPlayerName,
+        repertoireChoice,
+        setRepertoireChoice,
+        newRepertoireNameField,
+        setNewRepertoireNameField,
+        setRepertoire,
+        repertoire,
+        repertoireList,
+        setRepertoireList,
+        dispatchAnalysisDatabase,
+        setGames,
+        games,
+        analysisDatabase
+    }}></Viewer>;
+
+
     const drillPage = () => <Drills {...{games, analysisDatabase, repertoire: repertoire[repertoireChoice]}}></Drills>;
 
     // set up tab change listener
@@ -251,14 +273,14 @@ function App({
     }, []);
 
     // hide the inactive tab panels
-    const [oneProps, twoProps, threeProps] =
-        ["panel-one", "panel-two", "panel-three"].map(
+    const [oneProps, twoProps, threeProps, fourProps] =
+        ["panel-one", "panel-two", "panel-three", "panel-four"].map(
             tabID => tabID === activeTab ? {} : {"hidden": true}
         )
 
     // Add the active property to the appropriate md-primary-tab
-    const [oneActive, twoActive, threeActive] =
-        ["panel-one", "panel-two", "panel-three"].map(
+    const [oneActive, twoActive, threeActive, fourActive] =
+        ["panel-one", "panel-two", "panel-three", "panel-four"].map(
             tabID => tabID === activeTab ? {"active": true} : {}
         )
 
@@ -306,6 +328,9 @@ function App({
                 <md-primary-tab data-testid="drills-tab" id="tab-three" aria-controls="panel-three" {...threeActive}>
                     Drill
                 </md-primary-tab>
+                <md-primary-tab data-testid="view-tab" id="tab-four" aria-controls="panel-four" {...fourActive}>
+                    View
+                </md-primary-tab>
             </md-tabs>
 
             <div role="tabpanel" id="panel-one" aria-labelledby="tab-one" {...oneProps}>
@@ -316,6 +341,9 @@ function App({
             </div>
             <div role="tabpanel" id="panel-three" aria-labelledby="tab-three" {...threeProps}>
                 {activeTab === "panel-three" ? drillPage() : ""}
+            </div>
+            <div role="tabpanel" id="panel-four" aria-labelledby="tab-four" {...fourProps}>
+                {activeTab === "panel-four" ? viewerPage() : ""}
             </div>
         </mio-root>
     </>;
