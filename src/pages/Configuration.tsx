@@ -1,175 +1,204 @@
-import {clearAllGames, setItemDexie} from "../storage";
+import { clearAllGames, setItemDexie } from "../storage";
 import FileUpload from "../components/FileUpload";
-import AnalysisDatabase from '../types/AnalysisDatabase';
-import Repertoire from '../types/Repertoire';
-import Game from '../types/Game';
+import AnalysisDatabase from "../types/AnalysisDatabase";
+import Repertoire from "../types/Repertoire";
+import Game from "../types/Game";
 
 interface ConfigPageProps {
-    playerName: string,
-    setPlayerName: (newValue: string) => void,
-    lichessPlayerName: string,
-    setLichessPlayerName: (newValue: string) => void,
-    repertoireChoice: string,
-    setRepertoireChoice: (newValue: string) => void,
-    newRepertoireNameField: string,
-    setNewRepertoireNameField: (newValue: string) => void,
-    setRepertoire: (newValue: { [name: string]: Repertoire }) => void,
-    repertoire: { [name: string]: Repertoire },
-    repertoireList: string[]
-    setRepertoireList: (newValue: string[]) => void,
-    dispatchAnalysisDatabase: any,
-    setGames: (newValue: Game[]) => void,
-    games: Game[],
-    analysisDatabase: AnalysisDatabase
+  playerName: string;
+  setPlayerName: (newValue: string) => void;
+  lichessPlayerName: string;
+  setLichessPlayerName: (newValue: string) => void;
+  repertoireChoice: string;
+  setRepertoireChoice: (newValue: string) => void;
+  newRepertoireNameField: string;
+  setNewRepertoireNameField: (newValue: string) => void;
+  setRepertoire: (newValue: { [name: string]: Repertoire }) => void;
+  repertoire: { [name: string]: Repertoire };
+  repertoireList: string[];
+  setRepertoireList: (newValue: string[]) => void;
+  dispatchAnalysisDatabase: any;
+  setGames: (newValue: Game[]) => void;
+  games: Game[];
+  analysisDatabase: AnalysisDatabase;
 }
 
 function ConfigPage({
-                        playerName,
-                        setPlayerName,
-                        lichessPlayerName,
-                        setLichessPlayerName,
-                        repertoireChoice,
-                        setRepertoireChoice,
-                        newRepertoireNameField,
-                        setNewRepertoireNameField,
-                        setRepertoire,
-                        repertoire,
-                        repertoireList,
-                        setRepertoireList,
-                        dispatchAnalysisDatabase,
-                        setGames,
-                        games,
-                        analysisDatabase
-                    }: ConfigPageProps) {
-
-    // Make the checkbox items for repertoire selection
-    const checkboxItems =
-        (repertoireList ? repertoireList : []).map(repertoireName => {
-            const props = repertoireName === repertoireChoice ? ({
-                "checked": true,
-                "touch-target": "wrapper"
-            }) : {
-                "touch-target": "wrapper"
+  playerName,
+  setPlayerName,
+  lichessPlayerName,
+  setLichessPlayerName,
+  repertoireChoice,
+  setRepertoireChoice,
+  newRepertoireNameField,
+  setNewRepertoireNameField,
+  setRepertoire,
+  repertoire,
+  repertoireList,
+  setRepertoireList,
+  dispatchAnalysisDatabase,
+  setGames,
+  games,
+  analysisDatabase,
+}: ConfigPageProps) {
+  // Make the checkbox items for repertoire selection
+  const checkboxItems = (repertoireList ? repertoireList : []).map(
+    (repertoireName) => {
+      const props =
+        repertoireName === repertoireChoice
+          ? {
+              checked: true,
+              "touch-target": "wrapper",
+            }
+          : {
+              "touch-target": "wrapper",
             };
 
-            return <div className="radio-label" key={repertoireName}>
-                <md-radio
-                    data-testid={"repertoireChoiceField" + repertoireName}
-                    aria-label={repertoireName}
-                    onClick={() => {
+      return (
+        <div className="radio-label" key={repertoireName}>
+          <md-radio
+            data-testid={"repertoireChoiceField" + repertoireName}
+            aria-label={repertoireName}
+            onClick={() => {
+              setRepertoireChoice(repertoireName);
+              setItemDexie("repertoireChoice", repertoireName);
+            }}
+            id="default-lines-radio"
+            name="with-labels"
+            {...props}
+          ></md-radio>
+          <label htmlFor="default-lines-radio">{repertoireName}</label>
+        </div>
+      );
+    },
+  );
 
-                        setRepertoireChoice(repertoireName);
-                        setItemDexie("repertoireChoice", repertoireName);
-                    }}
-                    id="default-lines-radio"
-                    name="with-labels"
-                    {...props}>
-                </md-radio>
-                <label htmlFor="default-lines-radio">{repertoireName}</label>
-            </div>
-        })
-
-    let resetGamesButton = <div key={"reset-games-button"}>
-        <p> Current Games: {games.length}</p>
-        <md-filled-button data-testid={"reset-games-button"} className={"drill-button"} onClick={() => {
-            setGames([]);
-            setItemDexie("games", []);
-            clearAllGames();
-        }}>Reset Games
-        </md-filled-button>
-    </div>;
-
-    let resetAnalysisDatabase = <div key={"reset-analysis-button"}>
-        <p> Current Analysis Items: {typeof analysisDatabase === 'object' ? Object.keys(analysisDatabase).length : "Not initialized"}</p>
-        <md-filled-button data-testid={"reset-analysis-db-button"} className={"drill-button"} onClick={() => {
-
-            dispatchAnalysisDatabase({type: 'RESET'});
-            setItemDexie("analysisDatabase", {});
-
-        }}>Reset Analysis Database
-        </md-filled-button>
+  let resetGamesButton = (
+    <div key={"reset-games-button"}>
+      <p> Current Games: {games.length}</p>
+      <md-filled-button
+        data-testid={"reset-games-button"}
+        className={"drill-button"}
+        onClick={() => {
+          setGames([]);
+          setItemDexie("games", []);
+          clearAllGames();
+        }}
+      >
+        Reset Games
+      </md-filled-button>
     </div>
+  );
 
-    let resetRepertoires =
-        <div key={"reset-repertoires-button"}>
-            <p> Current Repertoires: {repertoireList.length}</p>
-            <md-filled-button data-testid={"reset-repertoires-button"} className={"drill-button"} onClick={() => {
+  let resetAnalysisDatabase = (
+    <div key={"reset-analysis-button"}>
+      <p>
+        {" "}
+        Current Analysis Items:{" "}
+        {typeof analysisDatabase === "object"
+          ? Object.keys(analysisDatabase).length
+          : "Not initialized"}
+      </p>
+      <md-filled-button
+        data-testid={"reset-analysis-db-button"}
+        className={"drill-button"}
+        onClick={() => {
+          dispatchAnalysisDatabase({ type: "RESET" });
+          setItemDexie("analysisDatabase", {});
+        }}
+      >
+        Reset Analysis Database
+      </md-filled-button>
+    </div>
+  );
 
-                setRepertoireChoice("");
-                setItemDexie("repertoireChoice", "");
+  let resetRepertoires = (
+    <div key={"reset-repertoires-button"}>
+      <p> Current Repertoires: {repertoireList.length}</p>
+      <md-filled-button
+        data-testid={"reset-repertoires-button"}
+        className={"drill-button"}
+        onClick={() => {
+          setRepertoireChoice("");
+          setItemDexie("repertoireChoice", "");
 
-                setRepertoireList([]);
-                setItemDexie("repertoireList", []);
+          setRepertoireList([]);
+          setItemDexie("repertoireList", []);
 
-                setRepertoire({});
-                setItemDexie("repertoire", {});
+          setRepertoire({});
+          setItemDexie("repertoire", {});
+        }}
+      >
+        Reset Repertoires
+      </md-filled-button>
+    </div>
+  );
 
+  let buttons = [resetGamesButton, resetAnalysisDatabase, resetRepertoires];
 
-            }}>Reset Repertoires
-            </md-filled-button>
-        </div>
+  return (
+    <>
+      <h2>Configuration</h2>
 
-    let buttons = [resetGamesButton, resetAnalysisDatabase, resetRepertoires];
+      <h3>User</h3>
+      <p>Please enter your chess.com username</p>
+      <md-outlined-text-field
+        data-testid={"chess-dot-com-username"}
+        label="chess.com Username"
+        value={playerName}
+        onInput={(e: { target: { value: string } }) => {
+          // console.log(e);
+          setPlayerName(e.target.value);
+          setItemDexie("playerName", e.target.value);
+        }}
+      ></md-outlined-text-field>
 
-    return <>
-        <h2>Configuration</h2>
+      <p>Please enter your lichess.org username</p>
+      <md-outlined-text-field
+        data-testid={"lichess-dot-org-username"}
+        label="lichess.org Username"
+        value={lichessPlayerName}
+        onInput={(e: { target: { value: string } }) => {
+          // console.log(e);
+          setLichessPlayerName(e.target.value);
+          setItemDexie("lichessPlayerName", e.target.value);
+        }}
+      ></md-outlined-text-field>
 
-        <h3>User</h3>
-        <p>Please enter your chess.com username</p>
-        <md-outlined-text-field
-            data-testid={"chess-dot-com-username"}
-            label="chess.com Username"
-            value={playerName}
-            onInput={(e: { target: { value: string }}) => {
-                // console.log(e);
-                setPlayerName(e.target.value);
-                setItemDexie("playerName", e.target.value);
-            }}>
-        </md-outlined-text-field>
+      <h3>Repertoire</h3>
+      <div className="column" role="radiogroup" aria-label="Repertoire">
+        {checkboxItems}
+      </div>
 
-        <p>Please enter your lichess.org username</p>
-        <md-outlined-text-field
-            data-testid={"lichess-dot-org-username"}
-            label="lichess.org Username"
-            value={lichessPlayerName}
-            onInput={(e: { target: { value: string }}) => {
-                // console.log(e);
-                setLichessPlayerName(e.target.value);
-                setItemDexie("lichessPlayerName", e.target.value);
-            }}>
-        </md-outlined-text-field>
+      <h3>Upload New Lines</h3>
 
-        <h3>Repertoire</h3>
-        <div className="column" role="radiogroup" aria-label="Repertoire">
-            {checkboxItems}
-        </div>
+      <md-outlined-text-field
+        data-testid={"new-repertoire-name-field"}
+        label="Repertoire Name"
+        value={newRepertoireNameField}
+        onInput={(e: { target: { value: string } }) => {
+          setNewRepertoireNameField(e.target.value);
+          // console.log("set it to ", e.target.value);
+        }}
+      ></md-outlined-text-field>
+      <br></br>
+      <FileUpload
+        newRepertoireNameField={newRepertoireNameField}
+        {...{
+          repertoire,
+          setRepertoire,
+          setNewRepertoireNameField,
+          repertoireList,
+          setRepertoireList,
+        }}
+      >
+        {" "}
+      </FileUpload>
 
-        <h3>Upload New Lines</h3>
-
-        <md-outlined-text-field
-            data-testid={"new-repertoire-name-field"}
-            label="Repertoire Name"
-            value={newRepertoireNameField}
-
-            onInput={(e: { target: { value: string }}) => {
-                setNewRepertoireNameField(e.target.value);
-                // console.log("set it to ", e.target.value);
-            }}>
-        </md-outlined-text-field>
-        <br></br>
-        <FileUpload
-            newRepertoireNameField={newRepertoireNameField}
-            {...{
-                repertoire,
-                setRepertoire,
-                setNewRepertoireNameField,
-                repertoireList,
-                setRepertoireList
-            }}> </FileUpload>
-
-        <h3>Clear Data</h3>
-        {buttons}
+      <h3>Clear Data</h3>
+      {buttons}
     </>
+  );
 }
 
 export default ConfigPage;

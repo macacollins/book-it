@@ -1,11 +1,11 @@
-import { fireEvent, render, screen, act } from '@testing-library/react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
+import { fireEvent, render, screen, act } from "@testing-library/react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
 
-jest.mock("./storage")
+jest.mock("./storage");
 
 // Canary Test
-test('renders Configuration Page', async () => {
+test("renders Configuration Page", async () => {
   await act(() => {
     render(<App />);
   });
@@ -13,8 +13,7 @@ test('renders Configuration Page', async () => {
   expect(linkElement).toBeInTheDocument();
 });
 
-
-test('Click drills tab', async () => {
+test("Click drills tab", async () => {
   await act(() => {
     render(<App />);
   });
@@ -22,12 +21,11 @@ test('Click drills tab', async () => {
   expect(linkElement).toBeInTheDocument();
 
   await act(() => {
-      fireEvent.click(linkElement);
+    fireEvent.click(linkElement);
   });
 });
 
-
-test('Fire tabs change event', async () => {
+test("Fire tabs change event", async () => {
   await act(() => {
     render(<App />);
   });
@@ -38,19 +36,17 @@ test('Fire tabs change event', async () => {
 
   await act(() => {
     fireEvent.click(linkElement);
-    fireEvent.change(navTab)
+    fireEvent.change(navTab);
   });
 });
 
-
-test('DARK MODE', async () => {
-
+test("DARK MODE", async () => {
   global.matchMedia = () => {
     return {
       matches: true,
-      addListener: jest.fn()
-    }
-  }
+      addListener: jest.fn(),
+    };
+  };
 
   await act(() => {
     render(<App />);
@@ -62,13 +58,11 @@ test('DARK MODE', async () => {
 
   await act(() => {
     fireEvent.click(linkElement);
-    fireEvent.change(navTab)
+    fireEvent.change(navTab);
   });
 });
 
-
-test('Dark mode switch during app run', async () => {
-
+test("Dark mode switch during app run", async () => {
   let listener;
   function addListener(newListener) {
     listener = newListener;
@@ -77,40 +71,34 @@ test('Dark mode switch during app run', async () => {
   global.matchMedia = () => {
     return {
       matches: true,
-      addListener: addListener
-    }
-  }
+      addListener: addListener,
+    };
+  };
 
   await act(() => {
     render(<App />);
   });
 
   await act(() => {
-    listener({matches: true})
-  })
+    listener({ matches: true });
+  });
 
   await act(() => {
-    listener({matches: false})
-  })
-
+    listener({ matches: false });
+  });
 });
 
-
-
-test('Mocked worker', async () => {
-
+test("Mocked worker", async () => {
   let postMessage = jest.fn();
-  let worker = { postMessage }
+  let worker = { postMessage };
 
   await act(() => {
-    render(<App worker={worker}/>);
+    render(<App worker={worker} />);
   });
 
   expect(postMessage).toHaveBeenCalled();
 
-
   await act(() => {
-    worker.onmessage({ data: {currentAnalysisDatabase: {}} });
+    worker.onmessage({ data: { currentAnalysisDatabase: {} } });
   });
-
 });

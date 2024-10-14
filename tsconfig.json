@@ -3,7 +3,7 @@
   "display": "Create React App",
   "_version": "2.0.0",
 
-"exclude": ["coverage/**/*.js"],
+  "exclude": ["coverage/**/*.js"],
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
     "module": "esnext",

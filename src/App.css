@@ -7,7 +7,6 @@
   pointer-events: none;
 }
 
-
 .column {
   display: flex;
   flex-direction: column;
@@ -46,4 +45,28 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.inline {
+  display: inline;
+  float: left;
+}
+
+.inline svg {
+  display: none;
+}
+
+#line-select .side-by-side {
+  float: right;
+}
+#line-select .side-by-side .cg-shapes {
+  border: 0;
+}
+
+
+#select-chapter .side-by-side {
+  float: right;
+}
+#select-chapter .side-by-side .cg-shapes {
+  border: 0;
 }

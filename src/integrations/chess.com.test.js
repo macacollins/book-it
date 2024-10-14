@@ -1,22 +1,21 @@
-jest.mock('../storage');
+jest.mock("../storage");
 
-import refreshGames from './chess.com';
+import refreshGames from "./chess.com";
 
-import defaultGames from './default-games';
-
+import defaultGames from "./default-games";
 
 // src/utils/currency.test.js
 global.fetch = jest.fn(() =>
   Promise.resolve({
-    json: () => Promise.resolve({games: defaultGames}),
-  })
+    json: () => Promise.resolve({ games: defaultGames }),
+  }),
 );
 
-test('Parses chess.com mock data', async () => {
-    const setGames = jest.fn();
-    const playerName = "test";
-    const setSyncingGames = jest.fn();
-    const games = [];
+test("Parses chess.com mock data", async () => {
+  const setGames = jest.fn();
+  const playerName = "test";
+  const setSyncingGames = jest.fn();
+  const games = [];
 
-    await refreshGames(setGames, playerName, setSyncingGames);
+  await refreshGames(setGames, playerName, setSyncingGames);
 });

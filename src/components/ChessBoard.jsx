@@ -1,190 +1,199 @@
-import Drawings from './Drawings';
-import {useEffect, useState} from 'react';
+import Drawings from "./Drawings";
+import { useEffect, useState } from "react";
 
-import {Chess} from 'chess.js';
-import useWindowSize from '../hooks/useWindowSize';
+import { Chess } from "chess.js";
+import useWindowSize from "../hooks/useWindowSize";
 
 const ChessBoard = ({
-                        name,
-                        game_url,
-                        invert = false,
-                        fen = 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R',
-                        arrows = [],
-                        draggable = false,
-                        dropOffBoard = 'snapback',
-                        madeMoveRef = {current: true},
-                        moveCallback = (move => {
-                            console.log("Got move", move)
-                        }),
-                        moves = [],
-                        chessboardRef = { current: undefined },
-                        gameRef = { current: undefined }
-                    }) => {
+  name,
+  game_url,
+  invert = false,
+  fen = "r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R",
+  arrows = [],
+  draggable = false,
+  dropOffBoard = "snapback",
+  madeMoveRef = { current: true },
+  moveCallback = (move) => {
+    console.log("Got move", move);
+  },
+  moves = [],
+  chessboardRef = { current: undefined },
+  gameRef = { current: undefined },
+}) => {
+  const width = useWindowSize()[0];
 
-    const width = useWindowSize()[0];
+  const finalID = name + game_url.replace(/[^a-zA-Z0-9]/g, "");
 
-    const finalID = name + game_url.replace(/[^a-zA-Z0-9]/g, '');
+  const [board, setBoard] = useState(undefined);
 
-    const [board, setBoard] = useState(undefined);
+  // Initialize the board after the component mounts to the DOM
+  useEffect(() => {
+    setTimeout(() => {
+      gameRef.current = new Chess();
 
-    // Initialize the board after the component mounts to the DOM
-    useEffect(() => {
-        setTimeout(() => {
-            gameRef.current = new Chess();
+      function onDragStart(source, piece, position, orientation) {
+        console.log("onDragStart called, madeMove = ", madeMoveRef);
 
-            function onDragStart(source, piece, position, orientation) {
-                console.log("onDragStart called, madeMove = ", madeMoveRef);
+        if (madeMoveRef.current) {
+          console.log("already made move");
+          return false;
+        }
 
-                if (madeMoveRef.current) {
-                    console.log("already made move");
-                    return false;
-                }
+        // only pick up pieces for the side to move
+        if (
+          (gameRef.current.turn() === "w" && piece.search(/^b/) !== -1) ||
+          (gameRef.current.turn() === "b" && piece.search(/^w/) !== -1)
+        ) {
+          return false;
+        }
+      }
 
-                // only pick up pieces for the side to move
-                if ((gameRef.current.turn() === 'w' && piece.search(/^b/) !== -1) ||
-                    (gameRef.current.turn() === 'b' && piece.search(/^w/) !== -1)) {
-                    return false
-                }
-            }
+      // update the board position after the piece snap
+      // for castling, en passant, pawn promotion
+      function onSnapEnd() {
+        board.position(gameRef.current.fen());
+      }
 
-            // update the board position after the piece snap
-            // for castling, en passant, pawn promotion
-            function onSnapEnd() {
-                board.position(gameRef.current.fen())
-            }
+      function onDrop(source, target) {
+        console.log("onDrop called");
 
-            function onDrop(source, target) {
-                console.log("onDrop called")
+        let move;
 
-                let move;
+        try {
+          // see if the move is legal
+          move = gameRef.current.move({
+            from: source,
+            to: target,
+            // promotion: 'q' // NOTE: always promote to a queen for example simplicity
+          });
+        } catch (e) {
+          //console.log("Invalid move attempted", e)
+          return "snapback";
+        }
 
-                try {
-                    // see if the move is legal
-                    move = gameRef.current.move({
-                        from: source,
-                        to: target,
-                        // promotion: 'q' // NOTE: always promote to a queen for example simplicity
-                    });
-                } catch (e) {
-                    //console.log("Invalid move attempted", e)
-                    return 'snapback';
-                }
+        moveCallback(move);
+      }
 
-                moveCallback(move);
-            }
+      const config = {
+        position: fen,
+        draggable: draggable,
+        dropOffBoard,
+        onDragStart,
+        onDrop,
+        onSnapEnd,
+      };
 
-            const config = {
-                position: fen,
-                draggable: draggable,
-                dropOffBoard,
-                onDragStart,
-                onDrop,
-                onSnapEnd
-            }
+      let board;
 
-            let board;
+      try {
+        // TODO fork and react-ify this library
 
+        const domElement = document.getElementById(finalID);
+
+        if (!domElement) {
+          console.log(
+            "DOM element was not present. App will not call Chessboard to avoid an alert() call.",
+          );
+          return;
+        }
+        /*global Chessboard */
+        board = Chessboard(finalID, config);
+
+        setBoard(board);
+      } catch (e) {
+        // This fires sometimes when it does not affect the experience
+        console.log("Got exception", e);
+      }
+
+      function makeMoves(moves) {
+        if (moves.length) {
+          setTimeout(() => {
+            // console.log("Moving", moves);
+
+            // console.log("Trying singleMove", singleMove);
+
+            let singleMove;
             try {
-                // TODO fork and react-ify this library
+              singleMove = gameRef.current.move(moves[0]);
 
-                const domElement = document.getElementById(finalID);
-
-                if (!domElement) {
-                    console.log("DOM element was not present. App will not call Chessboard to avoid an alert() call.")
-                    return;
-                }
-                /*global Chessboard */
-                board = Chessboard(finalID, config);
-
-                setBoard(board);
+              // board.move(`${singleMove.from}-${singleMove.to}`);
+              board.position(gameRef.current.fen());
             } catch (e) {
-                // This fires sometimes when it does not affect the experience
-                console.log("Got exception", e)
+              // This "shouldn't" ever happen
+              // In the real world this is a good place to log for debugging
+              console.debug(
+                "Unable to make move",
+                singleMove,
+                " on board",
+                gameRef.current,
+                e,
+              );
             }
+            makeMoves(moves.slice(1));
+          }, 250);
+        }
+      }
 
-            function makeMoves(moves) {
-                if (moves.length) {
-                    setTimeout(() => {
-                        // console.log("Moving", moves);
+      if (!board) {
+        return;
+      }
 
-                        // console.log("Trying singleMove", singleMove);
+      chessboardRef.current = board;
 
-                        let singleMove;
-                        try {
-                            singleMove = gameRef.current.move(moves[0]);
+      setTimeout(() => {
+        makeMoves(moves);
+      }, 200);
 
-                            // board.move(`${singleMove.from}-${singleMove.to}`);
-                            board.position(gameRef.current.fen())
-                        } catch (e) {
+      if (invert) {
+        board.flip();
+      }
 
-                            // This "shouldn't" ever happen
-                            // In the real world this is a good place to log for debugging
-                            console.debug("Unable to make move", singleMove, " on board", gameRef.current, e)
-                        }
-                        makeMoves(moves.slice(1));
-                    }, 250);
-                }
-            }
+      // Turn off mobile scrolling behavior if they drag inside the board on mobile
+      const domBoard = document.getElementById(finalID);
 
-            if (!board) {
-                return;
-            }
+      if (draggable) {
+        function preventBehavior(e) {
+          e.preventDefault();
+        }
 
-            chessboardRef.current = board;
+        domBoard.addEventListener("touchmove", preventBehavior, {
+          passive: false,
+        });
+      }
+    }, 100);
 
-            setTimeout(() => {
-                makeMoves(moves);
-            }, 200);
+    // If you take out the dependency array, it remakes the board each time
+    // eslint-disable-next-line
+  }, [fen, finalID, invert]);
 
-            if (invert) {
-                board.flip();
-            }
+  // Resize when the window changes width
+  useEffect(
+    () => {
+      if (board) {
+        board.resize();
+      }
+    },
+    // We don't care about the dependency on board; it won't be re-set with the current code
+    // eslint-disable-next-line
+    [width],
+  );
 
-            // Turn off mobile scrolling behavior if they drag inside the board on mobile
-            const domBoard = document.getElementById(finalID);
+  let drawings = <Drawings arrows={arrows}> </Drawings>;
 
-            if (draggable) {
-                function preventBehavior(e) {
-                    e.preventDefault();
-                }
+  // let widthOfChessboard = width - 36;
+  let widthOfChessboard = Math.min(width - 36, 513);
 
-                domBoard.addEventListener("touchmove", preventBehavior, {passive: false});
-            }
+  let style = {
+    height: widthOfChessboard + "px",
+    width: widthOfChessboard + "px",
+  };
 
-        }, 100);
-
-        // If you take out the dependency array, it remakes the board each time
-        // eslint-disable-next-line
-    }, [fen, finalID, invert]);
-
-    // Resize when the window changes width
-    useEffect(() => {
-            if (board) {
-                board.resize()
-            }
-
-        },
-        // We don't care about the dependency on board; it won't be re-set with the current code
-        // eslint-disable-next-line
-        [width]);
-
-    let drawings = <Drawings arrows={arrows}> </Drawings>
-
-    // let widthOfChessboard = width - 36;
-    let widthOfChessboard = Math.min(width - 36, 513);
-
-    let style = {
-        height: widthOfChessboard + "px",
-        width: widthOfChessboard + "px",
-    }
-
-    return (
-        <div className="side-by-side">
-            {drawings}
-            <div id={finalID} style={style}>
-            </div>
-        </div>
-    );
-}
+  return (
+    <div className="side-by-side">
+      {drawings}
+      <div id={finalID} style={style}></div>
+    </div>
+  );
+};
 
 export default ChessBoard;

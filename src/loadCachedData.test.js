@@ -1,17 +1,15 @@
-import { render, screen, act } from '@testing-library/react';
-import ReactDOM from 'react-dom/client';
-import loadCachedData from './loadCachedData';
+import { render, screen, act } from "@testing-library/react";
+import ReactDOM from "react-dom/client";
+import loadCachedData from "./loadCachedData";
 
-jest.mock("./storage")
+jest.mock("./storage");
 
-import {keysCalledGet, resetKeys} from './storage';
+import { keysCalledGet, resetKeys } from "./storage";
 
 // Canary Test
-test('loadCachedData makes the appropriate number of dexie calls', async () => {
+test("loadCachedData makes the appropriate number of dexie calls", async () => {
+  resetKeys();
+  await loadCachedData();
 
-    resetKeys();
-    await loadCachedData();
-
-    expect(keysCalledGet.length).toBe(9);
+  expect(keysCalledGet.length).toBe(9);
 });
-

@@ -1,4 +1,3 @@
-
 // eslint-disable-next-line
 declare namespace JSX {
   interface IntrinsicElements {

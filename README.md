@@ -1,5 +1,6 @@
 [![NodeJS with Webpack](https://github.com/macacollins/book-it/actions/workflows/webpack.yml/badge.svg)](https://github.com/macacollins/book-it/actions/workflows/webpack.yml)
 ![Coverage SVG showing current coverage](https://macacollins.github.io/book-it/coverage.svg)
+
 # Book It!
 
 Learn your chess openings with precisely targeted exercises based on your recent Chess.com games.
@@ -8,7 +9,7 @@ Learn your chess openings with precisely targeted exercises based on your recent
 
 ## Import Custom Repertoires
 
-You can upload any set of lines you want to learn. Learning the Scandinavian Wombat Attack like everyone else? Prepare your PGN with the lines you want from that opening and you can use it with this site. 
+You can upload any set of lines you want to learn. Learning the Scandinavian Wombat Attack like everyone else? Prepare your PGN with the lines you want from that opening and you can use it with this site.
 
 ## Review your games
 
@@ -46,7 +47,7 @@ This link takes you to the game itself so that you can look over what happened a
 
 ### Lichess
 
-This link takes you to an analysis board at the position where you played the different move. 
+This link takes you to an analysis board at the position where you played the different move.
 
 ![Screenshot of the lichess analysis board at lichess.org for the ](images/Lichess.png)
 
@@ -54,7 +55,7 @@ You can compare moves, access web-based Stockfish 16, and see Lichess statistics
 
 ### Chessable
 
-This link takes you to a Chessable position search. This will return a list of any courses that have the position where you played a different move from the repertoire. 
+This link takes you to a Chessable position search. This will return a list of any courses that have the position where you played a different move from the repertoire.
 
 ![Screenshot of the chessable UI with a search for the position from the previous examples](images/Chessable1.png)
 

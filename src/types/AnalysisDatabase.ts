@@ -1,5 +1,5 @@
-import AnalysisResult from './AnalysisResult';
+import AnalysisResult from "./AnalysisResult";
 
-export default interface AnalysisDatabase { 
-    [id: string]: AnalysisResult; 
+export default interface AnalysisDatabase {
+  [id: string]: AnalysisResult;
 }

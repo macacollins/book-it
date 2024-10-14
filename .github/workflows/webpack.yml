@@ -2,15 +2,14 @@ name: Continuous Integration / Continuous Deployment
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions:
   contents: read
   pages: write
   id-token: write
-
 
 jobs:
   build:
@@ -21,37 +20,37 @@ jobs:
         node-version: [18.x]
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
 
-    - name: Run Unit Tests
-      run: |
-        npm install --save-dev react-dev-utils
-        npm test -- --coverage --silent
+      - name: Run Unit Tests
+        run: |
+          npm install --save-dev react-dev-utils
+          npm test -- --coverage --silent
 
-    - name: Build
-      run: |
-        npm install
-        npm run build
+      - name: Build
+        run: |
+          npm install
+          npm run build
 
-    - name: Create Badges
-      shell: bash
-      run: |
-        npm i -g badgen-cli
-        export COV=$(node -p 't=require(`./coverage/coverage-summary.json`).total,Math.min(...`lines`.split(`|`).map(k=>t[k].pct))')
-        COLOR=$(node -p '+process.env.COV >= 95 ? `green` : `orange`')
-        badgen -j "Test Coverage" -s $COV% -c $COLOR > build/coverage.svg
+      - name: Create Badges
+        shell: bash
+        run: |
+          npm i -g badgen-cli
+          export COV=$(node -p 't=require(`./coverage/coverage-summary.json`).total,Math.min(...`lines`.split(`|`).map(k=>t[k].pct))')
+          COLOR=$(node -p '+process.env.COV >= 95 ? `green` : `orange`')
+          badgen -j "Test Coverage" -s $COV% -c $COLOR > build/coverage.svg
 
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
           # Upload build folder only
-          path: 'build'
+          path: "build"
 
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,23 +1,22 @@
-import {setItemDexie} from "../storage";
+import { setItemDexie } from "../storage";
 
 export default function reducer(state = {}, action) {
-    if (action.type === 'ADD_ANALYSIS') {
-        // console.log("Adding analysis")
+  if (action.type === "ADD_ANALYSIS") {
+    // console.log("Adding analysis")
 
-        const newState = {
-            ...action.data,
-            ...state
-        };
+    const newState = {
+      ...action.data,
+      ...state,
+    };
 
-        if (Object.keys(newState).length !== Object.keys(state).length) {
-            setItemDexie('analysisDatabase', newState);
-        }
-
-        return newState;
-
-    } else if (action.type === 'RESET') {
-        setItemDexie('analysisDatabase', {});
-        return {};
+    if (Object.keys(newState).length !== Object.keys(state).length) {
+      setItemDexie("analysisDatabase", newState);
     }
-    throw Error('Unknown action.');
+
+    return newState;
+  } else if (action.type === "RESET") {
+    setItemDexie("analysisDatabase", {});
+    return {};
+  }
+  throw Error("Unknown action.");
 }

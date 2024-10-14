@@ -1,3 +1,3 @@
 export default interface Repertoire {
-    [fen: string] : string[]
+  [fen: string]: string[];
 }
