@@ -7,6 +7,7 @@ import {
 import pgnParser from "pgn-parser";
 
 import getGameFromPGN from "./getGameFromPGN";
+import makeStreamingRequest from "./makeStreamingRequest";
 
 async function refreshGames(setGames, playerName, setSyncingGames) {
   console.log("Fetching games from lichess.org");
@@ -40,28 +41,43 @@ async function refreshGames(setGames, playerName, setSyncingGames) {
     console.log("Using lastTimestamp value");
   }
 
-  for (let i = 0; i < numberMonths; i++) {
-    if (monthByMonth) {
-      targetSinceTimestamp = Date.now() - oneMonth * (i + 1);
-      targetUntilTimestamp = Date.now() - oneMonth * i;
-    }
+    targetSinceTimestamp = Date.now() - oneMonth * (24);
+    targetUntilTimestamp = Date.now() - oneMonth * 0;
+    
+    const finalURL = "https://lichess.org/api/games/user/" +
+    playerName +
+    "?clocks=true&since=" +
+    targetSinceTimestamp +
+    "&until=" + 
+    targetUntilTimestamp;
 
-    console.log(
-      "Fetching with timestamp of " +
-        targetSinceTimestamp +
-        " and end time of " +
-        targetUntilTimestamp,
-    );
+    let batchSize = 15;
 
+    let current = 0;
+
+    makeStreamingRequest(finalURL, (game) => {
+      const pgn = pgnParser.parse(game);
+
+      const chessGame = getGameFromPGN(pgn[0], "lichess");
+      finalGames.push(chessGame); // TODO consider 
+
+      current ++;
+
+      if (current % batchSize === 0) {
+
+        addGamesBulk(finalGames);
+        setTimeout(async () => setGames(await getAllGames()), 0);
+        console.log("Got message", game);
+      }
+
+    }, () => {
+      console.log("Finished")
+    })
+/*
     // start requests to lichess.org for data
     // eslint-disable-next-line
     const result = await fetch(
-      "https://lichess.org/api/games/user/" +
-        playerName +
-        "?since=" +
-        targetSinceTimestamp +
-        "&until=" +
-        targetUntilTimestamp,
+      
     )
       .then((res) => res.text())
       // We only care about the final value
@@ -80,9 +96,8 @@ async function refreshGames(setGames, playerName, setSyncingGames) {
       .catch((err) => {
         console.log(err.message);
       });
-
-    console.log("Result", result);
-  }
+*/
+    //console.log("Result", result);
 
   console.log("Got " + finalGames.length + " from lichess.");
   setSyncingGames(false);

@@ -2,7 +2,7 @@ import { setItemDexie } from "../storage";
 import AnalysisDatabase from "../types/AnalysisDatabase";
 import Repertoire from "../types/Repertoire";
 import Game from "../types/Game";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import pgnParser from "pgn-parser";
 
 import ChessBoard from "../components/ChessBoard";
@@ -58,6 +58,12 @@ function ConfigPage({
   const [selectedChapter, setSelectedChapter] = useState<string>("");
   const [selectedLine, setSelectedLine] = useState<string>("");
   const [bookLines, setBookLines] = useState<any[]>([]);
+  const [previewFEN, setPreviewFEN ] = useState<string>('');
+
+  const gameRef = useRef<any>(null);
+  const chessboardRef = useRef<any>(null);
+
+  const invert = useRef<any>();
 
   useEffect(() => {
     (async () => {
@@ -67,11 +73,66 @@ function ConfigPage({
     })();
   }, [selectedRepertoire]);
 
+  const [delayTimer, setDelayTimer] = useState<any>();
+
+  function delayedDisplay(chapterName: string) {
+    if (delayTimer) {
+      clearTimeout(delayTimer);
+    }
+
+    const timeoutID = setTimeout(() => {
+      test(chapterName);
+
+      setDelayTimer(0);
+    }, 500);
+
+    setDelayTimer(timeoutID);
+  }
+
+  function test(chapterName: string) {
+    try {
+      const lines = bookLines.filter(
+        (bookLine) => bookLine.chapterName === chapterName,
+      );
+
+      const moveArrays = lines.map(line => line.game.moves.map((move:any) => move.move));
+
+      let commonPath = moveArrays[0];
+
+      if (!commonPath) {
+
+        chessboardRef?.current?.position(new Chess().fen());
+        gameRef.current = new Chess();
+        return;
+      }
+
+      moveArrays.forEach(moveArray => {
+        for (let i = 0; i < (moveArray.length) && i < commonPath.length; i++) {
+          if (moveArray[i] !== commonPath[i]) {
+            commonPath = commonPath.slice(0, i);
+            continue;
+          }
+        }
+      });
+
+      const chess = new Chess();
+
+      for (let move of commonPath) {
+        chess.move(move);
+      }
+      console.log('setting to', chess.fen());
+      chessboardRef?.current?.position(chess.fen());
+      //gameRef.current = new Chess(chess.fen());
+    } catch (e) {
+      console.log("Not showing errors", e);
+    }
+  }
+
   const buttons = repertoireList.map((repertoireName) => {
     return (
-      <button onClick={() => setSelectedRepertoire(repertoireName)}>
+      <md-text-button onClick={() => setSelectedRepertoire(repertoireName)}>
         {repertoireName}
-      </button>
+      </md-text-button>
     );
   });
 
@@ -90,6 +151,33 @@ function ConfigPage({
     }
   });
 
+  const [inverted, setInverted] = useState(false);
+  const handleUserKeyPress = useCallback((event:any) => {
+      const { key, keyCode } = event;
+      console.log("Doing it", event);
+      if (keyCode === 32 || (keyCode >= 65 && keyCode <= 90)){
+        invert.current = (!invert.current);
+        console.log("New invert value", invert, chessboardRef, gameRef);
+
+        chessboardRef?.current?.position(gameRef?.current?.fen())
+      } else {
+        console.log("event", event);
+      }
+  }, []);
+
+
+  useEffect(() => {
+    setInverted(invert.current);
+  }, [invert.current])
+
+  useEffect(() => {
+      console.log("Adding listener");
+      window.addEventListener("keydown", handleUserKeyPress);
+      return () => {
+          window.removeEventListener("keydown", handleUserKeyPress);
+      };
+  }, [handleUserKeyPress]);
+
   if (!selectedRepertoire) {
     // Display repertoire selection
     
@@ -100,9 +188,15 @@ function ConfigPage({
     const chapterButtons = chapters.map((chapter) => {
       return (
         <li>
-          <button onClick={() => setSelectedChapter(chapter)}>
+          <md-text-button 
+              onMouseEnter={() => delayedDisplay(chapter)} 
+              onClick={() => setSelectedChapter(chapter)}>
             {chapter}: {chapterInfo[chapter].numberLines}
-          </button>
+          </md-text-button>
+          <md-text-button 
+              onClick={() => delayedDisplay(chapter)}>
+            show
+          </md-text-button>
         </li>
       );
     })
@@ -110,19 +204,23 @@ function ConfigPage({
     const chapterList = <ul>{chapterButtons}</ul>
     const board =<ChessBoard
       fen={"start"}
-      invert={false}
+      invert={inverted}
       name={"chapter-viewer-board"}
       game_url={""}
       draggable={false}
       arrows={[]}
       madeMoveRef={{ current: true }}
       moveCallback={(move) => {}}
+
+      gameRef={gameRef}
+      chessboardRef={chessboardRef}
+      
     ></ChessBoard>
     return (
       <div id="select-chapter">
-        <button onClick={() => setSelectedRepertoire("")}>Home</button>
+        <md-text-button onClick={() => setSelectedRepertoire("")}>Home</md-text-button>
         <h2>{selectedRepertoire}</h2>
-        {board}
+        <div className="sticky-container">{board}</div>
         {chapterList}
       </div>
     );
@@ -156,7 +254,7 @@ function ConfigPage({
 
     const board = <ChessBoard
       fen={chess.fen()}
-      invert={false}
+      invert={inverted}
       name={"line-select-board"}
       game_url={""}
       draggable={false}
@@ -176,24 +274,28 @@ function ConfigPage({
 
     return (
       <div id="line-select">
-        <button onClick={() => setSelectedRepertoire("")}>Home</button>
-        <button onClick={() => setSelectedChapter("")}>
+        {JSON.stringify(invert)}{inverted}
+        <md-text-button onClick={() => setSelectedRepertoire("")}>Home</md-text-button>
+        <md-text-button onClick={() => setSelectedChapter("")}>
           {selectedRepertoire}
-        </button>
+        </md-text-button>
         <br></br>
-        {lastChapter && <button onClick={() => setSelectedChapter(lastChapter)}>{'<-' + lastChapter}</button>}
-        {nextChapter && <button onClick={() => setSelectedChapter(nextChapter)}>
+        {lastChapter && <md-text-button onClick={() => setSelectedChapter(lastChapter)}>{'<-' + lastChapter}</md-text-button>}
+        {nextChapter && <md-text-button onClick={() => setSelectedChapter(nextChapter)}>
         {nextChapter + ' ->'}
-        </button>}
+        </md-text-button>}
         <h2>{selectedChapter}</h2>
         {board}
+        {previewFEN}
         <ul>
           {lines.map((line) => {
             return (
               <li>
-                <button onClick={() => setSelectedLine(line.lineName)}>
+                <md-text-button 
+                    onClick={() => setSelectedLine(line.lineName)}
+                    >
                   {line.lineName}: {line.game.moves.length} moves
-                </button>
+                </md-text-button>
               </li>
             );
           })}
@@ -226,7 +328,7 @@ function ConfigPage({
     return (
       <>
         <img className="n" />
-        <button
+        <md-text-button
           onClick={() => {
             setSelectedRepertoire("");
             setSelectedChapter("");
@@ -234,33 +336,33 @@ function ConfigPage({
           }}
         >
           Home
-        </button>
-        <button
+        </md-text-button>
+        <md-text-button
           onClick={() => {
             setSelectedChapter("");
             setSelectedLine("");
           }}
         >
           {selectedRepertoire}
-        </button>
-        <button onClick={() => setSelectedLine("")}>{selectedChapter}</button>
+        </md-text-button>
+        <md-text-button onClick={() => setSelectedLine("")}>{selectedChapter}</md-text-button>
         <h2>{selectedLine}</h2>
 
-        {lastLine && <button
+        {lastLine && <md-text-button
           onClick={() => {
             setSelectedLine(lastLine);
           }}
         >
           Last
-        </button>}
+        </md-text-button>}
         {nextLine &&
-          <button
+          <md-text-button
             onClick={() => {
               setSelectedLine(nextLine);
             }}
           >
             Next
-          </button>
+          </md-text-button>
         }
 
         <LineViewer line={lines[0]} />

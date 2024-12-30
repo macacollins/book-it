@@ -101,9 +101,9 @@ const AnalysisResult = ({
         <div className="buttonlist" style={buttonStyles}>
           <md-text-button
             data-testid={"chess-dot-com-button"}
-            onClick={() => window.open(analysis.headers.Link)}
+            onClick={() => window.open("/book-it/tv?fen=" + analysis.displayFEN)}
           >
-            Chess.com
+            TV
           </md-text-button>
           <md-text-button
             data-testid={"lichess-button"}

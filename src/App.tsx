@@ -7,6 +7,8 @@ import {
   Dispatch,
   SetStateAction,
 } from "react";
+
+import { BrowserRouter, Routes, Route, Navigate, Link, Outlet, useNavigate } from 'react-router';
 import { setItemDexie } from "./storage";
 
 import defaultGames from "./integrations/default-games";
@@ -24,6 +26,9 @@ import "./css/theme.light.css";
 import "./css/tokens.css";
 import "./css/typography.module.css";
 import "./intrinsics";
+
+import 'primereact/resources/themes/mira/theme.css';
+
 
 // index.js
 import "@material/web/button/filled-button.js";
@@ -56,6 +61,13 @@ import Repertoire from "./types/Repertoire";
 import Game from "./types/Game";
 import Viewer from "./pages/Viewer";
 import Book from "./pages/Book";
+import TV from "./pages/TV";
+import TVPicker from "./pages/TVPicker";
+import MissedMovesTV from "./pages/MissedMovesTV";
+import ChannelManagement from "./pages/ChannelManagement";
+import Notes from "./components/Notes";
+import { ChannelForm } from "./pages/ChannelForm";
+import { MegaMenu } from "primereact/megamenu";
 
 interface AppProps {
   analysisDatabaseStorage: AnalysisDatabase;
@@ -91,6 +103,7 @@ function App({
   const [lichessPlayerName, setLichessPlayerName] = useState(
     lichessPlayerNameStorage || "",
   );
+
 
   const [repertoire, setRepertoire]: [
     { [name: string]: Repertoire },
@@ -286,6 +299,12 @@ function App({
     ></Drills>
   );
 
+  const tvPage = () => { return <TV/> }
+  const tvPickerPage = () => { return <TVPicker repertoire={repertoire[repertoireChoice]} /> }
+
+  const repertoireTV = () => { return <MissedMovesTV {...{ games, analysisDatabase }}/>}
+  const channelManagement = () => { return <ChannelManagement repertoire={repertoire[repertoireChoice]}/>}
+
   // set up tab change listener
   useEffect(() => {
     interface SpecialElement extends Element {
@@ -353,83 +372,98 @@ function App({
 
   let classProps = colorScheme === "dark" ? { class: "dark-mode" } : {};
 
-  return (
-    <>
-      <mio-root {...classProps}>
-        <md-tabs
-          data-testid={"nav-tabs"}
-          id="nav-tabs"
-          aria-label="A custom themed tab bar"
-        >
-          <md-primary-tab
-            data-testid="configuration-tab"
-            id="tab-one"
-            aria-controls="panel-one"
-            {...oneActive}
-          >
-            Configuration
-          </md-primary-tab>
-          <md-primary-tab
-            data-testid="games-tab"
-            id="tab-two"
-            aria-controls="panel-two"
-            {...twoActive}
-          >
-            Games
-          </md-primary-tab>
-          <md-primary-tab
-            data-testid="drills-tab"
-            id="tab-three"
-            aria-controls="panel-three"
-            {...threeActive}
-          >
-            Drill
-          </md-primary-tab>
-          <md-primary-tab
-            data-testid="view-tab"
-            id="tab-four"
-            aria-controls="panel-four"
-            {...fourActive}
-          >
-            View
-          </md-primary-tab>
-        </md-tabs>
 
-        <div
-          role="tabpanel"
-          id="panel-one"
-          aria-labelledby="tab-one"
-          {...oneProps}
-        >
-          {activeTab === "panel-one" ? configPage() : ""}
-        </div>
-        <div
-          role="tabpanel"
-          id="panel-two"
-          aria-labelledby="tab-two"
-          {...twoProps}
-        >
-          {activeTab === "panel-two" ? resultsPage() : ""}
-        </div>
-        <div
-          role="tabpanel"
-          id="panel-three"
-          aria-labelledby="tab-three"
-          {...threeProps}
-        >
-          {activeTab === "panel-three" ? drillPage() : ""}
-        </div>
-        <div
-          role="tabpanel"
-          id="panel-four"
-          aria-labelledby="tab-four"
-          {...fourProps}
-        >
-          {activeTab === "panel-four" ? viewerPage() : ""}
-        </div>
-      </mio-root>
-    </>
-  );
+  const channelForm = <ChannelForm repertoire={repertoire[repertoireChoice]} />
+
+  return <>
+  <BrowserRouter>
+    <Routes>
+      <Route element={<Navigator/>}>
+        <Route path="/book-it/config" element={configPage()} />
+        <Route path="/book-it/results" element={resultsPage()} />
+        <Route path="/book-it/drills" element={drillPage()} />
+        <Route path="/book-it/viewer" element={viewerPage()} />
+        <Route path="/book-it/tv-picker" element={tvPickerPage()} />
+        <Route path="/book-it/channels" element={channelManagement()} />
+        <Route path="/book-it/tv" element={tvPage()} />
+        <Route path="/book-it/repertoire-tv" element={repertoireTV()} />
+        <Route path="/book-it/notes" element={<Notes/>} />
+        <Route path="/book-it/add-channel" element={channelForm} />
+        <Route path="*" element={<Navigate to="/book-it/config/" replace />} />
+      </Route>
+    </Routes>
+  </BrowserRouter>
+  </>
 }
+
+function Navigator() {
+
+  const navigate = useNavigate();
+
+  const items = [ { 
+    label: "Book It", 
+    items:
+    [
+      {
+          label: 'Channels',
+          items: [
+            { label: 'View Channels', command: () => {
+              navigate("/book-it/channels") 
+            } }, 
+            { label: 'New Channel', command: () => {
+              navigate("/book-it/add-channel") 
+            } }
+          ]
+      },
+      {
+          label: 'Games',
+          items: [
+            { label: 'Recent Games', command: () => {
+              navigate("/book-it/results") 
+            } }
+          ]
+      },
+
+      {
+        label: 'Viewer',
+        items: [
+          { label: 'Repertoires', command: () => {
+            navigate("/book-it/viewer") 
+          } }
+        ]
+    },
+
+    {
+      label: 'Practice',
+      items: [
+        { label: 'Drills', command: () => {
+          navigate("/book-it/drills") 
+        } }
+      ]
+  },
+
+  {
+    label: 'Notes',
+    items: [
+      { label: 'View Notes', command: () => {
+        navigate("/book-it/notes") 
+      } }
+    ]
+},
+        {
+            label: 'Configuration',
+            items: [
+              { label: 'Configuration', command: () => {
+                navigate("/book-it/config") 
+              } }
+            ]
+        }
+    ]}];
+
+  return <>  <MegaMenu model={items} breakpoint="960px" />
+  <Outlet/></>
+
+
+};
 
 export default App;
