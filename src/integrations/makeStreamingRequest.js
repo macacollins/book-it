@@ -5,39 +5,34 @@ Utility function to read a ND-JSON HTTP stream.
 See usage example in the next file.
 */
 
-const readStream = processLine => response => {
-    const stream = response.body.getReader();
-    const matcher = /\r?\n/;
-    const decoder = new TextDecoder();
-    let buf = '';
+const readStream = (processLine) => (response) => {
+  const stream = response.body.getReader();
+  const matcher = /\r?\n/;
+  const decoder = new TextDecoder();
+  let buf = "";
 
-    const loop = () =>
-        stream.read().then(({ done, value }) => {
-        if (done) {
-            if (buf.length > 0) processLine(JSON.parse(buf));
-        } else {
-            const chunk = decoder.decode(value, {
-            stream: true
-            });
-            buf += chunk;
-
-            const parts = buf.split(matcher);
-            buf = parts.pop();
-
-            processLine(chunk);
-
-            return loop();
-        }
+  const loop = () =>
+    stream.read().then(({ done, value }) => {
+      if (done) {
+        if (buf.length > 0) processLine(JSON.parse(buf));
+      } else {
+        const chunk = decoder.decode(value, {
+          stream: true,
         });
+        buf += chunk;
 
-    return loop();
-}
+        const parts = buf.split(matcher);
+        buf = parts.pop();
+
+        processLine(chunk);
+
+        return loop();
+      }
+    });
+
+  return loop();
+};
 
 export default function makeStreamingRequest(url, onMessage, onComplete) {
-
-    const stream = fetch(url)
-        .then(readStream(onMessage))
-        .then(onComplete);
-
-
+  const stream = fetch(url).then(readStream(onMessage)).then(onComplete);
 }

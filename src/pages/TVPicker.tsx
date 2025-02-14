@@ -1,100 +1,111 @@
-import React, { useState, useEffect, useRef } from 'react';
-import Repertoire from '../types/Repertoire';
-import ChessBoard from '../components/ChessBoard';
+import React, { useState, useEffect, useRef } from "react";
+import Repertoire from "../types/Repertoire";
+import ChessBoard from "../components/ChessBoard";
 
-import { Chess, Move } from 'chess.js';
+import { Chess, Move } from "chess.js";
 
-import {Button} from 'primereact/button';
-import { InputText} from 'primereact/inputtext';
-import pgnParser, { ParsedPGN } from 'pgn-parser';
-import MultipleFENTV from './MultipleFENTV';
+import { Button } from "primereact/button";
+import { InputText } from "primereact/inputtext";
+import pgnParser, { ParsedPGN } from "pgn-parser";
+import MultipleFENTV from "./MultipleFENTV";
 
 export interface TVPickerProps {
-    repertoire: Repertoire;
+  repertoire: Repertoire;
 }
 
+export default function TVPicker({ repertoire }: TVPickerProps) {
+  const boardRef = useRef<any>();
+  const gameRef = useRef<any>();
 
-export default function TVPicker({ repertoire } : TVPickerProps) {
+  const urlParams = new URLSearchParams(window.location.search);
+  const [fen, setFEN] = useState(urlParams.get("fen"));
 
-    const boardRef = useRef<any>();
-    const gameRef = useRef<any>();
+  const [playChannel, setPlayChannel] = useState(false);
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const [ fen, setFEN ] = useState(urlParams.get('fen'));
+  if (!fen) {
+    return <TVFENPicker setFEN={setFEN}></TVFENPicker>;
+  }
+  let lines = repertoire[fen].map((line) => {
+    const lineChess = new Chess();
 
-    const [ playChannel, setPlayChannel ] = useState(false);
+    let pgn: ParsedPGN = pgnParser.parse(line + " *")[0];
 
-    if (!fen) {
-        return <TVFENPicker setFEN={setFEN}></TVFENPicker>;
-    }
-    let lines = 
-        repertoire[fen].map(line => {
-            const lineChess = new Chess();
+    let countdown = pgn.moves.length;
+    let currentIndex = 0;
 
-            let pgn: ParsedPGN = pgnParser.parse(line + " *")[0];
+    let finalFEN = fen;
+    pgn.moves.forEach((move) => {
+      currentIndex = currentIndex + 1;
+      countdown = countdown - 1;
 
-            let countdown = pgn.moves.length;
-            let currentIndex = 0;
+      lineChess.move(move.move);
 
-            let finalFEN = fen;
-            pgn.moves.forEach(move => {
-                currentIndex = currentIndex + 1;
-                countdown = countdown - 1;
+      if (lineChess.fen() === fen) {
+        countdown = 2;
+      }
 
-                lineChess.move(move.move);
+      if (countdown === 0) {
+        finalFEN = lineChess.fen();
+      }
+    });
 
-                if (lineChess.fen() === fen) {
-                    countdown = 2;
-                }
+    return finalFEN;
+  });
 
-                if (countdown === 0) {
-                    finalFEN = lineChess.fen();
-                }
-            });
+  // Get unique only
+  lines = [...new Set(lines)];
 
-            return finalFEN;
-        })
+  if (playChannel) {
+    return <MultipleFENTV fens={lines} />;
+  }
 
-    // Get unique only
-    lines = [ ...new Set(lines)]
-
-    if (playChannel) {
-        return <MultipleFENTV fens={lines} />
-    }
-
-    return <>
-        TV Picker
-        <Button onClick={() => {
-            setPlayChannel(true);
-        }}>Start Channel</Button>
-        { lines.map(fen => <LineDisplay fen={fen}/>) }
+  return (
+    <>
+      TV Picker
+      <Button
+        onClick={() => {
+          setPlayChannel(true);
+        }}
+      >
+        Start Channel
+      </Button>
+      {lines.map((fen) => (
+        <LineDisplay fen={fen} />
+      ))}
     </>
-
+  );
 }
 
-function LineDisplay({fen}: {fen: string}) {
+function LineDisplay({ fen }: { fen: string }) {
+  const boardRef = useRef<any>();
+  const gameRef = useRef<any>();
+  const madeMoveRef = { current: false };
 
-    const boardRef = useRef<any>();
-    const gameRef = useRef<any>();
-        const madeMoveRef = { current: false }
-
-    return <li>
-        {fen} 
-        <ChessBoard 
-        chessboardRef={boardRef} madeMoveRef ={madeMoveRef}
-        gameRef={gameRef} name={fen.replaceAll(/[^a-zA-Z]/g, "")} fen={fen} game_url={fen}></ChessBoard>
-        </li>
+  return (
+    <li>
+      {fen}
+      <ChessBoard
+        chessboardRef={boardRef}
+        madeMoveRef={madeMoveRef}
+        gameRef={gameRef}
+        name={fen.replaceAll(/[^a-zA-Z]/g, "")}
+        fen={fen}
+        game_url={fen}
+      ></ChessBoard>
+    </li>
+  );
 }
 
-function TVFENPicker({setFEN}: {setFEN: any}) {
+function TVFENPicker({ setFEN }: { setFEN: any }) {
+  const boardRef = useRef<any>();
+  const gameRef = useRef<any>();
+  const madeMoveRef = { current: false };
 
-    const boardRef = useRef<any>();
-    const gameRef = useRef<any>();
-    const madeMoveRef = { current: false }
+  const [currentFEN, setCurrentFEN] = useState("");
 
-    const [currentFEN, setCurrentFEN] = useState("");
-
-    return <><ChessBoard
+  return (
+    <>
+      <ChessBoard
         fen={"start"}
         moves={[]}
         invert={false}
@@ -105,11 +116,18 @@ function TVFENPicker({setFEN}: {setFEN: any}) {
         chessboardRef={boardRef}
         gameRef={gameRef}
         moveCallback={(move: Move) => {
-            setCurrentFEN(gameRef.current?.fen())
+          setCurrentFEN(gameRef.current?.fen());
         }}
       ></ChessBoard>
-      <br/>
+      <br />
       {currentFEN}
-      <Button onClick={() => { setFEN(currentFEN) }}>View Repertoire Lines</Button>
-  </>
+      <Button
+        onClick={() => {
+          setFEN(currentFEN);
+        }}
+      >
+        View Repertoire Lines
+      </Button>
+    </>
+  );
 }

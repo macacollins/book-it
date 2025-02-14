@@ -4,6 +4,11 @@ import AnalysisDatabase from "../types/AnalysisDatabase";
 import Repertoire from "../types/Repertoire";
 import Game from "../types/Game";
 
+import { InputText}  from 'primereact/inputtext';
+import { RadioButton } from 'primereact/radiobutton';
+
+import { Button } from 'primereact/button';
+
 interface ConfigPageProps {
   playerName: string;
   setPlayerName: (newValue: string) => void;
@@ -56,17 +61,17 @@ function ConfigPage({
 
       return (
         <div className="radio-label" key={repertoireName}>
-          <md-radio
+          <RadioButton
             data-testid={"repertoireChoiceField" + repertoireName}
             aria-label={repertoireName}
-            onClick={() => {
+            onChange={() => {
               setRepertoireChoice(repertoireName);
               setItemDexie("repertoireChoice", repertoireName);
             }}
             id="default-lines-radio"
             name="with-labels"
             {...props}
-          ></md-radio>
+          ></RadioButton>
           <label htmlFor="default-lines-radio">{repertoireName}</label>
         </div>
       );
@@ -76,7 +81,7 @@ function ConfigPage({
   let resetGamesButton = (
     <div key={"reset-games-button"}>
       <p> Current Games: {games.length}</p>
-      <md-filled-button
+      <Button
         data-testid={"reset-games-button"}
         className={"drill-button"}
         onClick={() => {
@@ -86,7 +91,7 @@ function ConfigPage({
         }}
       >
         Reset Games
-      </md-filled-button>
+      </Button>
     </div>
   );
 
@@ -99,7 +104,7 @@ function ConfigPage({
           ? Object.keys(analysisDatabase).length
           : "Not initialized"}
       </p>
-      <md-filled-button
+      <Button
         data-testid={"reset-analysis-db-button"}
         className={"drill-button"}
         onClick={() => {
@@ -108,14 +113,14 @@ function ConfigPage({
         }}
       >
         Reset Analysis Database
-      </md-filled-button>
+      </Button>
     </div>
   );
 
   let resetRepertoires = (
     <div key={"reset-repertoires-button"}>
       <p> Current Repertoires: {repertoireList.length}</p>
-      <md-filled-button
+      <Button
         data-testid={"reset-repertoires-button"}
         className={"drill-button"}
         onClick={() => {
@@ -130,7 +135,7 @@ function ConfigPage({
         }}
       >
         Reset Repertoires
-      </md-filled-button>
+      </Button>
     </div>
   );
 
@@ -142,28 +147,28 @@ function ConfigPage({
 
       <h3>User</h3>
       <p>Please enter your chess.com username</p>
-      <md-outlined-text-field
+      <InputText
         data-testid={"chess-dot-com-username"}
-        label="chess.com Username"
+        placeholder="chess.com Username"
         value={playerName}
-        onInput={(e: { target: { value: string } }) => {
+        onChange={(e: { target: { value: string } }) => {
           // console.log(e);
           setPlayerName(e.target.value);
           setItemDexie("playerName", e.target.value);
         }}
-      ></md-outlined-text-field>
+      ></InputText>
 
       <p>Please enter your lichess.org username</p>
-      <md-outlined-text-field
+      <InputText
         data-testid={"lichess-dot-org-username"}
-        label="lichess.org Username"
+        placeholder="lichess.org Username"
         value={lichessPlayerName}
-        onInput={(e: { target: { value: string } }) => {
+        onChange={(e: { target: { value: string } }) => {
           // console.log(e);
           setLichessPlayerName(e.target.value);
           setItemDexie("lichessPlayerName", e.target.value);
         }}
-      ></md-outlined-text-field>
+      ></InputText>
 
       <h3>Repertoire</h3>
       <div className="column" role="radiogroup" aria-label="Repertoire">
@@ -172,15 +177,15 @@ function ConfigPage({
 
       <h3>Upload New Lines</h3>
 
-      <md-outlined-text-field
+      <InputText
         data-testid={"new-repertoire-name-field"}
-        label="Repertoire Name"
+        placeholder="Repertoire Name"
         value={newRepertoireNameField}
-        onInput={(e: { target: { value: string } }) => {
+        onChange={(e: { target: { value: string } }) => {
           setNewRepertoireNameField(e.target.value);
           // console.log("set it to ", e.target.value);
         }}
-      ></md-outlined-text-field>
+      ></InputText>
       <br></br>
       <FileUpload
         newRepertoireNameField={newRepertoireNameField}

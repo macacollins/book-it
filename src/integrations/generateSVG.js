@@ -1,23 +1,24 @@
-
-
 var svgwidth = 500;
-svgwidth = Math.min(500,Math.min(window.innerWidth,window.innerHeight-50)*0.9);
+svgwidth = Math.min(
+  500,
+  Math.min(window.innerWidth, window.innerHeight - 50) * 0.9,
+);
 
 function downloadSVG(svg) {
-    const blob = new Blob([svg.toString()]);
-    const element = document.createElement("a");
-    element.download = "test.svg";
-    element.href = window.URL.createObjectURL(blob);
-    element.click();
-    element.remove();
-  }
-
-export default function parseFEN(fen){
-    downloadSVG(createSVGboard(fen));
+  const blob = new Blob([svg.toString()]);
+  const element = document.createElement("a");
+  element.download = "test.svg";
+  element.href = window.URL.createObjectURL(blob);
+  element.click();
+  element.remove();
 }
 
-function createSVGboard(fen){
-	fen = fen.replace(/%20/g," ");
+export default function parseFEN(fen) {
+  downloadSVG(createSVGboard(fen));
+}
+
+function createSVGboard(fen) {
+  fen = fen.replace(/%20/g, " ");
   let svg = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg"  viewBox="-9 -9 378 378">
   <defs>
     <pattern id="bg" x="0" y="0" width="90" height="90" patternUnits="userSpaceOnUse">
@@ -94,32 +95,51 @@ function createSVGboard(fen){
   */
   let row = 0;
   let col = 0;
-  for (var i=0;i<fen.length;i++){
-    if (row > 7){break;}
+  for (var i = 0; i < fen.length; i++) {
+    if (row > 7) {
+      break;
+    }
 
-    switch (fen[i]){
-      case 'r': case 'n': case 'b': case 'q': case 'k': case 'p': {
-        svg += `<rect className="b" x="${col*45}" y="${row*45}" width="45" height="45" fill="url(#${fen[i]})"></rect>`
+    switch (fen[i]) {
+      case "r":
+      case "n":
+      case "b":
+      case "q":
+      case "k":
+      case "p": {
+        svg += `<rect className="b" x="${col * 45}" y="${row * 45}" width="45" height="45" fill="url(#${fen[i]})"></rect>`;
         col++;
-        if (col > 7){
+        if (col > 7) {
           col = 0;
           row++;
         }
         break;
       }
-      case 'R': case 'N': case 'B': case 'Q': case 'K': case 'P': {
-        svg += `<rect x="${col*45}" y="${row*45}" width="45" height="45" fill="url(#${fen[i]})"></rect>`
+      case "R":
+      case "N":
+      case "B":
+      case "Q":
+      case "K":
+      case "P": {
+        svg += `<rect x="${col * 45}" y="${row * 45}" width="45" height="45" fill="url(#${fen[i]})"></rect>`;
 
         col++;
-        if (col > 7){
+        if (col > 7) {
           col = 0;
           row++;
         }
         break;
       }
-      case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': {
+      case "1":
+      case "2":
+      case "3":
+      case "4":
+      case "5":
+      case "6":
+      case "7":
+      case "8": {
         col += parseInt(fen[i]);
-        if (col > 7){
+        if (col > 7) {
           col = 0;
           row++;
         }
@@ -127,8 +147,7 @@ function createSVGboard(fen){
       }
     }
   }
-  
+
   svg += `</svg>`;
   return svg;
 }
-

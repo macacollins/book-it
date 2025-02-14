@@ -16,6 +16,11 @@ import { ArrowConfig } from "../types/ArrowConfig";
 import AnalysisResult from "../types/AnalysisResult";
 import generateArrowConfig from "../analysis/generateArrowConfig";
 
+import { Dropdown } from 'primereact/dropdown';
+import { Button } from 'primereact/button';
+import { Checkbox } from "primereact/checkbox";
+import { SelectButton } from 'primereact/selectbutton';
+
 // TODO make this happen
 
 export default function Drills(props: {
@@ -55,6 +60,8 @@ export default function Drills(props: {
   const [color, setColor] = useState<string>("White");
   const [moves, setMoves] = useState<string[]>([]);
   let newMoves = [...moves];
+
+  let [ selectedOpeningFilter, setSelectedOpeningFilter ] = useState();
 
   // cache drills to run to avoid re-computing each time
   useEffect(() => {
@@ -219,91 +226,78 @@ export default function Drills(props: {
       14,
     );
 
-    let openingFilters = topOpenings.map(({ opening, count }) => (
-      <md-select-option
-        data-testid={`opening-${opening}`}
-        key={opening}
-        value={opening}
-        onClick={() => {
-          setCurrentOpeningFilter(opening);
-        }}
-      >
-        {opening} {count}
-      </md-select-option>
-    ));
+    const openingOptions = topOpenings.map(({opening, count}) => {
+      return {
+        code: opening + " " + count,
+        label: opening
+      }
+    });
 
     const openingFiltersFull = (
       <>
-        <h3>Opening Filter</h3>
-        <md-outlined-select>{openingFilters}</md-outlined-select>
+        <label>Opening Filter</label>
+        <div>
+          <Dropdown value={selectedOpeningFilter} 
+            onChange={(e) => {
+              setSelectedOpeningFilter(e.value);
+              setCurrentOpeningFilter(e.value);
+            }}
+            options={openingOptions} 
+            optionLabel="code"
+            optionValue="label" 
+            placeholder="Select an Opening" 
+            className="w-25rem" />
+        </div>
       </>
     );
 
     const side = (
-      <>
-        <h3>Color</h3>
-        <md-outlined-select value={color}>
-          <md-select-option
-            data-testid={`opening-white`}
-            key={"White"}
-            value={"White"}
-            onClick={() => {
-              setColor(color);
-            }}
-          >
-            White
-          </md-select-option>
-          <md-select-option
-            data-testid={`opening-black`}
-            key={"Black"}
-            value={"Black"}
-            onClick={() => {
-              setColor("Black");
-            }}
-          >
-            Black
-          </md-select-option>
-        </md-outlined-select>
-      </>
+      <div>
+        <label>Color</label>
+        <SelectButton
+          value={color}
+          options={['White', 'Black']}
+          onChange={(e: any) => setColor(e.value)} 
+        >
+
+        </SelectButton>
+      </div>
     );
 
     let depthSelections = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((number) => (
-      <md-select-option
-        data-testid={`opening-${number}`}
-        value={number}
-        key={JSON.stringify(number)}
-        onClick={() => {
-          setDepth(number);
-        }}
-      >
-        {number}
-      </md-select-option>
+      {code: number, value: number}
     ));
 
     const depthFull = (
-      <>
-        <h3>Depth</h3>
-        <md-outlined-select value={depth}>{depthSelections}</md-outlined-select>
-      </>
+      <div>
+        <label>Depth</label>
+        <br></br>
+        <Dropdown value={depth} 
+            onChange={(e) => {
+              setDepth(e.value);
+            }}
+            options={depthSelections} 
+            optionLabel="code"
+            optionValue="value" 
+            placeholder="Select Depth" 
+            className="w-25rem" />
+      </div>
     );
 
     return (
       <>
-        <br></br>
-        <b>Blindfold</b>
-        <md-checkbox
-          data-testid={"blindfold-button"}
-          className={"blindfold-button"}
-          value={blindfold}
-          onClick={(e: any) => {
-            setBlindfold(!blindfold);
-          }}
+        <label>Drill Type</label>
+        <SelectButton
+          value={blindfold ? 'Blindfold' : 'Visual'}
+          options={['Visual', 'Blindfold']}
+          onChange={(e: any) => setBlindfold(e.value === 'Blindfold')} 
         >
-          Blindfold
-        </md-checkbox>
 
-        <br></br>
-        <md-filled-button
+        </SelectButton>
+
+        <label>Start Drills</label>
+        <div className="flex gap-3">
+        <Button
           data-testid={"time-button"}
           className={"time-button"}
           onClick={() => {
@@ -311,9 +305,9 @@ export default function Drills(props: {
           }}
         >
           Time
-        </md-filled-button>
+        </Button>
 
-        <md-filled-button
+        <Button
           data-testid={"frequency-button"}
           className={"frequency-button"}
           onClick={() => {
@@ -321,9 +315,9 @@ export default function Drills(props: {
           }}
         >
           Frequency
-        </md-filled-button>
+        </Button>
 
-        <md-filled-button
+        <Button
           data-testid={"from-position-button"}
           className={"from-position-button"}
           onClick={() => {
@@ -331,9 +325,9 @@ export default function Drills(props: {
           }}
         >
           From Position
-        </md-filled-button>
+        </Button>
 
-        <md-filled-button
+        <Button
           data-testid={"from-opening-button"}
           className={"from-opening-button"}
           onClick={() => {
@@ -341,14 +335,14 @@ export default function Drills(props: {
           }}
         >
           From Opening
-        </md-filled-button>
-
+        </Button>
+        </div>
         {depthFull}
 
         {side}
 
         {openingFiltersFull}
-
+        <label>Starting Position</label>
         <ChessBoard
           name="exercise-filter"
           game_url="exercise-filter"
@@ -369,9 +363,6 @@ export default function Drills(props: {
             setMoves(newMoves);
           }}
         />
-        <pre>{JSON.stringify(moves, undefined, 2)}</pre>
-        <pre>{depth}</pre>
-        <pre>{blindfold ? "true" : "false"}</pre>
       </>
     );
   }
@@ -420,7 +411,7 @@ export default function Drills(props: {
     }
 
     drillBoard = (
-      <md-list-item>
+      <li>
         <div slot="supporting-text">
           <div className="side-by-side">
             <ChessBoard
@@ -461,13 +452,13 @@ export default function Drills(props: {
           <br></br>
           {/*<p><a href={"https://lichess.org/opening/" + openingName}>{drillAnalysisResult.headers.ECO} {openingName}</a></p>*/}
           <div className="buttonlist" style={buttonStyles}>
-            <md-text-button
+            <Button
               data-testid={"chess-dot-com-button"}
               onClick={() => window.open(drillAnalysisResult.headers.Link)}
             >
               Chess.com
-            </md-text-button>
-            <md-text-button
+            </Button>
+            <Button
               data-testid={"lichess-button"}
               onClick={() =>
                 window.open(
@@ -477,8 +468,8 @@ export default function Drills(props: {
               }
             >
               Lichess
-            </md-text-button>
-            <md-text-button
+            </Button>
+            <Button
               data-testid={"chessable-button"}
               onClick={() =>
                 window.open(
@@ -488,12 +479,12 @@ export default function Drills(props: {
               }
             >
               Chessable
-            </md-text-button>
+            </Button>
             {frequencyTable[drillAnalysisResult.displayFEN]}
             <br></br>
           </div>
         </div>
-      </md-list-item>
+      </li>
     );
 
     if (currentDrillResult === "Failure") {
@@ -501,7 +492,7 @@ export default function Drills(props: {
         <>
           <p style={{ lineHeight: "36px" }}>
             {"Oops, better study on this one."}
-            <md-filled-button
+            <Button
               data-testid={"next-button"}
               onClick={() => {
                 setCurrentDrillIndex(currentDrillIndex + 1);
@@ -510,7 +501,7 @@ export default function Drills(props: {
               }}
             >
               Next
-            </md-filled-button>
+            </Button>
           </p>
         </>
       );
@@ -519,7 +510,7 @@ export default function Drills(props: {
         <>
           <p style={{ lineHeight: "36px" }}>
             {"Congrats, you did it!"}
-            <md-filled-button
+            <Button
               data-testid={"next-button"}
               className={"drill-button"}
               onClick={() => {
@@ -529,7 +520,7 @@ export default function Drills(props: {
               }}
             >
               Next
-            </md-filled-button>
+            </Button>
           </p>
         </>
       );
@@ -538,7 +529,7 @@ export default function Drills(props: {
 
   let repetitionSelections = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(
     (number) => (
-      <md-select-option
+      <option
         data-testid={`repetitions-${number}`}
         value={number}
         key={JSON.stringify(number)}
@@ -547,22 +538,22 @@ export default function Drills(props: {
         }}
       >
         {number}
-      </md-select-option>
+      </option>
     ),
   );
 
   const depthFull = (
     <>
       <h3>Repetitions</h3>
-      <md-outlined-select value={repetitions}>
+      <select value={repetitions}>
         {repetitionSelections}
-      </md-outlined-select>
+      </select>
     </>
   );
 
   let delaySecondsSelections = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(
     (number) => (
-      <md-select-option
+      <option
         data-testid={`delaySeconds-${number}`}
         value={number}
         key={JSON.stringify(number)}
@@ -571,16 +562,16 @@ export default function Drills(props: {
         }}
       >
         {number}
-      </md-select-option>
+      </option>
     ),
   );
 
   const delaySecondsFull = (
     <>
       <h3>Delay (Seconds)</h3>
-      <md-outlined-select value={delaySeconds}>
+      <select value={delaySeconds}>
         {delaySecondsSelections}
-      </md-outlined-select>
+      </select>
     </>
   );
 
@@ -633,7 +624,7 @@ export default function Drills(props: {
     <>
       {currentDrillIndex} / {exerciseGames.length}
       <br></br>
-      <md-filled-button
+      <Button
         data-testid={"speak-button"}
         onClick={async () => {
           let drillIndex = currentDrillIndex;
@@ -643,27 +634,27 @@ export default function Drills(props: {
         }}
       >
         Speak
-      </md-filled-button>
+      </Button>
       {showBlindfoldAnswer ? (
-        <md-filled-button
+        <Button
           data-testid={"hide-answer-button"}
           onClick={() => {
             setShowBlindfoldAnswer(false);
           }}
         >
           Hide answer
-        </md-filled-button>
+        </Button>
       ) : (
-        <md-filled-button
+        <Button
           data-testid={"see-answer-button"}
           onClick={() => {
             setShowBlindfoldAnswer(true);
           }}
         >
           See answer
-        </md-filled-button>
+        </Button>
       )}
-      <md-filled-button
+      <Button
         data-testid={"next-button"}
         onClick={() => {
           setCurrentDrillIndex(currentDrillIndex + 1);
@@ -672,8 +663,8 @@ export default function Drills(props: {
         }}
       >
         Next
-      </md-filled-button>
-      <md-filled-button
+      </Button>
+      <Button
         data-testid={"lichess-button"}
         onClick={() =>
           window.open(
@@ -682,8 +673,8 @@ export default function Drills(props: {
         }
       >
         Lichess
-      </md-filled-button>
-      <md-filled-button
+      </Button>
+      <Button
         data-testid={"chessable-button"}
         onClick={() =>
           window.open(
@@ -693,7 +684,7 @@ export default function Drills(props: {
         }
       >
         Chessable
-      </md-filled-button>
+      </Button>
       <br></br>
       {depthFull}
       {delaySecondsFull}

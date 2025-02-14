@@ -1,13 +1,11 @@
 import Arrow from "./Arrow";
 import ChessBoard from "./ChessBoard";
-
-import "@material/web/list/list.js";
-
-import "@material/web/list/list-item.js";
 import useWindowSize from "../hooks/useWindowSize";
 
 import Game from "../types/Game";
 import AnalysisDatabase from "../types/AnalysisDatabase";
+
+import { Button } from 'primereact/button';
 
 interface AnalysisResultPropTypes {
   analysisDatabase: AnalysisDatabase;
@@ -26,12 +24,12 @@ const AnalysisResult = ({
 
   if (typeof game === "undefined") {
     return (
-      <md-list-item key={index}>
+      <li key={index}>
         <div slot="headline">
           Loading Analysis for game
           {game}
         </div>
-      </md-list-item>
+      </li>
     );
   }
 
@@ -40,12 +38,12 @@ const AnalysisResult = ({
 
   if (!analysis) {
     return (
-      <md-list-item key={index}>
+      <li key={index}>
         <div slot="headline">
           Loading Analysis for game
           {game.url}
         </div>
-      </md-list-item>
+      </li>
     );
   }
 
@@ -75,7 +73,7 @@ const AnalysisResult = ({
   };
 
   return (
-    <md-list-item key={index}>
+    <li key={index}>
       <div slot="headline">
         {analysis.headers.White}
         {" vs "}
@@ -98,22 +96,24 @@ const AnalysisResult = ({
           ></ChessBoard>
         </div>
         <br></br>
-        <div className="buttonlist" style={buttonStyles}>
-          <md-text-button
+        <div className="w-full flex align-items-center justify-content-center gap-3 mb-5" style={buttonStyles}>
+          <Button
             data-testid={"chess-dot-com-button"}
-            onClick={() => window.open("/book-it/tv?fen=" + analysis.displayFEN)}
+            onClick={() =>
+              window.open("/book-it/tv?fen=" + analysis.displayFEN)
+            }
           >
             TV
-          </md-text-button>
-          <md-text-button
+          </Button>
+          <Button
             data-testid={"lichess-button"}
             onClick={() =>
               window.open("https://lichess.org/analysis/" + analysis.displayFEN)
             }
           >
             Lichess
-          </md-text-button>
-          <md-text-button
+          </Button>
+          <Button
             data-testid={"chessable-button"}
             onClick={() =>
               window.open(
@@ -122,11 +122,11 @@ const AnalysisResult = ({
             }
           >
             Chessable
-          </md-text-button>
+          </Button>
           <br></br>
         </div>
       </div>
-    </md-list-item>
+    </li>
   );
 };
 

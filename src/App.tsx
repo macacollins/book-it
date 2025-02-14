@@ -8,7 +8,15 @@ import {
   SetStateAction,
 } from "react";
 
-import { BrowserRouter, Routes, Route, Navigate, Link, Outlet, useNavigate } from 'react-router';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  Link,
+  Outlet,
+  useNavigate,
+} from "react-router";
 import { setItemDexie } from "./storage";
 
 import defaultGames from "./integrations/default-games";
@@ -19,35 +27,7 @@ import analyzeGames, {
   InnerAnalyzeGamesExpectedMessage,
 } from "./analysis/analyzeGames";
 
-import "./css/colors.module.css";
-import "./css/theme.css";
-import "./css/theme.dark.css";
-import "./css/theme.light.css";
-import "./css/tokens.css";
-import "./css/typography.module.css";
-import "./intrinsics";
-
-import 'primereact/resources/themes/mira/theme.css';
-
-
-// index.js
-import "@material/web/button/filled-button.js";
-import "@material/web/button/outlined-button.js";
-import "@material/web/button/text-button.js";
-import "@material/web/button/elevated-button.js";
-import "@material/web/checkbox/checkbox.js";
-import "@material/web/list/list.js";
-import "@material/web/list/list-item.js";
-import "@material/web/textfield/outlined-text-field.js";
-import "@material/web/radio/radio.js";
-import "@material/web/icon/icon.js";
-import "@material/web/iconbutton/icon-button.js";
-import "@material/web/tabs/primary-tab.js";
-import "@material/web/tabs/secondary-tab.js";
-import "@material/web/tabs/tabs.js";
-import "@material/web/select/select-option.js";
-import "@material/web/select/outlined-select.js";
-import "@material/web/progress/circular-progress.js";
+import "primereact/resources/themes/mira/theme.css";
 
 import defaultLines from "./integrations/default-lines";
 
@@ -67,7 +47,8 @@ import MissedMovesTV from "./pages/MissedMovesTV";
 import ChannelManagement from "./pages/ChannelManagement";
 import Notes from "./components/Notes";
 import { ChannelForm } from "./pages/ChannelForm";
-import { MegaMenu } from "primereact/megamenu";
+import { Menubar } from 'primereact/menubar';
+import { MenuItem } from "primereact/menuitem";
 
 interface AppProps {
   analysisDatabaseStorage: AnalysisDatabase;
@@ -104,7 +85,6 @@ function App({
     lichessPlayerNameStorage || "",
   );
 
-
   const [repertoire, setRepertoire]: [
     { [name: string]: Repertoire },
     Dispatch<SetStateAction<{ [name: string]: Repertoire }>>,
@@ -123,11 +103,6 @@ function App({
 
   const [userLeftBookOnly, setUserLeftBookOnly] = useState(
     userLeftBookOnlyStorage,
-  );
-
-  // tab navigation
-  const [activeTab, setActiveTab] = useState(
-    (typeof activeTabStorage === "string" && activeTabStorage) || "panel-one",
   );
 
   // This effect initializes a new repertoire based on some common Queen's Gambit lines if none are found
@@ -212,7 +187,6 @@ function App({
 
         function reportBack(currentAnalysisDatabase: AnalysisDatabase) {
           // console.log("answer from worker", message);
-
           dispatchAnalysisDatabase({
             type: "ADD_ANALYSIS",
             data: currentAnalysisDatabase,
@@ -299,45 +273,19 @@ function App({
     ></Drills>
   );
 
-  const tvPage = () => { return <TV/> }
-  const tvPickerPage = () => { return <TVPicker repertoire={repertoire[repertoireChoice]} /> }
+  const tvPage = () => {
+    return <TV />;
+  };
+  const tvPickerPage = () => {
+    return <TVPicker repertoire={repertoire[repertoireChoice]} />;
+  };
 
-  const repertoireTV = () => { return <MissedMovesTV {...{ games, analysisDatabase }}/>}
-  const channelManagement = () => { return <ChannelManagement repertoire={repertoire[repertoireChoice]}/>}
-
-  // set up tab change listener
-  useEffect(() => {
-    interface SpecialElement extends Element {
-      activeTab: Element;
-    }
-
-    const tabs: SpecialElement | null = document.querySelector("#nav-tabs");
-    if (tabs) {
-      tabs.addEventListener("change", () => {
-        const panelId = tabs.activeTab?.getAttribute("aria-controls");
-        if (panelId) {
-          setActiveTab(panelId);
-          setItemDexie("activeTab", panelId);
-        }
-      });
-    }
-  }, []);
-
-  // hide the inactive tab panels
-  const [oneProps, twoProps, threeProps, fourProps] = [
-    "panel-one",
-    "panel-two",
-    "panel-three",
-    "panel-four",
-  ].map((tabID) => (tabID === activeTab ? {} : { hidden: true }));
-
-  // Add the active property to the appropriate md-primary-tab
-  const [oneActive, twoActive, threeActive, fourActive] = [
-    "panel-one",
-    "panel-two",
-    "panel-three",
-    "panel-four",
-  ].map((tabID) => (tabID === activeTab ? { active: true } : {}));
+  const repertoireTV = () => {
+    return <MissedMovesTV {...{ games, analysisDatabase }} />;
+  };
+  const channelManagement = () => {
+    return <ChannelManagement repertoire={repertoire[repertoireChoice]} />;
+  };
 
   const [colorScheme, setColorScheme] = useState(
     window.matchMedia &&
@@ -372,98 +320,134 @@ function App({
 
   let classProps = colorScheme === "dark" ? { class: "dark-mode" } : {};
 
+  const channelForm = <ChannelForm repertoire={repertoire[repertoireChoice]} />;
 
-  const channelForm = <ChannelForm repertoire={repertoire[repertoireChoice]} />
-
-  return <>
-  <BrowserRouter>
-    <Routes>
-      <Route element={<Navigator/>}>
-        <Route path="/book-it/config" element={configPage()} />
-        <Route path="/book-it/results" element={resultsPage()} />
-        <Route path="/book-it/drills" element={drillPage()} />
-        <Route path="/book-it/viewer" element={viewerPage()} />
-        <Route path="/book-it/tv-picker" element={tvPickerPage()} />
-        <Route path="/book-it/channels" element={channelManagement()} />
-        <Route path="/book-it/tv" element={tvPage()} />
-        <Route path="/book-it/repertoire-tv" element={repertoireTV()} />
-        <Route path="/book-it/notes" element={<Notes/>} />
-        <Route path="/book-it/add-channel" element={channelForm} />
-        <Route path="*" element={<Navigate to="/book-it/config/" replace />} />
-      </Route>
-    </Routes>
-  </BrowserRouter>
-  </>
+  return (
+    <>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<Navigator />}>
+            <Route path="/book-it/config" element={configPage()} />
+            <Route path="/book-it/results" element={resultsPage()} />
+            <Route path="/book-it/drills" element={drillPage()} />
+            <Route path="/book-it/viewer" element={viewerPage()} />
+            <Route path="/book-it/tv-picker" element={tvPickerPage()} />
+            <Route path="/book-it/channels" element={channelManagement()} />
+            <Route path="/book-it/tv" element={tvPage()} />
+            <Route path="/book-it/repertoire-tv" element={repertoireTV()} />
+            <Route path="/book-it/notes" element={<Notes />} />
+            <Route path="/book-it/add-channel" element={channelForm} />
+            <Route
+              path="*"
+              element={<Navigate to="/book-it/config/" replace />}
+            />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </>
+  );
 }
 
 function Navigator() {
-
   const navigate = useNavigate();
 
-  const items = [ { 
-    label: "Book It", 
-    items:
-    [
-      {
-          label: 'Channels',
-          items: [
-            { label: 'View Channels', command: () => {
-              navigate("/book-it/channels") 
-            } }, 
-            { label: 'New Channel', command: () => {
-              navigate("/book-it/add-channel") 
-            } }
-          ]
-      },
-      {
-          label: 'Games',
-          items: [
-            { label: 'Recent Games', command: () => {
-              navigate("/book-it/results") 
-            } }
-          ]
-      },
 
-      {
-        label: 'Viewer',
-        items: [
-          { label: 'Repertoires', command: () => {
-            navigate("/book-it/viewer") 
-          } }
-        ]
-    },
-
+  const items = [
     {
-      label: 'Practice',
+      label: "Book It",
       items: [
-        { label: 'Drills', command: () => {
-          navigate("/book-it/drills") 
-        } }
-      ]
-  },
-
-  {
-    label: 'Notes',
-    items: [
-      { label: 'View Notes', command: () => {
-        navigate("/book-it/notes") 
-      } }
-    ]
-},
         {
-            label: 'Configuration',
-            items: [
-              { label: 'Configuration', command: () => {
-                navigate("/book-it/config") 
-              } }
-            ]
-        }
-    ]}];
+          label: "TV",
+          items: [
+            {
+              label: "TV",
+              command: () => {
+                navigate("/book-it/channels");
+              },
+            },
+          ],
+        },
+        {
+          label: "Games",
+          items: [
+            {
+              label: "Games",
+              command: () => {
+                navigate("/book-it/results");
+              },
+            },
+          ],
+        },
 
-  return <>  <MegaMenu model={items} breakpoint="960px" />
-  <Outlet/></>
+        {
+          label: "Viewer",
+          items: [
+            {
+              label: "Repertoires",
+              command: () => {
+                navigate("/book-it/viewer");
+              },
+            },
+          ],
+        },
 
+        {
+          label: "Practice",
+          items: [
+            {
+              label: "Drills",
+              command: () => {
+                navigate("/book-it/drills");
+              },
+            },
+          ],
+        },
 
-};
+        {
+          label: "Notes",
+          items: [
+            {
+              label: "Notes",
+              command: () => {
+                navigate("/book-it/notes");
+              },
+            },
+          ],
+        },
+        {
+          label: "Configuration",
+          items: [
+            {
+              label: "Configuration",
+              command: () => {
+                navigate("/book-it/config");
+              },
+            },
+          ],
+        },
+      ],
+    },
+  ];
+
+  const itemsFlat: MenuItem[] = [];
+
+  items.forEach(item => {
+    item.items.forEach(innerItem => {
+      innerItem.items.forEach(reallyInnerItem => {
+        itemsFlat.push(reallyInnerItem);
+
+      })
+    })
+  })
+
+  return (
+    <>
+      <Menubar model={itemsFlat} />
+      <main className="md:m-3">
+        <Outlet />
+      </main>
+    </>
+  );
+}
 
 export default App;

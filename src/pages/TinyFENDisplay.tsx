@@ -1,11 +1,19 @@
 import ChessBoard from "../components/ChessBoard";
 
-export function TinyFENDisplay({ fen, invert = false }: { fen: string; invert?: boolean; }) {
-    const madeMoveRef = { current: true };
+export function TinyFENDisplay({
+  fen,
+  invert = false,
+}: {
+  fen: string;
+  invert?: boolean;
+}) {
+  const madeMoveRef = { current: true };
 
-    const sanitized = fen.replace(/[^a-zA-Z0-9]/gi, '');
+  const sanitized = fen.replace(/[^a-zA-Z0-9]/gi, "");
 
-    return <div className=""><ChessBoard
+  return (
+    <div className="">
+      <ChessBoard
         fen={fen}
         moves={[]}
         invert={invert}
@@ -14,6 +22,7 @@ export function TinyFENDisplay({ fen, invert = false }: { fen: string; invert?: 
         game_url={sanitized}
         draggable={true}
         size="168px"
-    ></ChessBoard>
-    </div>;
+      ></ChessBoard>
+    </div>
+  );
 }

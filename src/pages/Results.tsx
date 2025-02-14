@@ -8,6 +8,11 @@ import { Dispatch, SetStateAction, useState } from "react";
 import findTopOpenings from "../analysis/findTopOpenings";
 import AnalysisDatabase from "../types/AnalysisDatabase";
 import Game from "../types/Game";
+import { Button } from 'primereact/button';
+import { Checkbox } from "primereact/checkbox";
+import { Dropdown } from "primereact/dropdown";
+import { Paginator, PaginatorPageChangeEvent } from 'primereact/paginator';
+import { ProgressSpinner } from "primereact/progressspinner";
 
 interface ResultsProps {
   games: Game[];
@@ -107,60 +112,48 @@ export default function Results({
     analysisDatabase,
   ).slice(0, 14);
 
-  let openingFilters = topOpenings.map(({ opening, count }) => (
-    <md-select-option
-      data-testid={`opening-${opening}`}
-      key={opening}
-      value={opening}
-      onClick={() => {
-        setCurrentOpeningFilter(opening);
-      }}
-    >
-      {opening} {count}
-    </md-select-option>
-  ));
-
-  openingFilters.push(
-    <md-select-option
-      data-testid={`clear-opening-filter`}
-      key="clear"
-      value={""}
-      onClick={() => {
-        setCurrentOpeningFilter("");
-      }}
-    >
-      Clear Opening Filter
-    </md-select-option>,
-  );
-
   const openingFiltersFull = (
     <>
       <h3>Opening Filter</h3>
-      <md-outlined-select>{openingFilters}</md-outlined-select>
+      <Dropdown
+        value={currentOpeningFilter}
+        options={topOpenings.map(({opening,count}) => ({
+          label: opening + " " + count,
+          value: opening
+        }))}
+        onChange={(e) => {
+          setCurrentOpeningFilter(e.value);
+        }}
+        placeholder="Select an Opening"
+      />
     </>
   );
 
   let numberPages = Math.ceil(filteredGamesLength / itemsPerPage);
 
   const leftBookCheckbox = userLeftBookOnly ? (
-    <md-checkbox
+    <Checkbox
       data-testid="leftBookCheckbox"
       checked={userLeftBookOnly}
+      className="mr-2"
       onClick={() => {
         setCurrentPage(1);
         setUserLeftBookOnly(!userLeftBookOnly);
         setItemDexie("userLeftBookOnly", !userLeftBookOnly);
       }}
-    ></md-checkbox>
+    ></Checkbox>
   ) : (
-    <md-checkbox
+    <Checkbox
+      checked={userLeftBookOnly}
       data-testid="leftBookCheckbox"
+      className="mr-2"
+
       onClick={() => {
         setCurrentPage(1);
         setUserLeftBookOnly(!userLeftBookOnly);
         setItemDexie("userLeftBookOnly", !userLeftBookOnly);
       }}
-    ></md-checkbox>
+    ></Checkbox>
   );
 
   let indicesToUse = Array.from({ length: numberPages }).map(
@@ -179,14 +172,14 @@ export default function Results({
     const className = item === currentPage - 1 ? "currentPage" : "";
 
     return item < numberPages ? (
-      <text-button
+      <Button
         data-testid={`page-${item + 1}-button`}
         key={item}
         onClick={() => setCurrentPage(item + 1)}
         {...{ class: className }}
       >
         {item + 1}
-      </text-button>
+      </Button>
     ) : (
       ""
     );
@@ -195,41 +188,49 @@ export default function Results({
   // Show buttons for first and last pages
   if (currentPage > 5) {
     paginationButtons.unshift(
-      <text-button
+      <Button
         data-testid={"first-page-button"}
         key="first"
         onClick={() => setCurrentPage(1)}
       >
         First
-      </text-button>,
+      </Button>,
     );
   }
 
   if (currentPage < numberPages - 9) {
     paginationButtons.push(
-      <text-button
+      <Button
         data-testid={"last-page-button"}
         key="last"
         onClick={() => setCurrentPage(numberPages)}
       >
         Last
-      </text-button>,
+      </Button>,
     );
   }
+
+  const [ first, setFirst ] = useState(0);
+  const onPageChange = (event: PaginatorPageChangeEvent) => {
+    setCurrentPage(event.page + 1);
+    setFirst(event.first);
+};
+
   const paginationSection = (
-    <div className={"pagination"}>
-      <div className={"page"}>{"Page | "}</div>
-      {paginationButtons}
-    </div>
+      <Paginator 
+      first={first} 
+      rows={10} 
+      totalRecords={filteredGamesLength} 
+      onPageChange={onPageChange} />
   );
 
   const syncingIndicator = syncingGames ? (
-    <md-circular-progress indeterminate></md-circular-progress>
+    <ProgressSpinner></ProgressSpinner>
   ) : (
     ""
   );
   const syncingIndicator2 = syncingGamesLichess ? (
-    <md-circular-progress indeterminate></md-circular-progress>
+    <ProgressSpinner></ProgressSpinner>
   ) : (
     ""
   );
@@ -240,15 +241,15 @@ export default function Results({
       <p>This is a list of games at the position where they left the book.</p>
       <p>
         <label>
-          Show only lines where you left book first
           {leftBookCheckbox}
+          Show only lines where you left book first
         </label>
       </p>
       <br></br>
       {openingFiltersFull}
       <br></br>
       <p>
-        <md-filled-button
+        <Button
           data-testid="refreshGamesButton"
           onClick={() => {
             setSyncingGames(true);
@@ -262,13 +263,13 @@ export default function Results({
           }}
         >
           Refresh games
-        </md-filled-button>
+        </Button>
         {syncingIndicator}
         {syncingIndicator2}
       </p>
       <p>{`Found ${filteredGamesLength} results.`}</p>
       {paginationSection}
-      <md-list>{listItems}</md-list>
+      <ul>{listItems}</ul>
       {paginationSection}
     </>
   );

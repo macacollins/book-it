@@ -16,6 +16,9 @@ import { getComments } from "../storage";
 
 import { exportComponentAsPNG } from "react-component-export-image";
 
+import { Button } from 'primereact/button';
+import { RadioButton } from "primereact/radiobutton";
+
 interface ConfigPageProps {
   playerName: string;
   setPlayerName: (newValue: string) => void;
@@ -68,7 +71,7 @@ function ConfigPage({
 
       return (
         <div className="radio-label" key={repertoireName}>
-          <md-radio
+          <RadioButton
             data-testid={"repertoireChoiceField" + repertoireName}
             aria-label={repertoireName}
             onClick={() => {
@@ -78,7 +81,7 @@ function ConfigPage({
             id="default-lines-radio"
             name="with-labels"
             {...props}
-          ></md-radio>
+          ></RadioButton>
           <label htmlFor="default-lines-radio">{repertoireName}</label>
         </div>
       );
@@ -183,8 +186,8 @@ function ConfigPage({
       <h3>Explorer</h3>
       <button onClick={() => backOneMove()}>Back</button>
       <button onClick={() => reset()}>Reset</button>
-      <button onClick={() => downloadBoard()}>Reset</button>
-      <md-list-item>
+      <button onClick={() => downloadBoard()}>Download</button>
+      <li>
         <div slot="supporting-text">
           <div className="side-by-side center-fix" ref={componentRef}>
             <ChessBoard
@@ -278,15 +281,15 @@ function ConfigPage({
           <br></br>
           {/*<p><a href={"https://lichess.org/opening/" + openingName}>{drillAnalysisResult.headers.ECO} {openingName}</a></p>*/}
           <div className="buttonlist">
-            <md-text-button
+            <Button
               data-testid={"lichess-button"}
               onClick={() =>
                 window.open("https://lichess.org/analysis/" + currentFEN)
               }
             >
               Lichess
-            </md-text-button>
-            <md-text-button
+            </Button>
+            <Button
               data-testid={"chessable-button"}
               onClick={() =>
                 window.open(
@@ -295,11 +298,11 @@ function ConfigPage({
               }
             >
               Chessable
-            </md-text-button>
+            </Button>
             <br></br>
           </div>
         </div>
-      </md-list-item>
+      </li>
     </>
   );
 }

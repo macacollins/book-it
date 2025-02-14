@@ -7,9 +7,11 @@ import loadCachedData from "./loadCachedData";
 
 import "./index.css";
 
+import MyWorker from './worker?worker'
+
 const propsFromLocalStorage = await loadCachedData();
 
-let worker = new Worker(new URL("./worker.js", import.meta.url));
+let worker = new MyWorker();
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(

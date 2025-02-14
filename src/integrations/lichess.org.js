@@ -41,39 +41,42 @@ async function refreshGames(setGames, playerName, setSyncingGames) {
     console.log("Using lastTimestamp value");
   }
 
-    targetSinceTimestamp = Date.now() - oneMonth * (24);
-    targetUntilTimestamp = Date.now() - oneMonth * 0;
-    
-    const finalURL = "https://lichess.org/api/games/user/" +
+  targetSinceTimestamp = Date.now() - oneMonth * 24;
+  targetUntilTimestamp = Date.now() - oneMonth * 0;
+
+  const finalURL =
+    "https://lichess.org/api/games/user/" +
     playerName +
     "?clocks=true&since=" +
     targetSinceTimestamp +
-    "&until=" + 
+    "&until=" +
     targetUntilTimestamp;
 
-    let batchSize = 15;
+  let batchSize = 15;
 
-    let current = 0;
+  let current = 0;
 
-    makeStreamingRequest(finalURL, (game) => {
+  makeStreamingRequest(
+    finalURL,
+    (game) => {
       const pgn = pgnParser.parse(game);
 
       const chessGame = getGameFromPGN(pgn[0], "lichess");
-      finalGames.push(chessGame); // TODO consider 
+      finalGames.push(chessGame); // TODO consider
 
-      current ++;
+      current++;
 
       if (current % batchSize === 0) {
-
         addGamesBulk(finalGames);
         setTimeout(async () => setGames(await getAllGames()), 0);
         console.log("Got message", game);
       }
-
-    }, () => {
-      console.log("Finished")
-    })
-/*
+    },
+    () => {
+      console.log("Finished");
+    },
+  );
+  /*
     // start requests to lichess.org for data
     // eslint-disable-next-line
     const result = await fetch(
@@ -97,7 +100,7 @@ async function refreshGames(setGames, playerName, setSyncingGames) {
         console.log(err.message);
       });
 */
-    //console.log("Result", result);
+  //console.log("Result", result);
 
   console.log("Got " + finalGames.length + " from lichess.");
   setSyncingGames(false);

@@ -1,172 +1,326 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
-import { ProgressSpinner } from 'primereact/progressspinner';
+import { ProgressSpinner } from "primereact/progressspinner";
 
-import { DataTable} from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import ChessBoard from './ChessBoard';
-import { Dropdown } from 'primereact/dropdown';
-import { Button } from 'primereact/button';
-import JSZip from 'jszip';
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import ChessBoard from "./ChessBoard";
+import { Dropdown } from "primereact/dropdown";
+import { Button } from "primereact/button";
+import { Dialog} from 'primereact/dialog';
+
+import { InputTextarea } from 'primereact/inputtextarea';
+import { InputText } from 'primereact/inputtext'; 
+import JSZip from "jszip";
 // @ts-ignore
-import FileSaver from 'file-saver';
-import { Checkbox } from 'primereact/checkbox';
+import FileSaver from "file-saver";
+import { Checkbox } from "primereact/checkbox";
+import { FilterMatchMode } from "primereact/api";
 
 interface NotesItem {
-    key: number,
-    fen: string,
-    move: string,
-    notes: string,
-    repertoire: string,
-    original_location: string
+  key: number;
+  fen: string;
+  move: string;
+  notes: string;
+  repertoire: string;
+  original_location: string;
 }
 
 export default function Notes() {
+  const [loading, setLoading] = useState(true);
+  const [shouldInvert, setShouldInvert] = useState(true);
+  const [results, setResults] = useState<NotesItem[]>([]);
+  const [editingID, setEditingID] = useState<number | undefined>();
 
-    const [ loading, setLoading ] = useState(true);
-    const [ shouldInvert, setShouldInvert ] = useState(true);
-    const [ results, setResults ] = useState<NotesItem[]>([]);
+  const [filters, setFilters] = useState({
+    repertoire: { value: null, matchMode: FilterMatchMode.IN }
+  });
 
-    const [ selectedRepertoire, setSelectedRepertoire ] = useState<any>(null);
+  const [selectedRepertoire, setSelectedRepertoire] = useState<any>(null);
 
-    const [ shouldRefresh, setShouldRefresh ] = useState<boolean>(true);
+  const [shouldRefresh, setShouldRefresh] = useState<boolean>(true);
 
-    // Load stuff
-    useEffect(() => {
+  const updateNote = (noteData: NotesItem) => {
+    setResults(results.map(result => {
+      if (result.key === noteData.key) {
+        return noteData;
+      }
+      return result;
+    }));
+  }
 
-        if (loading || shouldRefresh) {
+  const currentItem: NotesItem | undefined = results.find(a => a.key === editingID);
 
-            fetch("http://localhost:3001/notes").then(response => response.json()).then(json => {
-                setLoading(false);
-                setResults(json);
-                setShouldRefresh(false);
+  // Load stuff
+  useEffect(() => {
+    if (loading || shouldRefresh) {
+      fetch("http://localhost:3001/notes")
+        .then((response) => response.json())
+        .then((json) => {
+          setLoading(false);
+          setResults(json);
+          setShouldRefresh(false);
+        });
+    }
+  }, [shouldRefresh]);
+
+  if (loading) {
+    return (
+      <div className="w-100vh flex-column font-bold text-3xl row-gap-4 font-size-lg p-7 min-h-full flex align-items-center justify-content-center">
+        <ProgressSpinner />
+        Loading
+      </div>
+    );
+  }
+
+  const options = [
+    ...new Set(results.map((result: any) => result.repertoire)),
+  ].map((code) => ({ code }));
+
+  function generateCardConfig(
+    selectedRepertoire: string,
+    results: NotesItem[],
+  ): string {
+    const filtered = results.filter(
+      (result) => result.repertoire === selectedRepertoire,
+    );
+    console.log("Making csv for", filtered.length, "results");
+
+    return filtered
+      .map((note) => {
+        const rawNotes = note.notes.replaceAll("\n", "<br>");
+
+        return `Move and Reason<br><img src="${shortenLine(note.fen)}.svg"/><br>The move is {{c1::${note.move}}} because {{c1::${rawNotes}}}`;
+      })
+      .join("\n");
+  }
+
+  return (
+    <>
+      <h2>Notes</h2>
+      <section id="form" className="flex gap-3 row-gap-3 p-3">
+        <Dropdown
+          className="w-4 max-h-3rem m-3"
+          placeholder="Select Repertoire"
+          optionLabel="code"
+          value={selectedRepertoire}
+          onChange={(e) => setSelectedRepertoire(e.value)}
+          options={options}
+        ></Dropdown>
+        <label className={"p-3 gap-1 flex flex-column font-bold"}>
+          Invert
+          <Checkbox
+            checked={shouldInvert}
+            onClick={(e: any) => {
+              console.log(e);
+              setShouldInvert(!shouldInvert);
+            }}
+          />
+        </label>
+        <Button
+          className=" max-h-3rem m-3"
+          disabled={!selectedRepertoire}
+          label="Export"
+          onClick={() => {
+            const zip = new JSZip();
+
+            const folderName = selectedRepertoire.code || "export";
+
+            const mediaName = folderName + "/media";
+            const getMediaPath = (fen: string) =>
+              `${mediaName}/${shortenLine(fen)}.svg`;
+
+            zip.folder(folderName);
+            zip.file(
+              folderName + "/" + "cards.csv",
+              generateCardConfig(folderName, results),
+            );
+            zip.folder(mediaName);
+
+            const filtered = results.filter(
+              (result) => result.repertoire === selectedRepertoire.code,
+            );
+            filtered.forEach(({ fen }) => {
+              zip.file(
+                getMediaPath(fen),
+                createSVGboard(fen, [], shouldInvert),
+              );
             });
-        }
 
-    }, [shouldRefresh])
+            zip.generateAsync({ type: "blob" }).then(function (content) {
+              FileSaver.saveAs(content, selectedRepertoire?.code + ".zip");
+            });
+          }}
+        />
+      </section>
+      <DataTable filters={filters} paginator paginatorPosition="both" rows={5} rowsPerPageOptions={[5, 10, 25, 50]} value={results}>
+        <Column
+          header="FEN"
+          field="fen"
+          body={(a) => <TinyFENDisplay keyID={a} fen={a.fen} />}
+        />
+        <Column header="Notes" field="notes" />
+        <Column header="Move" field="move" />
+        <Column header="Repertoire" field="repertoire" filterMatchMode="" filter filterField="repertoire"/>
+        <Column
+          header="Link"
+          field="original_location"
+          body={(a) => (
+            <a target="_blank" href={a.original_location}>
+              Link
+            </a>
+          )}
+        />
+        <Column
+          header="Delete"
+          field="key"
+          body={(a) => (
+            <Button
+              label="Delete"
+              onClick={() => {
+                fetch("http://localhost:3001/notes?key=" + a.key, {
+                  method: "DELETE",
+                  headers: {
+                    Accept: "*",
+                  },
+                }).then((response) => {
+                  //do something awesome that makes the world a better place
+                  console.log("Got", response);
+                  setShouldRefresh(true);
+                });
+              }}
+            />
+          )}
+        />
+        <Column
+          header="Edit"
+          field="key"
+          body={(a) => (
+            <Button
+              label="Edit"
+              onClick={() => {
+                setEditingID(a.key);
+              }}
+            />
+          )}
+        />
+      </DataTable>
+      <Dialog header={`Editing ${editingID}`} visible={!!editingID} style={{ width: '50vw' }} onHide={() => {if (!editingID) return; setEditingID(undefined); }}>
+        <div className="flex flex-column gap-2">{currentItem && <TinyFENDisplay fen={currentItem.fen} keyID={currentItem.key}/>}
+        <label>Notes</label>
+        <InputTextarea 
+          className="w-full"
+          rows={5}
+          value={currentItem?.notes} 
+          onChange={(e) => { 
+            if (currentItem) {
+              updateNote({ ...currentItem, notes: e.target.value });
+            }
+          }} 
+        />
+        <label>Move</label>
+        <InputText 
+          className="w-full"
+          value={currentItem?.move} 
+          onChange={(e) => { 
+            if (currentItem) {
+              updateNote({ ...currentItem, move: e.target.value });
+            }
+          }} 
+        />
+        <label>Repertoire</label>
+        <Dropdown
+          value={currentItem?.repertoire}
+          options={options}
+          className="w-full"
+          onChange={(e) => { 
+            if (currentItem) {
+              updateNote({ ...currentItem, repertoire: e.value });
+            }
+          }} 
+          optionLabel="code"
+          optionValue="code"
+        />
+        
+        <Button label="Save Changes" onClick={() => {
+          alert('sup');
 
-    if (loading) {
-        return <div className="w-100vh flex-column font-bold text-3xl row-gap-4 font-size-lg p-7 min-h-full flex align-items-center justify-content-center">
-            <ProgressSpinner/>
-            Loading
+          const results = fetch("http://localhost:3001/notes", {
+            method: "POST",
+            headers: {
+              'Accept': '*',
+              'Content-Type': 'application/json'
+            },
+
+            //make sure to serialize your JSON body
+            body: JSON.stringify(currentItem)
+          })
+          .then( (response) => {
+            //do something awesome that makes the world a better place
+            console.log("Got", response);
+          });
+        }}/>
         </div>
-    }
-    
-    const options = [... new Set(results.map((result: any) => result.repertoire))].map(code => ({ code }))
-
-    function generateCardConfig(selectedRepertoire: string, results: NotesItem[]): string {
-        const filtered = results.filter(result => result.repertoire === selectedRepertoire);
-        console.log("Making csv for", filtered.length, "results");
-
-        return filtered.map(note => {
-            const rawNotes = note.notes.replaceAll("\n", "<br>")
-
-            return `Move and Reason<br>${shortenLine(note.fen)}.svg<br>The move is {{c1::${note.move}}} because {{c1::${rawNotes}}}`
-        }).join("\n")
-    }
-
-    return <>
-        <h2>Notes</h2>
-        <section id="form" className="flex gap-3 row-gap-3 p-3">
-            <Dropdown className="w-4 max-h-3rem m-3" placeholder="Select Repertoire" optionLabel="code" value={selectedRepertoire} onChange={(e) => setSelectedRepertoire(e.value)} options={options}>
-
-            </Dropdown>
-            <label className={"p-3 gap-1 flex flex-column font-bold"}>
-                Invert
-                <Checkbox checked={shouldInvert} onClick={(e:any) => { console.log(e); setShouldInvert(!shouldInvert)}} />
-            </label>
-            <Button className=" max-h-3rem m-3" disabled={!selectedRepertoire} label="Export" onClick={() => {
-                const zip = new JSZip();
-
-                const folderName = selectedRepertoire.code || "export";
-
-                const mediaName = folderName + "/media";
-                const getMediaPath = (fen: string) => `${mediaName}/${shortenLine(fen)}.svg`;
-
-                zip.folder(folderName);
-                zip.file(folderName + "/" + 'cards.csv', generateCardConfig(folderName, results));
-                zip.folder(mediaName)
-
-                const filtered = results.filter(result => result.repertoire === selectedRepertoire.code);
-                filtered.forEach(({fen}) => {
-                    zip.file(getMediaPath(fen), createSVGboard(fen, [], shouldInvert));
-                })
-
-                zip.generateAsync({ type: 'blob' }).then(function (content) {
-                    FileSaver.saveAs(content, selectedRepertoire?.code + ".zip");
-                });
-            }}/>
-        </section>
-        <DataTable value={results}>
-            <Column header="FEN" field='fen' body={a => <TinyFENDisplay keyID={a} fen={a.fen}/>}/>
-            <Column header="Notes" field='notes'/>
-            <Column header="Repertoire" field='repertoire'/>
-            <Column 
-                header="Link" 
-                field='original_location' 
-                body={a => <a target="_blank" href={a.original_location}>Link</a>} />
-            <Column 
-                header="Delete" 
-                field='key' 
-                body={a => <Button label="Delete" onClick={() => {
-                    fetch("http://localhost:3001/notes?key=" + a.key, {
-                        method: "DELETE",
-                        headers: {
-                            'Accept': '*'
-                        },
-                })
-                .then( (response) => {
-                    //do something awesome that makes the world a better place
-                    console.log("Got", response);
-                    setShouldRefresh(true);
-                });
-                }}/>} />
-        </DataTable>
-    </>;
+      </Dialog>
+    </>
+  );
 }
 
+function TinyFENDisplay({
+  keyID,
+  fen,
+  invert = false,
+}: {
+  keyID: any;
+  fen: string;
+  invert?: boolean;
+}) {
+  const madeMoveRef = { current: true };
 
-function TinyFENDisplay({keyID, fen, invert = false}: {keyID: any, fen: string, invert?: boolean}) {
-    const madeMoveRef = { current: true };
+  const sanitized = fen.replace(/[^a-zA-Z0-9]/gi, "");
 
-    const sanitized = fen.replace(/[^a-zA-Z0-9]/gi, '');
-
-    return <div className=""><ChessBoard
-            fen={fen}
-            moves={[]}
-            invert={invert}
-            madeMoveRef={madeMoveRef}
-            name={sanitized + keyID?.key}
-            game_url={sanitized + keyID?.key}
-            draggable={true}
-            size="168px"
-        ></ChessBoard>
-      </div>
+  return (
+    <div className="">
+      <ChessBoard
+        fen={fen}
+        moves={[]}
+        invert={invert}
+        madeMoveRef={madeMoveRef}
+        name={sanitized + keyID?.key}
+        game_url={sanitized + keyID?.key}
+        draggable={true}
+        size="168px"
+      ></ChessBoard>
+    </div>
+  );
 }
 
 function squareToCoordinates(inputString: string): [number, number] {
-    // Extract letter and number
-    const letter = inputString.charAt(0);
-    const number = parseInt(inputString.charAt(1));
-  
-    // Calculate the index of the letter (a=1, b=2, ..., h=8)
-    const letterIndex = letter.charCodeAt(0) - "a".charCodeAt(0) + 1;
-  
-    // Return a list with the calculated values
-    return [letterIndex, number];
-  }
-  
-  function invert(input: number): number {
-    return 7 - input;
-  }
+  // Extract letter and number
+  const letter = inputString.charAt(0);
+  const number = parseInt(inputString.charAt(1));
+
+  // Calculate the index of the letter (a=1, b=2, ..., h=8)
+  const letterIndex = letter.charCodeAt(0) - "a".charCodeAt(0) + 1;
+
+  // Return a list with the calculated values
+  return [letterIndex, number];
+}
+
+function invert(input: number): number {
+  return 7 - input;
+}
 
 function shortenLine(input: string): string {
-    return input.replace(/[^A-Za-z0-9]/g, '');
-  }
+  return input.replace(/[^A-Za-z0-9]/g, "");
+}
 
-
-  function createSVGboard(fen: string, highlightedSquares: string[], shouldInvert: boolean) {
-	fen = fen.replace(/%20/g," ");
+function createSVGboard(
+  fen: string,
+  highlightedSquares: string[],
+  shouldInvert: boolean,
+) {
+  fen = fen.replace(/%20/g, " ");
   let svg = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg"  viewBox="-9 -9 378 378">
   <defs>
     <pattern id="bg" x="0" y="0" width="90" height="90" patternUnits="userSpaceOnUse">
@@ -175,7 +329,7 @@ function shortenLine(input: string): string {
       <rect fill="rgb(144,161,172)" x="0" y="45" width="45" height="45"/>
     </pattern>
 
-    ${/* Pieces */''}
+    ${/* Pieces */ ""}
     <pattern id="P" width="45" height="45">
         <path fill="#fff" stroke="#000" stroke-linecap="round" stroke-width="1.5" d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z"/>
     </pattern>
@@ -225,50 +379,77 @@ function shortenLine(input: string): string {
   // Add highlights
   if (highlightedSquares) {
     highlightedSquares.forEach((square: string) => {
-
       const coordinates = squareToCoordinates(square);
 
-      const x = shouldInvert ? (8 - coordinates[0]) * 45 : (coordinates[0] - 1) * 45;
-      const y = shouldInvert ? (coordinates[1] - 1) * 45 : (8 - coordinates[1]) * 45;
+      const x = shouldInvert
+        ? (8 - coordinates[0]) * 45
+        : (coordinates[0] - 1) * 45;
+      const y = shouldInvert
+        ? (coordinates[1] - 1) * 45
+        : (8 - coordinates[1]) * 45;
 
-      console.log('squareToCoordinates', square, coordinates, x, y);
+      console.log("squareToCoordinates", square, coordinates, x, y);
 
-      svg += `<rect fill="rgba(76, 167, 79, 0.3)" x="` + x + `" y="` + y + `" width="45" height="45"/>`
+      svg +=
+        `<rect fill="rgba(76, 167, 79, 0.3)" x="` +
+        x +
+        `" y="` +
+        y +
+        `" width="45" height="45"/>`;
     });
   }
 
   // Add actual pieces
   let row = 0;
   let col = 0;
-  for (var i=0; i < fen.length; i++){
-    if (row > 7){break;}
+  for (var i = 0; i < fen.length; i++) {
+    if (row > 7) {
+      break;
+    }
 
     const displayRow = shouldInvert ? invert(row) : row;
     const displayCol = shouldInvert ? invert(col) : col;
 
-    switch (fen[i]){
-      case 'r': case 'n': case 'b': case 'q': case 'k': case 'p': {
-        svg += `<rect className="b" x="${displayCol*45}" y="${displayRow*45}" width="45" height="45" fill="url(#${fen[i]})"></rect>`
+    switch (fen[i]) {
+      case "r":
+      case "n":
+      case "b":
+      case "q":
+      case "k":
+      case "p": {
+        svg += `<rect className="b" x="${displayCol * 45}" y="${displayRow * 45}" width="45" height="45" fill="url(#${fen[i]})"></rect>`;
         col++;
-        if (col > 7){
+        if (col > 7) {
           col = 0;
           row++;
         }
         break;
       }
-      case 'R': case 'N': case 'B': case 'Q': case 'K': case 'P': {
-        svg += `<rect x="${displayCol*45}" y="${displayRow*45}" width="45" height="45" fill="url(#${fen[i]})"></rect>`
+      case "R":
+      case "N":
+      case "B":
+      case "Q":
+      case "K":
+      case "P": {
+        svg += `<rect x="${displayCol * 45}" y="${displayRow * 45}" width="45" height="45" fill="url(#${fen[i]})"></rect>`;
 
         col++;
-        if (col > 7){
+        if (col > 7) {
           col = 0;
           row++;
         }
         break;
       }
-      case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': {
+      case "1":
+      case "2":
+      case "3":
+      case "4":
+      case "5":
+      case "6":
+      case "7":
+      case "8": {
         col += parseInt(fen[i]);
-        if (col > 7){
+        if (col > 7) {
           col = 0;
           row++;
         }
