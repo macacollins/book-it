@@ -2,18 +2,21 @@ Short term
 
 + Allow editing notes from inside this app
 - Fix url schema for repertoire viewer to allow persistent links. Probably index-based
-- Re-add viewer to list of links in sidebar
 + More terse header options
-- Responsive header options
 - Fix repertoire selection preview to not appear behind lines list
 - Clean up lines list when viewing a repertoire
+- Pull notes when viewing a position in the repertoire viewer
 + Clean up drills selection page
 + Move channel creation button into channel selection page and rename it TV
 - Allow deleting channels
-- Better caching controls
-- Incorporate completely offline functionality, should be offline first
++ Make dedicated route for channels so there are persistent links
 
 Long term
+- Add a board-first page that allows viewing notes and applicable repertoires as well as any other data we have for a position 
+    - win rate
+    - number of games seen
+- add lichess config options such as which elo range to target
+- Responsive header options
 - Restructure / rethink page that starts drills
 - Allow building repertoire from the viewer
 - Allow importing pgn through local server means--POST + GET stuff
@@ -23,6 +26,7 @@ Long term
 - allow adding / removing single positions when creating a channel
 - Notes-based drills
 - Ability to clear cache of lichess games
+- Incorporate completely offline functionality, should be offline first
 - Make tv work completely offline
 - Create matrix of which drill options work with which and implement multistep design. 
     - Also provide a quick frequency based setting or ability to save configurations

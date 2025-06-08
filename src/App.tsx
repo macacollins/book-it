@@ -27,8 +27,6 @@ import analyzeGames, {
   InnerAnalyzeGamesExpectedMessage,
 } from "./analysis/analyzeGames";
 
-import "primereact/resources/themes/mira/theme.css";
-
 import defaultLines from "./integrations/default-lines";
 
 import ConfigPage from "./pages/Configuration";
@@ -46,9 +44,15 @@ import TVPicker from "./pages/TVPicker";
 import MissedMovesTV from "./pages/MissedMovesTV";
 import ChannelManagement from "./pages/ChannelManagement";
 import Notes from "./components/Notes";
+import ChannelViewer from "./pages/ChannelViewer";
+import Annotations from "./pages/Annotations";
 import { ChannelForm } from "./pages/ChannelForm";
 import { Menubar } from 'primereact/menubar';
 import { MenuItem } from "primereact/menuitem";
+import RepertoireSelection from "./pages/RepertoireSelection";
+import RepertoireChapterSelection from "./pages/RepertoireChapterSelection";
+import RepertoireLineSelection from "./pages/RepertoireLineSelection";
+import RepertoireLineViewer from "./pages/RepertoireLineViewer";
 
 interface AppProps {
   analysisDatabaseStorage: AnalysisDatabase;
@@ -273,9 +277,6 @@ function App({
     ></Drills>
   );
 
-  const tvPage = () => {
-    return <TV />;
-  };
   const tvPickerPage = () => {
     return <TVPicker repertoire={repertoire[repertoireChoice]} />;
   };
@@ -284,7 +285,7 @@ function App({
     return <MissedMovesTV {...{ games, analysisDatabase }} />;
   };
   const channelManagement = () => {
-    return <ChannelManagement repertoire={repertoire[repertoireChoice]} />;
+    return <ChannelManagement />;
   };
 
   const [colorScheme, setColorScheme] = useState(
@@ -331,11 +332,17 @@ function App({
             <Route path="/book-it/results" element={resultsPage()} />
             <Route path="/book-it/drills" element={drillPage()} />
             <Route path="/book-it/viewer" element={viewerPage()} />
+            <Route path="/book-it/repertoires" element={<RepertoireSelection repertoireList={repertoireList} />} />
+            <Route path="/book-it/repertoires/:repertoirePathName" element={<RepertoireChapterSelection repertoireList={repertoireList}/>} />
+            <Route path="/book-it/repertoires/:repertoirePathName/:chapter" element={<RepertoireLineSelection repertoireList={repertoireList} />} />
+            <Route path="/book-it/repertoires/:repertoirePathName/:chapter/:line" element={<RepertoireLineViewer repertoireList={repertoireList} />} />
             <Route path="/book-it/tv-picker" element={tvPickerPage()} />
             <Route path="/book-it/channels" element={channelManagement()} />
-            <Route path="/book-it/tv" element={tvPage()} />
+            <Route path="/book-it/channels/:channelName" element={<ChannelViewer/>} />
+            <Route path="/book-it/tv" element={<TV />} />
             <Route path="/book-it/repertoire-tv" element={repertoireTV()} />
             <Route path="/book-it/notes" element={<Notes />} />
+            <Route path="/book-it/annotations" element={<Annotations />} />
             <Route path="/book-it/add-channel" element={channelForm} />
             <Route
               path="*"

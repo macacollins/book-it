@@ -213,12 +213,26 @@ const ChessBoard = ({
     () => {
       if (chessboardRef.current) {
         chessboardRef.current.resize();
+        console.log("Firing")
       }
     },
     // We don't care about the dependency on board; it won't be re-set with the current code
     // eslint-disable-next-line
     [width],
   );
+
+    // Resize when the window changes width
+    useEffect(
+      () => {
+        if (chessboardRef.current) {
+          chessboardRef.current.resize();
+          console.log("Firing2")
+        }
+      },
+      // We don't care about the dependency on board; it won't be re-set with the current code
+      // eslint-disable-next-line
+      [size],
+    );
 
   let drawings = <Drawings arrows={arrows}> </Drawings>;
 

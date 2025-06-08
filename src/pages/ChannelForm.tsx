@@ -147,7 +147,6 @@ export function ChannelForm({ repertoire }: { repertoire: Repertoire }) {
             />
           </div>
         </div>
-        
       </StepperPanel>
       <StepperPanel header="Review">
         <section className="form flex gap-3 flex-wrap">

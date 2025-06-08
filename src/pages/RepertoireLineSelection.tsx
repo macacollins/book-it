@@ -12,43 +12,18 @@ import { getBookGames } from "../storage";
 import LineViewer from "../components/LineViewer";
 
 import { Button } from 'primereact/button';
+import { useParams } from "react-router";
+import { channelifyName } from "./channel-utils";
+
+import  {useNavigate} from 'react-router';
+import { ProgressSpinner } from "primereact/progressspinner";
 
 interface ConfigPageProps {
-  playerName: string;
-  setPlayerName: (newValue: string) => void;
-  lichessPlayerName: string;
-  setLichessPlayerName: (newValue: string) => void;
-  repertoireChoice: string;
-  setRepertoireChoice: (newValue: string) => void;
-  newRepertoireNameField: string;
-  setNewRepertoireNameField: (newValue: string) => void;
-  setRepertoire: (newValue: { [name: string]: Repertoire }) => void;
-  repertoire: { [name: string]: Repertoire };
   repertoireList: string[];
-  setRepertoireList: (newValue: string[]) => void;
-  dispatchAnalysisDatabase: any;
-  setGames: (newValue: Game[]) => void;
-  games: Game[];
-  analysisDatabase: AnalysisDatabase;
 }
 
 function ConfigPage({
-  playerName,
-  setPlayerName,
-  lichessPlayerName,
-  setLichessPlayerName,
-  repertoireChoice,
-  setRepertoireChoice,
-  newRepertoireNameField,
-  setNewRepertoireNameField,
-  setRepertoire,
-  repertoire,
-  repertoireList,
-  setRepertoireList,
-  dispatchAnalysisDatabase,
-  setGames,
-  games,
-  analysisDatabase,
+  repertoireList
 }: ConfigPageProps) {
   const [selectedRepertoire, setSelectedRepertoire] = useState<string>("");
   const [selectedChapter, setSelectedChapter] = useState<string>("");
@@ -61,13 +36,27 @@ function ConfigPage({
 
   const invert = useRef<any>();
 
+  const { repertoirePathName, chapter } = useParams();
+
   useEffect(() => {
     (async () => {
-      if (selectedRepertoire) {
-        setBookLines(await getBookGames(selectedRepertoire));
+
+        if (!repertoirePathName) {
+            return;
+        }
+ 
+        const realRepertoireName = repertoireList.find(a => {
+            if (channelifyName(a) === (repertoirePathName)) {
+                return a;
+            }
+        });
+
+      if (realRepertoireName) {
+        setSelectedRepertoire(realRepertoireName);
+        setBookLines(await getBookGames(realRepertoireName));
       }
     })();
-  }, [selectedRepertoire]);
+  }, []);
 
   const [delayTimer, setDelayTimer] = useState<any>();
 
@@ -148,6 +137,9 @@ function ConfigPage({
     }
   });
 
+  const navigate = useNavigate();
+
+
   const [inverted, setInverted] = useState(false);
   const handleUserKeyPress = useCallback((event: any) => {
     const { key, keyCode } = event;
@@ -166,75 +158,18 @@ function ConfigPage({
     setInverted(invert.current);
   }, [invert.current]);
 
-  /*
-  useEffect(() => {
-    console.log("Adding listener");
-    window.addEventListener("keydown", handleUserKeyPress);
-    return () => {
-      window.removeEventListener("keydown", handleUserKeyPress);
-    };
-  }, [handleUserKeyPress]);*/
+  if (!selectedRepertoire || !bookLines) {
+    return <ProgressSpinner/ >;
+  }
 
-  if (!selectedRepertoire) {
-    // Display repertoire selection
-
-    return (
-      <>
-        <h2>All Repertoires</h2>
-        <section className="flex gap-3 row-gap-3 flex-wrap flex-column">{buttons}</section>
-      </>
-    );
-  } else if (!selectedChapter) {
-    // display chapter selection
-
-    const chapterButtons = chapters.map((chapter) => {
-      return (
-        <li>
-          <Button
-            onMouseEnter={() => delayedDisplay(chapter)}
-            onClick={() => setSelectedChapter(chapter)}
-          >
-            {chapter}: {chapterInfo[chapter].numberLines}
-          </Button>
-          <Button onClick={() => delayedDisplay(chapter)}>
-            show
-          </Button>
-        </li>
-      );
-    });
-
-    const chapterList = <ul>{chapterButtons}</ul>;
-    const board = (
-      <div className="max-w-3rem">
-      <ChessBoard
-        fen={"start"}
-        invert={inverted}
-        name={"chapter-viewer-board"}
-        game_url={""}
-        draggable={false}
-        arrows={[]}
-        madeMoveRef={{ current: true }}
-        moveCallback={(move) => {}}
-        gameRef={gameRef}
-        chessboardRef={chessboardRef}
-      ></ChessBoard>
-      </div>
-    );
-    return (
-      <div id="select-chapter">
-        <Button onClick={() => setSelectedRepertoire("")}>
-          Home
-        </Button>
-        <h2>{selectedRepertoire}</h2>
-        <div className="sticky-container">{board}</div>
-        {chapterList}
-      </div>
-    );
-  } else if (!selectedLine) {
+  if (selectedRepertoire && (!Number(chapter) || chapters.length <= Number(chapter))) {
+    console.log("WOWOWOWOW chatper was " + chapter);
+    return;
+  }
     // display line selection
 
     const lines = bookLines.filter(
-      (bookLine) => bookLine.chapterName === selectedChapter,
+      (bookLine) => bookLine.chapterName === chapters[Number(chapter)],
     );
 
     const moveArrays = lines.map((line) =>
@@ -284,21 +219,21 @@ function ConfigPage({
 
     return (<>
       <div id="line-select" className="flex gap-2">
-        <Button onClick={() => setSelectedRepertoire("")}>
+        <Button onClick={() => navigate("/book-it/repertoires")}>
           Home
         </Button>
-        <Button onClick={() => setSelectedChapter("")}>
+        <Button onClick={() => navigate("/book-it/repertoires/" + repertoirePathName)}>
           {selectedRepertoire}
         </Button>
         <br></br>
         {lastChapter && (
-          <Button onClick={() => setSelectedChapter(lastChapter)}>
+        <Button onClick={() => navigate("/book-it/repertoires/" + repertoirePathName + "/" + lastChapter)}>
             {"<-" + lastChapter}
           </Button>
         )}
         {nextChapter && (
-          <Button onClick={() => setSelectedChapter(nextChapter)}>
-            {nextChapter + " ->"}
+        <Button onClick={() => navigate("/book-it/repertoires/" + repertoirePathName + "/" + nextChapter)}>
+        {nextChapter + " ->"}
           </Button>
         )}
         </div>
@@ -306,10 +241,19 @@ function ConfigPage({
         {board}
         {previewFEN}
         <ul>
-          {lines.map((line) => {
+          {lines.map((line, index) => {
+
+            const path = 
+                "/book-it/repertoires/" + 
+                repertoirePathName + 
+                "/" + 
+                chapter + 
+                "/" + 
+                index;
+
             return (
               <li>
-                <Button outlined onClick={() => setSelectedLine(line.lineName)}>
+                <Button outlined onClick={() => navigate(path)}>
                   {line.lineName}: {line.game.moves.length} moves
                 </Button>
               </li>
@@ -318,79 +262,6 @@ function ConfigPage({
         </ul>
       </>
     );
-  } else {
-    // display line info
-
-    const lines = bookLines.filter(
-      (bookLine) =>
-        bookLine.chapterName === selectedChapter &&
-        bookLine.lineName === selectedLine,
-    );
-
-    let lastLine: any, nextLine: any;
-
-    let chapterLines = bookLines.filter(
-      (bookLine) => bookLine.chapterName === selectedChapter,
-    );
-
-    for (let index = 0; index < chapterLines.length; index++) {
-      if (chapterLines[index].lineName === selectedLine) {
-        lastLine = chapterLines[index - 1]?.lineName;
-        nextLine = chapterLines[index + 1]?.lineName;
-      }
-    }
-
-    return (
-      <>
-        <nav className="flex gap-2">
-          <img className="n" />
-          <Button
-            onClick={() => {
-              setSelectedRepertoire("");
-              setSelectedChapter("");
-              setSelectedLine("");
-            }}
-          >
-            Home
-          </Button>
-          <Button
-            onClick={() => {
-              setSelectedChapter("");
-              setSelectedLine("");
-            }}
-          >
-            {selectedRepertoire}
-          </Button>
-          <Button onClick={() => setSelectedLine("")}>
-            {selectedChapter}
-          </Button>
-        </nav>
-        <h2>{selectedLine}</h2>
-
-        <div className="inline-flex gap-2 m-2">
-        {lastLine && (
-          <Button
-            onClick={() => {
-              setSelectedLine(lastLine);
-            }}
-          >
-            Last
-          </Button>
-        )}
-        {nextLine && (
-          <Button
-            onClick={() => {
-              setSelectedLine(nextLine);
-            }}
-          >
-            Next
-          </Button>
-        )}
-  </div>
-        <LineViewer repertoire={selectedRepertoire} line={lines[0]} lineToShow={selectedLine}/>
-      </>
-    );
-  }
 }
 
 export default ConfigPage;

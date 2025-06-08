@@ -6,6 +6,8 @@ import Game from "../types/Game";
 import AnalysisDatabase from "../types/AnalysisDatabase";
 
 import { Button } from 'primereact/button';
+import { useNavigate } from "react-router";
+import { useEffect } from "react";
 
 interface AnalysisResultPropTypes {
   analysisDatabase: AnalysisDatabase;
@@ -21,6 +23,9 @@ const AnalysisResult = ({
   nameOverride = "my-name",
 }: AnalysisResultPropTypes) => {
   const width = useWindowSize()[0];
+  useEffect(() => { console.log("Game", {...game, pgn: undefined})}, []);
+
+  const navigate = useNavigate();
 
   if (typeof game === "undefined") {
     return (
@@ -122,6 +127,14 @@ const AnalysisResult = ({
             }
           >
             Chessable
+          </Button>
+          <Button
+            data-testid={"notes-button"}
+            onClick={() =>
+              navigate(`/book-it/annotations?gameURL=${game.url}`)
+            }
+          >
+            Notes
           </Button>
           <br></br>
         </div>
