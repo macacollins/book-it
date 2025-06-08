@@ -11,7 +11,7 @@ import "./index.css";
 
 import MyWorker from './worker?worker'
 
-loadCachedData().then(() => {
+loadCachedData().then((propsFromLocalStorage) => {
   let worker = new MyWorker();
 
   const root = ReactDOM.createRoot(document.getElementById("root"));
