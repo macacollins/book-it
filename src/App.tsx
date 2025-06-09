@@ -16,6 +16,7 @@ import {
   Link,
   Outlet,
   useNavigate,
+  HashRouter,
 } from "react-router";
 import { setItemDexie } from "./storage";
 
@@ -325,7 +326,7 @@ function App({
 
   return (
     <>
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
           <Route element={<Navigator />}>
             <Route path="/book-it/config" element={configPage()} />
@@ -350,7 +351,7 @@ function App({
             />
           </Route>
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </>
   );
 }

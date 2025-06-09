@@ -40,8 +40,10 @@ export default function Annotations() {
 
     const width = useWindowSize()[0];
 
+    const split = window.location?.toString()?.split("?");
 
-    const urlParams = new URLSearchParams(window.location.search);
+
+    const urlParams = new URLSearchParams(split[split.length-1]);
     const gameURL = urlParams.get('gameURL');
 
     const urlParts = gameURL?.split("/") || ["nothing found here"]
