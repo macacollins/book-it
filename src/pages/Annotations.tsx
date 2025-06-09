@@ -13,6 +13,9 @@ import useWindowSize from "../hooks/useWindowSize";
 
 const makeKey = (id: string) => id + "-annotations";
 
+const HORIZONTAL_CONTROLS_KEY = "ANNOTATIONS_HORIZONTAL_CONTROLS";
+const BOARD_SIZE_KEY = "ANNOTATIONS_BOARD_SIZE";
+
 function saveAnalysis(id, notes) {
     const key = makeKey(id);
 
@@ -63,6 +66,10 @@ export default function Annotations() {
             .then(json => {
                 console.log("Got json", json);
                 setGame(json);
+
+                if (chessboardRef.current) {
+                    chessboardRef.current.resize();
+                }
             })
 
     }, []);
@@ -97,35 +104,85 @@ export default function Annotations() {
     }
 
     const chessboardRef = useRef<any>(null);
-    const [ boardWidth, setBoardWidth ] = useState(width > 512 ? 512 : width < 128 ? 128 : width)
+
+    const defaultBoardSize = width > 512 ? 512 : width < 128 ? 128 : width
+    const storedBoardSize = localStorage.getItem(BOARD_SIZE_KEY);
+
+    // debugger;
+    let finalBoardSize = defaultBoardSize;
+    try {
+        if (storedBoardSize !== undefined && Number(storedBoardSize)) {
+            const numberVersion = Number(storedBoardSize);
+            if (numberVersion >= 128 && numberVersion < 513) {
+                finalBoardSize = numberVersion;
+            }
+        } 
+    } catch (e) {
+        console.log("WOW WHAT HAPPENED", e);
+    }
+
+
+
+    const [ boardWidth, setBoardWidth ] = useState(finalBoardSize);
+    const [ firstWidthIgnored, setFirstWidthIgnored ] = useState(false);
+
+
+    console.log("Will be using", finalBoardSize, " as the board size. board width: ", boardWidth);
+
 
     const [ showControls, setShowControls ] = useState(true);
 
     useEffect(() => {
-        setBoardWidth(width > 512 ? 512 : width < 128 ? 128 : width);
+        if (width > 0 ) { 
+            if (firstWidthIgnored) {
+                setBoardWidth(defaultBoardSize);
+                console.log("Set board width to ", defaultBoardSize);
+
+            } else {
+                console.log("Skipping the first resize")
+                setFirstWidthIgnored(true);
+            }
+        }
     }, [width])
+    
+    const [ horizontalOn, setHorizontalOn ] = useState(localStorage.getItem(HORIZONTAL_CONTROLS_KEY) === "true");
 
     const boards = fens?.map((fen, index) => {
-        return <Splitter layout="vertical" onDoubleClickCapture={() => setShowControls(!showControls)}>
-            <SplitterPanel>
+        return <Splitter layout="vertical">
+            <SplitterPanel className="flex flex gap-3 align-items-center justify-content-center">
+        
+                {horizontalOn && <Button severity="secondary" label="<" onClick={lastMove}/> }
                 <ChessBoard chessboardRef={chessboardRef} name={"test" + index} game_url={"url" + index} fen={fen} size={`${boardWidth}px`}/>
+                {horizontalOn && <Button severity="secondary" label=">" onClick={nextMove}/> }
+
             </SplitterPanel>
             <SplitterPanel className="flex flex-column">
                 <div>
-                    {showControls && <><div className="flex gap-1">
-                    <Button severity="secondary" label="last" onClick={lastMove}/>
-                    <Button severity="secondary" label="next" onClick={nextMove}/>
-                    <Button severity="secondary" label="analysis" onClick={() => {
+                    {showControls && <><div className="flex gap-1 justify-content-center">
+                    <Button severity="secondary" label="<" onClick={lastMove}/>
+                    <Button severity="secondary" label=">" onClick={nextMove}/>
+                    <Button severity="secondary" label="?" onClick={() => {
                         window.open(`https://lichess.org/analysis/${fen}`, "_blank")
                     }} />
 
-                    <Button severity="secondary" label="game" onClick={() => {
+                    <Button severity="secondary" label="l" onClick={() => {
                         window.open(`https://lichess.org/${id}`, "_blank")
+                    }} />
+
+                    <Button severity="secondary" label="h" onClick={() => {
+                        setShowControls(false);
+                    }} />
+
+                    <Button severity="secondary" label="c" onClick={() => {
+                        const newValue = !horizontalOn;
+                        setHorizontalOn(newValue);
+                        localStorage.setItem(HORIZONTAL_CONTROLS_KEY, "true");
                     }} />
                     </div>
                     <div className="m-2">
                     <Slider value={boardWidth} onChange={(e) => {
                         setBoardWidth(e.value);
+                        localStorage.setItem(BOARD_SIZE_KEY, "" + e.value);
                         setTimeout(() => {
                             console.log("ChessboardREf", chessboardRef);
                             if (chessboardRef.current) {
