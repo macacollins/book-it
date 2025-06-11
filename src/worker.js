@@ -1,6 +1,6 @@
 import analyzeGames from "./analysis/analyzeGames";
 
-console.log("Worker is running");
+console.log("Analysis Worker is running");
 
 let receiver = async (message) => {
   function inProgressListener(currentAnalysisDatabase) {

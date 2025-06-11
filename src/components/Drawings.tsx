@@ -20,8 +20,8 @@ const Drawings = ({ arrows, circles }: any) => {
     // border: "0px"
   };
 
-  let marker1Props = { cgKey: "g2" };
-  let marker2Props = { cgKey: "pb2" };
+  // let marker1Props = { cgKey: "g2" };
+  // let marker2Props = { cgKey: "pb2" };
 
   return (
     <svg
@@ -42,7 +42,6 @@ const Drawings = ({ arrows, circles }: any) => {
           markerHeight="4"
           refX="2.05"
           refY="2"
-          {...marker1Props}
         >
           <path d="M0,0 V4 L3,2 Z" fill="green"></path>
         </marker>
@@ -54,7 +53,6 @@ const Drawings = ({ arrows, circles }: any) => {
           markerHeight="4"
           refX="2.05"
           refY="2"
-          {...marker2Props}
         >
           <path d="M0,0 V4 L3,2 Z" fill="red"></path>
         </marker>

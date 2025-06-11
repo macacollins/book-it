@@ -23,7 +23,6 @@ const AnalysisResult = ({
   nameOverride = "my-name",
 }: AnalysisResultPropTypes) => {
   const width = useWindowSize()[0];
-  useEffect(() => { console.log("Game", {...game, pgn: undefined})}, []);
 
   const navigate = useNavigate();
 
@@ -52,8 +51,8 @@ const AnalysisResult = ({
     );
   }
 
-  let arrows = analysis.arrows.map((arrow) => (
-    <Arrow {...{ index, hidden: false, ...arrow }}></Arrow>
+  let arrows = analysis.arrows.map((arrow, index) => (
+    <Arrow key={index} {...{ index, hidden: false, ...arrow }}></Arrow>
   ));
 
   let openingName;

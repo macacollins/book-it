@@ -423,8 +423,8 @@ export default function Drills(props: {
               draggable={!currentDrillResult}
               arrows={
                 currentDrillResult
-                  ? drillAnalysisResult.arrows.map((arrow: any) => (
-                      <Arrow {...arrow}></Arrow>
+                  ? drillAnalysisResult.arrows.map((arrow: any, index: number) => (
+                      <Arrow  key={index} {...arrow}></Arrow>
                     ))
                   : []
               }

@@ -75,7 +75,6 @@ export default function Results({
         })
       : [];
 
-  // listItems = listItems;
   let sliced = filteredGames.slice(
     indexOfFirstItem,
     indexOfFirstItem + itemsPerPage,
@@ -84,6 +83,7 @@ export default function Results({
   let listItems = sliced.map((singleGame, index) => {
     return (
       <AnalysisResult
+        key={index}
         game={singleGame}
         index={index}
         analysisDatabase={analysisDatabase}
@@ -239,16 +239,16 @@ export default function Results({
     <>
       <h2>Games</h2>
       <p>This is a list of games at the position where they left the book.</p>
-      <p>
+      <div>
         <label>
           {leftBookCheckbox}
           Show only lines where you left book first
         </label>
-      </p>
+      </div>
       <br></br>
       {openingFiltersFull}
       <br></br>
-      <p>
+      <section>
         <Button
           data-testid="refreshGamesButton"
           onClick={() => {
@@ -266,7 +266,7 @@ export default function Results({
         </Button>
         {syncingIndicator}
         {syncingIndicator2}
-      </p>
+        </section>
       <p>{`Found ${filteredGamesLength} results.`}</p>
       {paginationSection}
       <ul>{listItems}</ul>
