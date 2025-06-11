@@ -10,7 +10,6 @@ import { Splitter, SplitterPanel } from "primereact/splitter";
 import { Slider } from "primereact/slider";
 import useWindowSize from "../hooks/useWindowSize";
 
-
 const makeKey = (id: string) => id + "-annotations";
 
 const HORIZONTAL_CONTROLS_KEY = "ANNOTATIONS_HORIZONTAL_CONTROLS";
@@ -20,7 +19,6 @@ function saveAnalysis(id, notes) {
     const key = makeKey(id);
 
     localStorage.setItem(key, JSON.stringify(notes));
-
 } 
 
 function retrieveAnalysis(id) {
@@ -35,17 +33,14 @@ function retrieveAnalysis(id) {
     return {}
 }
 
-
 export default function Annotations() {
 
     const width = useWindowSize()[0];
 
     const split = window.location?.toString()?.split("?");
 
-
     const urlParams = new URLSearchParams(split[split.length-1]);
     const gameURL = urlParams.get('gameURL');
-
     const urlParts = gameURL?.split("/") || ["nothing found here"]
     const id = urlParts[urlParts.length - 1];
 
@@ -58,21 +53,35 @@ export default function Annotations() {
     useEffect(() => {
 
         const url = `https://lichess.org/game/export/${id}`;
-        console.log("Fetching url:", url);
-        fetch(url, {
-            headers: {
-              Accept: "application/json"
-            }
-        })
-            .then(response => response.json())
-            .then(json => {
-                console.log("Got json", json);
-                setGame(json);
 
-                if (chessboardRef.current) {
-                    chessboardRef.current.resize();
+        const cachedValue = localStorage.getItem(url);
+
+        if (cachedValue) {
+            setGame(cachedValue);
+
+            if (chessboardRef.current) {
+                chessboardRef.current.resize();
+            }
+        } else {
+
+            console.log("Fetching url:", url);
+            fetch(url, {
+                headers: {
+                  Accept: "application/json"
                 }
             })
+                .then(response => response.json())
+                .then(json => {
+                    console.log("Got json", json);
+                    setGame(json);
+    
+                    if (chessboardRef.current) {
+                        chessboardRef.current.resize();
+                    }
+                })
+        }
+
+
 
     }, []);
 

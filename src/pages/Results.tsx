@@ -269,7 +269,7 @@ export default function Results({
         </section>
       <p>{`Found ${filteredGamesLength} results.`}</p>
       {paginationSection}
-      <ul>{listItems}</ul>
+      <div className="flex flex-column gap-3">{listItems}</div>
       {paginationSection}
     </>
   );

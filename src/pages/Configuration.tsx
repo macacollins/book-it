@@ -202,6 +202,15 @@ function ConfigPage({
 
       <h3>Clear Data</h3>
       {buttons}
+      {<Button onClick={
+        () => {
+          caches.keys().then(function(names) {
+            for (let name of names)
+                caches.delete(name);
+        });
+        
+        }
+      } label="Clear service worker cache" />}
     </>
   );
 }

@@ -35,16 +35,21 @@ self.addEventListener('install', e => {
 
 });
 
-// the fetch event handler, to intercept requests and serve all 
-// static assets from the cache
-self.addEventListener('fetch', e => {
-    try {
-        e.respondWith(
-            caches.match(e.request)
-            .then(response => response ? response : fetch(e.request))
-          )
-    } catch (e) {
-        console.log("Got exception during fetch event", e);
-    }
 
-});
+async function cacheThenNetwork(request) {
+
+    console.log(request);
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      console.log("Found response in cache:", cachedResponse);
+      return cachedResponse;
+    }
+    console.log("Falling back to network");
+    return fetch(request);
+  }
+  
+  self.addEventListener("fetch", (event) => {
+    console.log(`Handling fetch event for ${event.request.url}`);
+    event.respondWith(cacheThenNetwork(event.request));
+  });
+  

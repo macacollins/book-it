@@ -7,7 +7,8 @@ import AnalysisDatabase from "../types/AnalysisDatabase";
 
 import { Button } from 'primereact/button';
 import { useNavigate } from "react-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { Chess } from "chess.js";
 
 interface AnalysisResultPropTypes {
   analysisDatabase: AnalysisDatabase;
@@ -22,7 +23,17 @@ const AnalysisResult = ({
   index,
   nameOverride = "my-name",
 }: AnalysisResultPropTypes) => {
+
+  const chessboardRef = useRef<any>();
+
   const width = useWindowSize()[0];
+
+  useEffect(() => {
+    if (chessboardRef.current) {
+      chessboardRef.current?.resize();
+    }
+  }, []);
+
 
   const navigate = useNavigate();
 
@@ -65,7 +76,7 @@ const AnalysisResult = ({
     openingName = "";
   }
 
-  let widthOfChessboard = Math.min(width - 36, 513);
+  let widthOfChessboard = Math.min(width, 513);
 
   let actualChessboardWidth =
     widthOfChessboard % 8 === 0
@@ -77,7 +88,8 @@ const AnalysisResult = ({
   };
 
   return (
-    <li key={index}>
+
+    <div key={index} className="w-full flex flex-column align-items-center justify-content-center">
       <div slot="headline">
         {analysis.headers.White}
         {" vs "}
@@ -85,18 +97,18 @@ const AnalysisResult = ({
         {"\n"}
         {analysis.headers.Result}
       </div>
+      <div className="p-3">{analysis.advice}</div>
       <div slot="supporting-text">
         <div className="side-by-side">
-          {analysis.advice}
-          <p>
-            {analysis.headers.ECO} {openingName}
-          </p>
+          
           <ChessBoard
             fen={analysis.displayFEN}
             invert={analysis.invert_board}
             name={nameOverride}
             game_url={game.url}
             arrows={arrows}
+            chessboardRef={chessboardRef}
+            size={widthOfChessboard + "px"}
           ></ChessBoard>
         </div>
         <br></br>
@@ -138,7 +150,7 @@ const AnalysisResult = ({
           <br></br>
         </div>
       </div>
-    </li>
+    </div>
   );
 };
 
