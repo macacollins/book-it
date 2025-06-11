@@ -1,7 +1,7 @@
 console.log("Service worker is initializing.");
 
 const cacheName = 'book-it-cache';
-const filestoCache = [
+const filesToCache = [
   '/',
   '/index.html',
   '/book-it/',
