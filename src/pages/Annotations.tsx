@@ -57,14 +57,15 @@ export default function Annotations() {
         const cachedValue = localStorage.getItem(url);
 
         if (cachedValue) {
-            setGame(cachedValue);
+            console.log("Using cached game.");
+            setGame(JSON.parse(cachedValue));
 
             if (chessboardRef.current) {
                 chessboardRef.current.resize();
             }
         } else {
 
-            console.log("Fetching url:", url);
+            console.log("Fetching game from url :", url);
             fetch(url, {
                 headers: {
                   Accept: "application/json"
@@ -74,6 +75,8 @@ export default function Annotations() {
                 .then(json => {
                     console.log("Got json", json);
                     setGame(json);
+
+                    localStorage.setItem(url, JSON.stringify(json))
     
                     if (chessboardRef.current) {
                         chessboardRef.current.resize();
