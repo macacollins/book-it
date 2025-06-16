@@ -37,15 +37,17 @@ self.addEventListener('install', e => {
 
 
 async function cacheThenNetwork(request) {
-
-    console.log(request);
-    const cachedResponse = await caches.match(request);
-    if (cachedResponse) {
-      console.log("Found response in cache:", cachedResponse);
-      return cachedResponse;
+    try {
+        console.log(request);
+        const cachedResponse = await caches.match(request);
+        if (cachedResponse) {
+          console.log("Found response in cache:", cachedResponse);
+          return cachedResponse;
+        }
+    } catch (e) {
+        console.log("Falling back to network");
+        return fetch(request);
     }
-    console.log("Falling back to network");
-    return fetch(request);
   }
   
   self.addEventListener("fetch", (event) => {
