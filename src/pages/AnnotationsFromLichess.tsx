@@ -33,7 +33,7 @@ function retrieveAnalysis(id) {
     return {}
 }
 
-export default function Annotations() {
+export default function AnnotationsFromLichess() {
 
     const width = useWindowSize()[0];
 

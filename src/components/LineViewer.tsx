@@ -14,6 +14,7 @@ import { InputTextarea } from "primereact/inputtextarea";
 import Repertoire from "../types/Repertoire";
 import { AnyIfEmpty } from "react-redux";
 import { ProgressSpinner } from "primereact/progressspinner";
+import AnnotationsFromPGN from "../pages/AnnotationsFromPGN";
 
 /**
  * { type: LINE_MOVE, move: string }
@@ -204,7 +205,7 @@ export default function LineViewer({
       return '';
     }
 
-    console.log("Got some sections", sections);
+    // console.log("Got some sections", sections);
 
     const commentElements = (
       <>
@@ -278,8 +279,11 @@ export default function LineViewer({
   
 
   const [ payload, setPayload ] = useState<any>('');
+  const [ annotating, setAnnotating ] = useState(false);
 
-
+  if (annotating) {
+    return <AnnotationsFromPGN pgn={line.game} onClose={() => setAnnotating(false)} />
+  }
 
   return (
     <>
@@ -288,6 +292,10 @@ export default function LineViewer({
           Download SVG
         </Button>
         <Button onClick={() => setInverted(!inverted)}>Invert</Button>
+
+        <Button onClick={() => {
+          setAnnotating(true);
+        }} label="Annotate" className="col-2 max-h-3rem"/>
       </span>
       <br></br>
       <div className="inline">{board}</div>
@@ -387,6 +395,7 @@ function CommentsBox({ currentIndex, gameRef, line, repertoire, setPayload}: any
             alert("Couldn't FEN");
           }
     }} label="Analysis Board" className="col-2 max-h-3rem"/>
+
   </section>
 </>
 }

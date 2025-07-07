@@ -1,4 +1,4 @@
-console.log("Service worker is initializing.");
+console.debug("Network Cache Service worker is initializing.");
 
 const cacheName = 'book-it-cache';
 const filesToCache = [
@@ -10,14 +10,13 @@ const filesToCache = [
 
 // the event handler for the activate event
 self.addEventListener('activate', e => {
-    console.log("Hit activate event");
+    console.debug("Hit activate event");
 
     try {
         self.clients.claim()
     } catch (e) {
-        console.log("encountered exception during activate ", e);
+        console.debug("encountered exception during activate ", e);
     }
-    
 });
 
 // the event handler for the install event 
@@ -38,20 +37,23 @@ self.addEventListener('install', e => {
 
 async function cacheThenNetwork(request) {
     try {
-        console.log(request);
+        console.debug(request);
         const cachedResponse = await caches.match(request);
         if (cachedResponse) {
-          console.log("Found response in cache:", cachedResponse);
+          console.debug("Found response in cache:", cachedResponse);
           return cachedResponse;
         }
+        console.debug("service worker cache miss")
     } catch (e) {
-        console.log("Falling back to network");
-        return fetch(request);
+        console.debug("Got e.", e);
     }
+
+    console.debug("Falling back to network");
+    return fetch(request);
   }
   
   self.addEventListener("fetch", (event) => {
-    console.log(`Handling fetch event for ${event.request.url}`);
+    console.debug(`Handling fetch event for ${event.request.url}`);
     event.respondWith(cacheThenNetwork(event.request));
   });
   

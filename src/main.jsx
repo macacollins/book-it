@@ -17,23 +17,34 @@ const chessBoardCSSURL = new URL('./chessboard-1.0.0.min.css', import.meta.url).
 const chessboardJSURL = new URL('./chessboard-1.0.0.min.js', import.meta.url).href
 const jqueryURL = new URL('./jquery-3.5.1.min.js', import.meta.url).href
 
-
 loadCachedData().then((propsFromLocalStorage) => {
   let worker = new MyWorker();
   Test();
 
-  document.getElementById('jquery-script').src = jqueryURL
-  setTimeout(() => {
-    document.getElementById('chessboard-js-script').src = chessboardJSURL
-    document.getElementById('chessboard-css-link').src = chessBoardCSSURL
-  }, 10);
+  const jqueryScriptTag = document.getElementById('jquery-script');
+  const chessboardJSScriptTag = document.getElementById('chessboard-js-script');
+  const chessboardCSSScriptTag = document.getElementById('chessboard-js-script');
 
-  const root = ReactDOM.createRoot(document.getElementById("root"));
-  root.render(
-    <React.StrictMode>
-      <App worker={worker} {...propsFromLocalStorage} />
-    </React.StrictMode>,
-  );  
+  jqueryScriptTag.onload = loadChessboard;
+  chessboardJSScriptTag.onload = renderReactApp;
+
+  // this line initiates the network request 
+  // and eventually leads to the onload events above
+  jqueryScriptTag.src = jqueryURL;
+
+  function loadChessboard() {
+    chessboardJSScriptTag.src = chessboardJSURL;
+    chessboardCSSScriptTag.src = chessBoardCSSURL;
+  }
+
+  function renderReactApp() {
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(
+      <React.StrictMode>
+        <App worker={worker} {...propsFromLocalStorage} />
+      </React.StrictMode>
+    );  
+  }
 
   if ('serviceWorker' in navigator) {
     console.log("Attempting to install service worker");

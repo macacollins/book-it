@@ -23,7 +23,7 @@ interface ConfigPageProps {
   repertoireList: string[];
 }
 
-function ConfigPage({
+function RepertoireLineViewer({
   repertoireList
 }: ConfigPageProps) {
   const [selectedRepertoire, setSelectedRepertoire] = useState<string>("");
@@ -156,4 +156,4 @@ function ConfigPage({
     );
 }
 
-export default ConfigPage;
+export default RepertoireLineViewer;
