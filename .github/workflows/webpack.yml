@@ -45,6 +45,9 @@ jobs:
           sed -i.bak "s/{replace-me-js}/\/book-it\/$(echo $JS | sed -r 's/\//\\\//g')/g" "src/dist/$SERVICE_WORKER_FILENAME"
           sed -i.bak "s/{replace-me-css}/\/book-it\/$(echo $CSS | sed -r 's/\//\\\//g')/g" "src/dist/$SERVICE_WORKER_FILENAME"
 
+          sed -i.bak "s/{replace-me-js}/\/book-it\/$(echo $JS | sed -r 's/\//\\\//g')/g" "src/dist/service-worker.js"
+          sed -i.bak "s/{replace-me-css}/\/book-it\/$(echo $CSS | sed -r 's/\//\\\//g')/g" "src/dist/service-worker.js"
+
       # - name: Create Badges
       #   shell: bash
       #   run: |
