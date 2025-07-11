@@ -23,11 +23,16 @@ self.addEventListener('activate', e => {
 // typically used to cache assets
 self.addEventListener('install', e => {
     console.log("Hit install event");
-    e.waitUntil(
-        caches.open(cacheName)
-        .then(cache => cache.addAll(filesToCache))
-        );
-    console.log("Failed during install", e);
+    try {
+        e.waitUntil(
+            caches.open(cacheName)
+            .then(cache => cache.addAll(filesToCache))
+            );
+
+    } catch (e) {
+        console.log("Failed during install", e);
+    }
+    
 
 });
 
