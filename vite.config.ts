@@ -45,6 +45,7 @@ interface OutputChunk {
 
 function writeAssetNames() {
 	return {
+		name: "write asset names",
 		generateBundle(options, bundle, isWrite) {
 			let css, js, sw;
 			Object.keys(bundle).forEach(key => {
@@ -65,8 +66,14 @@ function writeAssetNames() {
 
 			this.emitFile({
 				type: 'asset',
-				fileName: "assets/sources.json",
-				source: `{ "css": "${css}", "js": "${js}" }`
+				fileName: "js.txt",
+				source: js
+			});
+
+			this.emitFile({
+				type: 'asset',
+				fileName: "css.txt",
+				source: css
 			});
 		}
 	};
@@ -77,6 +84,7 @@ export default defineConfig({
     react(),
 	writeAssetNames(),
     {
+	  name: "write-service=worker",
       apply: "build",
       enforce: "post",
       transformIndexHtml() {

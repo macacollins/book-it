@@ -37,6 +37,14 @@ jobs:
           npm install
           npm run build
 
+
+          JS=$(< "src/dist/js.txt")
+          CSS=$(< "src/dist/css.txt")
+          SERVICE_WORKER_FILENAME="src/dist/service-worker.js"
+
+          sed -i.bak "s/{replace-me-js}/$(echo $JS | sed -r 's/\//\\\//g')/g" "$SERVICE_WORKER_FILENAME"
+          sed -i.bak "s/{replace-me-css}/$(echo $CSS | sed -r 's/\//\\\//g')/g" "$SERVICE_WORKER_FILENAME"
+
       # - name: Create Badges
       #   shell: bash
       #   run: |

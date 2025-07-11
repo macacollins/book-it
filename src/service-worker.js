@@ -5,7 +5,9 @@ const filesToCache = [
   '/',
   '/index.html',
   '/book-it/',
-  '/book-it'
+  '/book-it',
+  '{replace-me-js}',
+  '{replace-me-css}'
 ];
 
 const stuff = fetch("/book-it/assets/sources.json")
