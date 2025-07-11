@@ -119,6 +119,12 @@ export async function getAllGames() {
   const games = await gamesDB.games.filter((game) => true).sortBy("end_time");
   return games && games.reverse();
 }
+export async function getGameByID(id) {
+
+  const filterURL = "https://lichess.org/" + id;
+
+  return await gamesDB.games.get(filterURL);
+}
 
 /*
 This application currently uses Dexie as a key-value store.

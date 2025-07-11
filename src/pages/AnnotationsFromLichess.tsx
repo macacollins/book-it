@@ -9,6 +9,7 @@ import { Divider } from "primereact/divider";
 import { Splitter, SplitterPanel } from "primereact/splitter";
 import { Slider } from "primereact/slider";
 import useWindowSize from "../hooks/useWindowSize";
+import { getGameByID } from "../storage";
 
 const makeKey = (id: string) => id + "-annotations";
 
@@ -54,10 +55,16 @@ export default function AnnotationsFromLichess() {
 
         const url = `https://lichess.org/game/export/${id}`;
 
+        const dbValue = getGameByID(32);
+
+        if (dbValue) {
+            console.log("Using db value.", dbValue);
+        }
+
         const cachedValue = localStorage.getItem(url);
 
         if (cachedValue) {
-            console.log("Using cached game.");
+            console.log("Using cached game.", cachedValue);
             setGame(JSON.parse(cachedValue));
 
             if (chessboardRef.current) {

@@ -9,6 +9,8 @@ import { Divider } from "primereact/divider";
 import { Splitter, SplitterPanel } from "primereact/splitter";
 import { Slider } from "primereact/slider";
 import useWindowSize from "../hooks/useWindowSize";
+import { getGameByID } from "../storage";
+import pgnParser, { ParsedPGN, parse } from "pgn-parser";
 
 const makeKey = (id: string) => id + "-annotations";
 
@@ -48,41 +50,57 @@ export default function Annotations() {
     const [ game, setGame ] = useState<any>();
     const [ currentTextBoxValue, setCurrentTextBoxValue ] = useState<string>();
 
-    const moves = game?.moves?.split(" ");
+    const [ parsedPGN, setParsedPGN ] = useState<ParsedPGN>();
+    const moves = parsedPGN?.moves?.map(move => move.move);
 
     useEffect(() => {
 
-        const url = `https://lichess.org/game/export/${id}`;
-
-        const cachedValue = localStorage.getItem(url);
-
-        if (cachedValue) {
-            console.log("Using cached game.");
-            setGame(JSON.parse(cachedValue));
-
-            if (chessboardRef.current) {
-                chessboardRef.current.resize();
-            }
-        } else {
-
-            console.log("Fetching game from url :", url);
-            fetch(url, {
-                headers: {
-                  Accept: "application/json"
-                }
-            })
-                .then(response => response.json())
-                .then(json => {
-                    console.log("Got json", json);
-                    setGame(json);
-
-                    localStorage.setItem(url, JSON.stringify(json))
+        async function getGame() {
+            const url = `https://lichess.org/game/export/${id}`;
+            const dbValue = await getGameByID(id);
     
+            if (dbValue) {
+                console.log("Using db value.", dbValue);
+                setGame(dbValue);
+                setParsedPGN(pgnParser.parse(dbValue.pgn)[0]);
+
+            } else {
+                console.log("Not found in database.");
+
+                const cachedValue = localStorage.getItem(url);
+
+                if (cachedValue) {
+                    console.log("Using cached game from local storage.");
+                    setGame(JSON.parse(cachedValue));
+        
                     if (chessboardRef.current) {
                         chessboardRef.current.resize();
                     }
-                })
+                } else {
+        
+                    console.log("Fetching game from url :", url);
+                    fetch(url, {
+                        headers: {
+                          Accept: "application/json"
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(json => {
+                            console.log("Got json", json);
+                            setGame(json);
+        
+                            localStorage.setItem(url, JSON.stringify(json))
+            
+                            if (chessboardRef.current) {
+                                chessboardRef.current.resize();
+                            }
+                        })
+                }
+            }
+    
         }
+
+        getGame();
     }, []);
 
     const [ notes, setNotes ] = useState(retrieveAnalysis(id));
@@ -219,5 +237,5 @@ export default function Annotations() {
         </Splitter>
     });
 
-    return game ? boards[currentPosition] : id
+    return parsedPGN ? boards[currentPosition] : id
 }

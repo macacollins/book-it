@@ -86,7 +86,7 @@ export default function Annotations({ pgn, onClose } : { pgn: ParsedPGN, onClose
     const chess = new Chess();
     const fens = 
         moves?.map((move: string) => {
-            chess.move(move);
+            chess.move(move, { strict: false });
             return chess.fen();
         })
 
