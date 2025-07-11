@@ -5,7 +5,6 @@ const filesToCache = [
   '/',
   '/index.html',
   '/book-it/',
-  '/book-it/assets/*',
   '/book-it'
 ];
 
