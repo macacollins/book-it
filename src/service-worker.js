@@ -5,6 +5,7 @@ const filesToCache = [
   '/',
   '/index.html',
   '/book-it/',
+  '/book-it/assets/*',
   '/book-it'
 ];
 
@@ -58,6 +59,7 @@ async function cacheThenNetwork(request) {
         event.respondWith(cacheThenNetwork(event.request));
     } catch (e) {
         console.error(e);
+        event.respondWith(fetch(request));
     }
   });
   
