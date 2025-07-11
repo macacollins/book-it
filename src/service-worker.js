@@ -10,17 +10,6 @@ const filesToCache = [
   '{replace-me-css}'
 ];
 
-const stuff = fetch("/book-it/assets/sources.json")
-    .then(a => a.json())
-    .then(sources => {
-        console.log("sources", sources)
-
-        caches.open(cacheName)
-            .then(cache => cache.addAll([sources.css, sources.json]));
-    });
-
-console.log("Got stuff", stuff);
-
 // the event handler for the activate event
 self.addEventListener('activate', e => {
     console.debug("Hit activate event");
