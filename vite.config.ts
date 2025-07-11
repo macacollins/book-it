@@ -48,32 +48,20 @@ function writeAssetNames() {
 		name: "write asset names",
 		generateBundle(options, bundle, isWrite) {
 			let css, js, sw;
-			Object.keys(bundle).forEach(key => {
-				
-				if (key.indexOf("index-") !== -1) {
-					if (key.endsWith("css")) {
-						css = key;
-					}
-					if (key.endsWith("js")) {
-						js = key;
-					}
-				}
+			let keys = Object.keys(bundle);
 
+			let stringValue = JSON.stringify(keys.map(key => "/book-it/" + key));
+			Object.keys(bundle).forEach(key => {
+						
 				if (key.indexOf("service-worker-") !== -1) {
 					sw = key;
 				}
-			})
-
-			this.emitFile({
-				type: 'asset',
-				fileName: "js.txt",
-				source: js
 			});
 
 			this.emitFile({
 				type: 'asset',
-				fileName: "css.txt",
-				source: css
+				fileName: "files.txt",
+				source: stringValue.substring(1, stringValue.length - 1)
 			});
 
 			this.emitFile({
@@ -90,7 +78,7 @@ export default defineConfig({
     react(),
 	writeAssetNames(),
     {
-	  name: "write-service=worker",
+	  name: "write-service-worker",
       apply: "build",
       enforce: "post",
       transformIndexHtml() {

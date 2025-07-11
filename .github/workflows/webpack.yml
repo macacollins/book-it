@@ -38,15 +38,12 @@ jobs:
           npm run build
 
 
-          JS=$(< "src/dist/js.txt")
-          CSS=$(< "src/dist/css.txt")
+          FILES=$(< "src/dist/files.txt")
           SERVICE_WORKER_FILENAME=$(< "src/dist/sw.txt")
 
-          sed -i.bak "s/{replace-me-js}/\/book-it\/$(echo $JS | sed -r 's/\//\\\//g')/g" "src/dist/$SERVICE_WORKER_FILENAME"
-          sed -i.bak "s/{replace-me-css}/\/book-it\/$(echo $CSS | sed -r 's/\//\\\//g')/g" "src/dist/$SERVICE_WORKER_FILENAME"
+          sed -i.bak "s/\"{replace-me}\"/$(echo $FILES | sed -r 's/\//\\\//g')/g" "src/dist/$SERVICE_WORKER_FILENAME"
 
-          sed -i.bak "s/{replace-me-js}/\/book-it\/$(echo $JS | sed -r 's/\//\\\//g')/g" "src/dist/service-worker.js"
-          sed -i.bak "s/{replace-me-css}/\/book-it\/$(echo $CSS | sed -r 's/\//\\\//g')/g" "src/dist/service-worker.js"
+          sed -i.bak "s/\"{replace-me}\"/$(echo $FILES | sed -r 's/\//\\\//g')/g" "src/dist/service-worker.js"
 
       # - name: Create Badges
       #   shell: bash

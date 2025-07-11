@@ -6,8 +6,7 @@ const filesToCache = [
   '/index.html',
   '/book-it/',
   '/book-it',
-  '{replace-me-js}',
-  '{replace-me-css}'
+  '{replace-me}'
 ];
 
 // the event handler for the activate event
