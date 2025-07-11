@@ -75,6 +75,12 @@ function writeAssetNames() {
 				fileName: "css.txt",
 				source: css
 			});
+
+			this.emitFile({
+				type: 'asset',
+				fileName: "sw.txt",
+				source: sw
+			});
 		}
 	};
 }
