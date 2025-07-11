@@ -53,7 +53,11 @@ async function cacheThenNetwork(request) {
   }
   
   self.addEventListener("fetch", (event) => {
-    console.debug(`Handling fetch event for ${event.request.url}`);
-    event.respondWith(cacheThenNetwork(event.request));
+    try {
+        console.debug(`Handling fetch event for ${event.request.url}`);
+        event.respondWith(cacheThenNetwork(event.request));
+    } catch (e) {
+        console.error(e);
+    }
   });
   
