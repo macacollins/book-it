@@ -141,8 +141,13 @@ const AnalysisResult = ({
           </Button>
           <Button
             data-testid={"notes-button"}
-            onClick={() =>
-              navigate(`/book-it/annotations?gameURL=${game.url}`)
+            onClick={() => {
+              const id = game.url.slice(game.url.length - 8);
+              console.log("Value was", id )
+              navigate(`/book-it/annotations/` + id)
+            }
+
+              
             }
           >
             Notes

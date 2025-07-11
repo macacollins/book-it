@@ -54,6 +54,8 @@ import RepertoireSelection from "./pages/RepertoireSelection";
 import RepertoireChapterSelection from "./pages/RepertoireChapterSelection";
 import RepertoireLineSelection from "./pages/RepertoireLineSelection";
 import RepertoireLineViewer from "./pages/RepertoireLineViewer";
+import MastersIndex from "./pages/MastersIndex";
+import MasterGameAnnotations from "./pages/MasterGameAnnotations";
 
 interface AppProps {
   analysisDatabaseStorage: AnalysisDatabase;
@@ -330,6 +332,8 @@ function App({
         <Routes>
           <Route element={<Navigator />}>
             <Route path="/book-it/config" element={configPage()} />
+            <Route path="/book-it/masters" element={<MastersIndex/>} />
+            <Route path="/book-it/masters/morphy/:id" element={<MasterGameAnnotations/>} />
             <Route path="/book-it/results" element={resultsPage()} />
             <Route path="/book-it/drills" element={drillPage()} />
             <Route path="/book-it/viewer" element={viewerPage()} />
@@ -343,7 +347,7 @@ function App({
             <Route path="/book-it/tv" element={<TV />} />
             <Route path="/book-it/repertoire-tv" element={repertoireTV()} />
             <Route path="/book-it/notes" element={<Notes />} />
-            <Route path="/book-it/annotations" element={<Annotations />} />
+            <Route path="/book-it/annotations/:id" element={<Annotations />} />
             <Route path="/book-it/add-channel" element={channelForm} />
             <Route
               path="*"
@@ -426,9 +430,20 @@ function Navigator() {
           label: "Configuration",
           items: [
             {
-              label: "Configuration",
+              label: "Config",
               command: () => {
                 navigate("/book-it/config");
+              },
+            },
+          ],
+        },
+        {
+          label: "Masters",
+          items: [
+            {
+              label: "Masters",
+              command: () => {
+                navigate("/book-it/masters");
               },
             },
           ],
@@ -443,7 +458,6 @@ function Navigator() {
     item.items.forEach(innerItem => {
       innerItem.items.forEach(reallyInnerItem => {
         itemsFlat.push(reallyInnerItem);
-
       })
     })
   })

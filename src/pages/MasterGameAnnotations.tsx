@@ -9,22 +9,23 @@ import { Divider } from "primereact/divider";
 import { Splitter, SplitterPanel } from "primereact/splitter";
 import { Slider } from "primereact/slider";
 import useWindowSize from "../hooks/useWindowSize";
-import { getGameByID } from "../storage";
+import { getGameByID, getItemDexie } from "../storage";
 import pgnParser, { ParsedPGN, parse } from "pgn-parser";
+import getKeyValueHeaders from "../pgn/getKeyValueHeaders";
 
-const makeKey = (id: string) => id + "-annotations";
+const makeKey = (master: string, id: string) => master + "-" + id + "-annotations";
 
 const HORIZONTAL_CONTROLS_KEY = "ANNOTATIONS_HORIZONTAL_CONTROLS";
 const BOARD_SIZE_KEY = "ANNOTATIONS_BOARD_SIZE";
 
 function saveAnalysis(id, notes) {
-    const key = makeKey(id);
+    const key = makeKey("morphy", id);
 
     localStorage.setItem(key, JSON.stringify(notes));
 } 
 
 function retrieveAnalysis(id) {
-    const key = makeKey(id);
+    const key = makeKey("morphy", id);
 
     const currentValue = localStorage.getItem(key);
 
@@ -35,55 +36,30 @@ function retrieveAnalysis(id) {
     return {}
 }
 
-export default function Annotations() {
+export default function MasterGameAnnotations() {
 
     const width = useWindowSize()[0];
-
-    const { id } = useParams()
 
     // should be a LichessGame or similar
     const [ currentTextBoxValue, setCurrentTextBoxValue ] = useState<string>();
 
     const [ parsedPGN, setParsedPGN ] = useState<ParsedPGN>();
     const moves = parsedPGN?.moves?.map(move => move.move);
+    const { id } = useParams();
+
+    const kvHeaders = parsedPGN && getKeyValueHeaders(parsedPGN);
 
     useEffect(() => {
 
         async function getGame() {
-            const url = `https://lichess.org/game/export/${id}`;
-            const dbValue = await getGameByID(id);
-    
-            if (dbValue) {
-                console.log("Using db value.", dbValue);
-                setParsedPGN(pgnParser.parse(dbValue.pgn)[0]);
+            const morphyGames = await getItemDexie("morphyGames");
 
-            } else {
-                console.log("Not found in database.");
-
-                const cachedValue = localStorage.getItem(url);
-
-                console.log("Fetching game from url :", url);
-                fetch(url, {
-                    headers: {
-                        Accept: "application/json"
-                    }
-                })
-                    .then(response => response.json())
-                    .then(json => {
-                        console.log("Got json", json);
-                        setGame(json);
-    
-                        localStorage.setItem(url, JSON.stringify(json))
-        
-                        if (chessboardRef.current) {
-                            chessboardRef.current.resize();
-                        }
-                    })
+            if (morphyGames.length >= id) {
+                setParsedPGN(morphyGames[id]);
             }
-    
         }
 
-        getGame();
+        id && getGame();
     }, []);
 
     const [ notes, setNotes ] = useState(retrieveAnalysis(id));
@@ -132,9 +108,6 @@ export default function Annotations() {
     } catch (e) {
         console.log("WOW WHAT HAPPENED", e);
     }
-
-
-
     const [ boardWidth, setBoardWidth ] = useState(finalBoardSize);
     const [ firstWidthIgnored, setFirstWidthIgnored ] = useState(false);
 
@@ -196,14 +169,15 @@ export default function Annotations() {
                         setBoardWidth(e.value);
                         localStorage.setItem(BOARD_SIZE_KEY, "" + e.value);
                         setTimeout(() => {
-                            console.log("ChessboardREf", chessboardRef);
+                            console.log("ChessboardRef", chessboardRef);
                             if (chessboardRef.current) {
                                 chessboardRef.current.resize();
                             }
                         }, 10);
                     } 
 
-                    } max={512} min={128}/>
+                    } width="20rem" max={512} min={128}/>
+                    {kvHeaders && `${kvHeaders.White} vs. ${kvHeaders.Black} ${kvHeaders.Event} ${kvHeaders.Date}`}
                 </div></>}
                     <InputTextarea 
                         rows={5} 
@@ -220,5 +194,5 @@ export default function Annotations() {
         </Splitter>
     });
 
-    return parsedPGN ? boards[currentPosition] : id
+    return parsedPGN ? boards[currentPosition] : id ? id : "No ID found.";
 }
