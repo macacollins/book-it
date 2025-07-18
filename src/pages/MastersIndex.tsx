@@ -55,12 +55,15 @@ export default function MastersIndex() {
                 morphyGames = parsedPGNs;
             }
 
-            setMorphyGames(morphyGames.map(getKeyValueHeaders).map((kvHeaders, index) => { kvHeaders.ID = index; return kvHeaders }));
+            setMorphyGames(morphyGames.map(getKeyValueHeaders).map((kvHeaders, index) => { 
+                kvHeaders.ID = index; 
+                return augmentWithWordCounts(kvHeaders) 
+            }));
 
             if (morphyGames.length) {
                 const exampleHeaders = getKeyValueHeaders(morphyGames[0])
 
-                setColumns(Object.keys(exampleHeaders).filter(header => ["Site", "Round", "WhiteElo", "BlackElo"].indexOf(header) === -1))
+                setColumns([...Object.keys(exampleHeaders).filter(header => ["Site", "Round", "WhiteElo", "BlackElo"].indexOf(header) === -1), "Word Count"])
             }
         }
         test();
@@ -95,4 +98,26 @@ export default function MastersIndex() {
     return morphyGames?.length ? morphyIndex : <ProgressSpinner/>;
 }
 
+
+function augmentWithWordCounts(kvHeaders: any) {
+    const key = "morphy-" + kvHeaders.ID + "-annotations";
+
+    const localStorageValue = localStorage.getItem(key);
+
+    if (localStorageValue) {
+        try {
+            const parsed = JSON.parse(localStorageValue);
+            const wordCount = Object.values(parsed).join(" ").split(" ").length
+
+            kvHeaders["Word Count"] = wordCount
+        } catch (e) {
+            console.log("Encountered error when enriching annotations for game with ID " + kvHeaders.ID);
+            kvHeaders["Word Count"] = 0;
+        }
+    } else {
+        kvHeaders["Word Count"] = 0;
+    }
+
+    return kvHeaders;
+}
 
