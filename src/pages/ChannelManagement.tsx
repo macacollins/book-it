@@ -20,7 +20,9 @@ export default function ChannelManagement() {
         header={
           <header className="flex align-items-center gap-2 justify-content-left">
             {channel.name}{" "}
-            <Button onClick={() => navigate(channelifyName(channel.name))}>Play</Button>
+            <Button onClick={() => navigate(channelifyName(channel.name))}>
+              Play
+            </Button>
           </header>
         }
       >
@@ -36,7 +38,10 @@ export default function ChannelManagement() {
   return (
     <>
       <h1>Channels</h1>
-      <Button label="New Channel" onClick={() => navigate("/book-it/add-channel")}></Button>
+      <Button
+        label="New Channel"
+        onClick={() => navigate("/book-it/add-channel")}
+      ></Button>
       <Accordion>{channelDisplays}</Accordion>
     </>
   );

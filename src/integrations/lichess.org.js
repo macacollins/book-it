@@ -111,3 +111,29 @@ async function refreshGames(setGames, playerName, setSyncingGames) {
 }
 
 export default refreshGames;
+
+export async function getLichessAnalysis(fen) {
+  let params =
+    "variant=standard" +
+    `&fen=${fen}` +
+    "&speeds=blitz" +
+    "&ratings=1800%2C2000%2C2200" +
+    "&source=analysis";
+
+  let finalURL = "https://explorer.lichess.ovh/lichess?" + params;
+
+  return fetch(finalURL);
+}
+
+export async function getLichessMastersAnalysis(fen) {
+  let params =
+    "variant=standard" +
+    `&fen=${fen}` +
+    "&speeds=blitz" +
+    "&ratings=1800%2C2000%2C2200" +
+    "&source=analysis";
+
+  let finalURL = "https://explorer.lichess.ovh/masters?" + params;
+
+  return fetch(finalURL);
+}

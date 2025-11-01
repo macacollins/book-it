@@ -9,7 +9,7 @@ import { Chess } from "chess.js";
 
 import { getBookGames } from "../storage";
 
-import { Button } from 'primereact/button';
+import { Button } from "primereact/button";
 import { useNavigate, useParams } from "react-router";
 import { channelifyName } from "./channel-utils";
 
@@ -17,11 +17,8 @@ interface ConfigPageProps {
   repertoireList: string[];
 }
 
-function ConfigPage({
-  repertoireList
-}: ConfigPageProps) {
-
-    const navigate = useNavigate();
+function ConfigPage({ repertoireList }: ConfigPageProps) {
+  const navigate = useNavigate();
 
   const [selectedRepertoire, setSelectedRepertoire] = useState<string>("");
   const [bookLines, setBookLines] = useState<any[]>([]);
@@ -33,17 +30,15 @@ function ConfigPage({
 
   useEffect(() => {
     (async () => {
+      if (!repertoirePathName) {
+        return;
+      }
 
-        if (!repertoirePathName) {
-            return;
+      const realRepertoireName = repertoireList.find((a) => {
+        if (channelifyName(a) === repertoirePathName) {
+          return a;
         }
- 
-        const realRepertoireName = repertoireList.find(a => {
-            if (channelifyName(a) === (repertoirePathName)) {
-                return a;
-            }
-        });
-
+      });
 
       if (realRepertoireName) {
         setSelectedRepertoire(realRepertoireName);
@@ -108,7 +103,6 @@ function ConfigPage({
     }
   }
 
-
   const chapters: string[] = [];
   const chapterInfo: any = {};
   bookLines.map((bookLine) => {
@@ -124,25 +118,25 @@ function ConfigPage({
     }
   });
 
-    const chapterButtons = chapters.map((chapter, index) => {
-      return (
-        <li>
-          <Button
-            onMouseEnter={() => delayedDisplay(chapter)}
-            onClick={() => navigate(`/book-it/repertoires/${repertoirePathName}/${index}`) }
-          >
-            {chapter}: {chapterInfo[chapter].numberLines}
-          </Button>
-          <Button onClick={() => delayedDisplay(chapter)}>
-            show
-          </Button>
-        </li>
-      );
-    });
+  const chapterButtons = chapters.map((chapter, index) => {
+    return (
+      <li>
+        <Button
+          onMouseEnter={() => delayedDisplay(chapter)}
+          onClick={() =>
+            navigate(`/book-it/repertoires/${repertoirePathName}/${index}`)
+          }
+        >
+          {chapter}: {chapterInfo[chapter].numberLines}
+        </Button>
+        <Button onClick={() => delayedDisplay(chapter)}>show</Button>
+      </li>
+    );
+  });
 
-    const chapterList = <ul>{chapterButtons}</ul>;
-    const board = (
-      <div className="max-w-3rem">
+  const chapterList = <ul>{chapterButtons}</ul>;
+  const board = (
+    <div className="max-w-3rem">
       <ChessBoard
         fen={"start"}
         invert={false}
@@ -155,18 +149,16 @@ function ConfigPage({
         gameRef={gameRef}
         chessboardRef={chessboardRef}
       ></ChessBoard>
-      </div>
-    );
-    return (
-      <div id="select-chapter">
-        <Button onClick={() => navigate("/book-it/repertoires")}>
-          Home
-        </Button>
-        <h2>{selectedRepertoire}</h2>
-        <div className="sticky-container">{board}</div>
-        {chapterList}
-      </div>
-    );
+    </div>
+  );
+  return (
+    <div id="select-chapter">
+      <Button onClick={() => navigate("/book-it/repertoires")}>Home</Button>
+      <h2>{selectedRepertoire}</h2>
+      <div className="sticky-container">{board}</div>
+      {chapterList}
+    </div>
+  );
 }
 
 export default ConfigPage;

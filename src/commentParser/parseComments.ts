@@ -51,14 +51,15 @@ export default function parseComments(
 
           let [beforeText, afterText] = remainingText.split(pgnFragment);
 
-          if (trace) console.log(
-            "Remaining text",
-            remainingText,
-            "before",
-            beforeText,
-            "after",
-            afterText,
-          );
+          if (trace)
+            console.log(
+              "Remaining text",
+              remainingText,
+              "before",
+              beforeText,
+              "after",
+              afterText,
+            );
 
           remainingText = afterText;
 

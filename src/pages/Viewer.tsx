@@ -16,7 +16,7 @@ import { getComments } from "../storage";
 
 import { exportComponentAsPNG } from "react-component-export-image";
 
-import { Button } from 'primereact/button';
+import { Button } from "primereact/button";
 import { RadioButton } from "primereact/radiobutton";
 
 interface ConfigPageProps {

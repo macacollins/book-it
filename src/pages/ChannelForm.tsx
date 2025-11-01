@@ -29,10 +29,13 @@ export function ChannelForm({ repertoire }: { repertoire: Repertoire }) {
   const stepperRef = useRef<any>(null);
 
   const refreshButton = (
-    <Button       className="max-h-3rem my-3"
-    label="Refresh Positions" onClick={() => {
-      generatePreviewFENs();
-    }}/>
+    <Button
+      className="max-h-3rem my-3"
+      label="Refresh Positions"
+      onClick={() => {
+        generatePreviewFENs();
+      }}
+    />
   );
 
   const createChannelButton = (

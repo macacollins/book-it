@@ -120,7 +120,6 @@ export async function getAllGames() {
   return games && games.reverse();
 }
 export async function getGameByID(id) {
-
   const filterURL = "https://lichess.org/" + id;
 
   return await gamesDB.games.get(filterURL);

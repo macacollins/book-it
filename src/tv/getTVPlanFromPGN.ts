@@ -37,11 +37,10 @@ export default function getTVPlan(inputPGN: ParsedPGN): TVPlan {
           // @ts-expect-error yah
           const moveText = move.comments[0].text;
           const results = /.*%clk ([0]+:[0-9][0-9]:[0-9][0-9]).*/g.exec(
-            moveText
+            moveText,
           );
           time = results && results.length > 1 ? results[1] : undefined;
         }
-        
       } catch (e) {
         debugger;
       }

@@ -16,17 +16,17 @@ export function TVFENPicker({
 
   const [currentFEN, setCurrentFEN] = useState("");
 
-  return (<>
-              <div className="mb-3 flex pt-4 justify-content-between">
-
-    <Button
-        onClick={() => {
-          gameRef.current = new Chess();
-          boardRef.current?.position("start");
-        }}
-      >
-        Clear Board
-      </Button>
+  return (
+    <>
+      <div className="mb-3 flex pt-4 justify-content-between">
+        <Button
+          onClick={() => {
+            gameRef.current = new Chess();
+            boardRef.current?.position("start");
+          }}
+        >
+          Clear Board
+        </Button>
       </div>
       <ChessBoard
         fen={"start"}
@@ -44,8 +44,6 @@ export function TVFENPicker({
         }}
         size="512px"
       ></ChessBoard>
-      
-      
     </>
   );
 }

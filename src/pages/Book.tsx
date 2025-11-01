@@ -11,7 +11,7 @@ import { getBookGames } from "../storage";
 
 import LineViewer from "../components/LineViewer";
 
-import { Button } from 'primereact/button';
+import { Button } from "primereact/button";
 
 interface ConfigPageProps {
   playerName: string;
@@ -181,7 +181,9 @@ function ConfigPage({
     return (
       <>
         <h2>All Repertoires</h2>
-        <section className="flex gap-3 row-gap-3 flex-wrap flex-column">{buttons}</section>
+        <section className="flex gap-3 row-gap-3 flex-wrap flex-column">
+          {buttons}
+        </section>
       </>
     );
   } else if (!selectedChapter) {
@@ -196,9 +198,7 @@ function ConfigPage({
           >
             {chapter}: {chapterInfo[chapter].numberLines}
           </Button>
-          <Button onClick={() => delayedDisplay(chapter)}>
-            show
-          </Button>
+          <Button onClick={() => delayedDisplay(chapter)}>show</Button>
         </li>
       );
     });
@@ -206,25 +206,23 @@ function ConfigPage({
     const chapterList = <ul>{chapterButtons}</ul>;
     const board = (
       <div className="max-w-3rem">
-      <ChessBoard
-        fen={"start"}
-        invert={inverted}
-        name={"chapter-viewer-board"}
-        game_url={""}
-        draggable={false}
-        arrows={[]}
-        madeMoveRef={{ current: true }}
-        moveCallback={(move) => {}}
-        gameRef={gameRef}
-        chessboardRef={chessboardRef}
-      ></ChessBoard>
+        <ChessBoard
+          fen={"start"}
+          invert={inverted}
+          name={"chapter-viewer-board"}
+          game_url={""}
+          draggable={false}
+          arrows={[]}
+          madeMoveRef={{ current: true }}
+          moveCallback={(move) => {}}
+          gameRef={gameRef}
+          chessboardRef={chessboardRef}
+        ></ChessBoard>
       </div>
     );
     return (
       <div id="select-chapter">
-        <Button onClick={() => setSelectedRepertoire("")}>
-          Home
-        </Button>
+        <Button onClick={() => setSelectedRepertoire("")}>Home</Button>
         <h2>{selectedRepertoire}</h2>
         <div className="sticky-container">{board}</div>
         {chapterList}
@@ -282,25 +280,24 @@ function ConfigPage({
       }
     }
 
-    return (<>
-      <div id="line-select" className="flex gap-2">
-        <Button onClick={() => setSelectedRepertoire("")}>
-          Home
-        </Button>
-        <Button onClick={() => setSelectedChapter("")}>
-          {selectedRepertoire}
-        </Button>
-        <br></br>
-        {lastChapter && (
-          <Button onClick={() => setSelectedChapter(lastChapter)}>
-            {"<-" + lastChapter}
+    return (
+      <>
+        <div id="line-select" className="flex gap-2">
+          <Button onClick={() => setSelectedRepertoire("")}>Home</Button>
+          <Button onClick={() => setSelectedChapter("")}>
+            {selectedRepertoire}
           </Button>
-        )}
-        {nextChapter && (
-          <Button onClick={() => setSelectedChapter(nextChapter)}>
-            {nextChapter + " ->"}
-          </Button>
-        )}
+          <br></br>
+          {lastChapter && (
+            <Button onClick={() => setSelectedChapter(lastChapter)}>
+              {"<-" + lastChapter}
+            </Button>
+          )}
+          {nextChapter && (
+            <Button onClick={() => setSelectedChapter(nextChapter)}>
+              {nextChapter + " ->"}
+            </Button>
+          )}
         </div>
         <h2>{selectedChapter}</h2>
         {board}
@@ -361,33 +358,35 @@ function ConfigPage({
           >
             {selectedRepertoire}
           </Button>
-          <Button onClick={() => setSelectedLine("")}>
-            {selectedChapter}
-          </Button>
+          <Button onClick={() => setSelectedLine("")}>{selectedChapter}</Button>
         </nav>
         <h2>{selectedLine}</h2>
 
         <div className="inline-flex gap-2 m-2">
-        {lastLine && (
-          <Button
-            onClick={() => {
-              setSelectedLine(lastLine);
-            }}
-          >
-            Last
-          </Button>
-        )}
-        {nextLine && (
-          <Button
-            onClick={() => {
-              setSelectedLine(nextLine);
-            }}
-          >
-            Next
-          </Button>
-        )}
-  </div>
-        <LineViewer repertoire={selectedRepertoire} line={lines[0]} lineToShow={selectedLine}/>
+          {lastLine && (
+            <Button
+              onClick={() => {
+                setSelectedLine(lastLine);
+              }}
+            >
+              Last
+            </Button>
+          )}
+          {nextLine && (
+            <Button
+              onClick={() => {
+                setSelectedLine(nextLine);
+              }}
+            >
+              Next
+            </Button>
+          )}
+        </div>
+        <LineViewer
+          repertoire={selectedRepertoire}
+          line={lines[0]}
+          lineToShow={selectedLine}
+        />
       </>
     );
   }

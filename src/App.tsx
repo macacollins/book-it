@@ -48,7 +48,7 @@ import Notes from "./components/Notes";
 import ChannelViewer from "./pages/ChannelViewer";
 import Annotations from "./pages/Annotations";
 import { ChannelForm } from "./pages/ChannelForm";
-import { Menubar } from 'primereact/menubar';
+import { Menubar } from "primereact/menubar";
 import { MenuItem } from "primereact/menuitem";
 import RepertoireSelection from "./pages/RepertoireSelection";
 import RepertoireChapterSelection from "./pages/RepertoireChapterSelection";
@@ -56,6 +56,8 @@ import RepertoireLineSelection from "./pages/RepertoireLineSelection";
 import RepertoireLineViewer from "./pages/RepertoireLineViewer";
 import MastersIndex from "./pages/MastersIndex";
 import MasterGameAnnotations from "./pages/MasterGameAnnotations";
+import MastersTable from "./pages/MastersTable";
+import GameSearcher from "./pages/GameSearcher";
 
 interface AppProps {
   analysisDatabaseStorage: AnalysisDatabase;
@@ -332,18 +334,42 @@ function App({
         <Routes>
           <Route element={<Navigator />}>
             <Route path="/book-it/config" element={configPage()} />
-            <Route path="/book-it/masters" element={<MastersIndex/>} />
-            <Route path="/book-it/masters/morphy/:id" element={<MasterGameAnnotations/>} />
+            <Route path="/book-it/masters" element={<MastersIndex />} />
+            <Route path="/book-it/masters/:master" element={<MastersTable />} />
+            <Route
+              path="/book-it/masters/:master/:id"
+              element={<MasterGameAnnotations />}
+            />
             <Route path="/book-it/results" element={resultsPage()} />
+            <Route path="/book-it/searcher" element={<GameSearcher />} />
             <Route path="/book-it/drills" element={drillPage()} />
             <Route path="/book-it/viewer" element={viewerPage()} />
-            <Route path="/book-it/repertoires" element={<RepertoireSelection repertoireList={repertoireList} />} />
-            <Route path="/book-it/repertoires/:repertoirePathName" element={<RepertoireChapterSelection repertoireList={repertoireList}/>} />
-            <Route path="/book-it/repertoires/:repertoirePathName/:chapter" element={<RepertoireLineSelection repertoireList={repertoireList} />} />
-            <Route path="/book-it/repertoires/:repertoirePathName/:chapter/:line" element={<RepertoireLineViewer repertoireList={repertoireList} />} />
+            <Route
+              path="/book-it/repertoires"
+              element={<RepertoireSelection repertoireList={repertoireList} />}
+            />
+            <Route
+              path="/book-it/repertoires/:repertoirePathName"
+              element={
+                <RepertoireChapterSelection repertoireList={repertoireList} />
+              }
+            />
+            <Route
+              path="/book-it/repertoires/:repertoirePathName/:chapter"
+              element={
+                <RepertoireLineSelection repertoireList={repertoireList} />
+              }
+            />
+            <Route
+              path="/book-it/repertoires/:repertoirePathName/:chapter/:line"
+              element={<RepertoireLineViewer repertoireList={repertoireList} />}
+            />
             <Route path="/book-it/tv-picker" element={tvPickerPage()} />
             <Route path="/book-it/channels" element={channelManagement()} />
-            <Route path="/book-it/channels/:channelName" element={<ChannelViewer/>} />
+            <Route
+              path="/book-it/channels/:channelName"
+              element={<ChannelViewer />}
+            />
             <Route path="/book-it/tv" element={<TV />} />
             <Route path="/book-it/repertoire-tv" element={repertoireTV()} />
             <Route path="/book-it/notes" element={<Notes />} />
@@ -362,7 +388,6 @@ function App({
 
 function Navigator() {
   const navigate = useNavigate();
-
 
   const items = [
     {
@@ -454,13 +479,13 @@ function Navigator() {
 
   const itemsFlat: MenuItem[] = [];
 
-  items.forEach(item => {
-    item.items.forEach(innerItem => {
-      innerItem.items.forEach(reallyInnerItem => {
+  items.forEach((item) => {
+    item.items.forEach((innerItem) => {
+      innerItem.items.forEach((reallyInnerItem) => {
         itemsFlat.push(reallyInnerItem);
-      })
-    })
-  })
+      });
+    });
+  });
 
   return (
     <>

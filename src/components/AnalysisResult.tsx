@@ -5,7 +5,7 @@ import useWindowSize from "../hooks/useWindowSize";
 import Game from "../types/Game";
 import AnalysisDatabase from "../types/AnalysisDatabase";
 
-import { Button } from 'primereact/button';
+import { Button } from "primereact/button";
 import { useNavigate } from "react-router";
 import { useEffect, useRef } from "react";
 import { Chess } from "chess.js";
@@ -23,7 +23,6 @@ const AnalysisResult = ({
   index,
   nameOverride = "my-name",
 }: AnalysisResultPropTypes) => {
-
   const chessboardRef = useRef<any>();
 
   const width = useWindowSize()[0];
@@ -33,7 +32,6 @@ const AnalysisResult = ({
       chessboardRef.current?.resize();
     }
   }, []);
-
 
   const navigate = useNavigate();
 
@@ -88,8 +86,10 @@ const AnalysisResult = ({
   };
 
   return (
-
-    <div key={index} className="w-full flex flex-column align-items-center justify-content-center">
+    <div
+      key={index}
+      className="w-full flex flex-column align-items-center justify-content-center"
+    >
       <div slot="headline">
         {analysis.headers.White}
         {" vs "}
@@ -100,7 +100,6 @@ const AnalysisResult = ({
       <div className="p-3">{analysis.advice}</div>
       <div slot="supporting-text">
         <div className="side-by-side">
-          
           <ChessBoard
             fen={analysis.displayFEN}
             invert={analysis.invert_board}
@@ -112,7 +111,10 @@ const AnalysisResult = ({
           ></ChessBoard>
         </div>
         <br></br>
-        <div className="w-full flex align-items-center justify-content-center gap-3 mb-5" style={buttonStyles}>
+        <div
+          className="w-full flex align-items-center justify-content-center gap-3 mb-5"
+          style={buttonStyles}
+        >
           <Button
             data-testid={"chess-dot-com-button"}
             onClick={() =>
@@ -143,12 +145,9 @@ const AnalysisResult = ({
             data-testid={"notes-button"}
             onClick={() => {
               const id = game.url.slice(game.url.length - 8);
-              console.log("Value was", id )
-              navigate(`/book-it/annotations/` + id)
-            }
-
-              
-            }
+              console.log("Value was", id);
+              navigate(`/book-it/annotations/` + id);
+            }}
           >
             Notes
           </Button>

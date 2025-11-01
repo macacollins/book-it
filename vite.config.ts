@@ -1,84 +1,86 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
-import fs from 'fs';
+import fs from "fs";
 import { join } from "node:path";
 import { buildSync } from "esbuild";
+import { SourceMap } from "node:module";
 interface OutputAsset {
-	fileName: string;
-	names: string[];
-	needsCodeReference: boolean;
-	originalFileNames: string[];
-	source: string | Uint8Array;
-	type: 'asset';
+  fileName: string;
+  names: string[];
+  needsCodeReference: boolean;
+  originalFileNames: string[];
+  source: string | Uint8Array;
+  type: "asset";
 }
 
 interface OutputChunk {
-	code: string;
-	dynamicImports: string[];
-	exports: string[];
-	facadeModuleId: string | null;
-	fileName: string;
-	implicitlyLoadedBefore: string[];
-	imports: string[];
-	importedBindings: { [imported: string]: string[] };
-	isDynamicEntry: boolean;
-	isEntry: boolean;
-	isImplicitEntry: boolean;
-	map: SourceMap | null;
-	modules: {
-		[id: string]: {
-			renderedExports: string[];
-			removedExports: string[];
-			renderedLength: number;
-			originalLength: number;
-			code: string | null;
-		};
-	};
-	moduleIds: string[];
-	name: string;
-	preliminaryFileName: string;
-	referencedFiles: string[];
-	sourcemapFileName: string | null;
-	type: 'chunk';
+  code: string;
+  dynamicImports: string[];
+  exports: string[];
+  facadeModuleId: string | null;
+  fileName: string;
+  implicitlyLoadedBefore: string[];
+  imports: string[];
+  importedBindings: { [imported: string]: string[] };
+  isDynamicEntry: boolean;
+  isEntry: boolean;
+  isImplicitEntry: boolean;
+  map: SourceMap | null;
+  modules: {
+    [id: string]: {
+      renderedExports: string[];
+      removedExports: string[];
+      renderedLength: number;
+      originalLength: number;
+      code: string | null;
+    };
+  };
+  moduleIds: string[];
+  name: string;
+  preliminaryFileName: string;
+  referencedFiles: string[];
+  sourcemapFileName: string | null;
+  type: "chunk";
 }
 
 function writeAssetNames() {
-	return {
-		name: "write asset names",
-		generateBundle(options, bundle, isWrite) {
-			let css, js, sw;
-			let keys = Object.keys(bundle);
+  return {
+    name: "write asset names",
+    generateBundle(options: any, bundle: any, isWrite: any) {
+      let css, js, sw;
+      let keys = Object.keys(bundle);
 
-			let stringValue = JSON.stringify(keys.map(key => "/book-it/" + key));
-			Object.keys(bundle).forEach(key => {
-						
-				if (key.indexOf("service-worker-") !== -1) {
-					sw = key;
-				}
-			});
+      let stringValue = JSON.stringify(keys.map((key) => "/book-it/" + key));
+      Object.keys(bundle).forEach((key) => {
+        if (key.indexOf("service-worker-") !== -1) {
+          sw = key;
+        }
+      });
 
-			this.emitFile({
-				type: 'asset',
-				fileName: "files.txt",
-				source: stringValue.substring(1, stringValue.length - 1)
-			});
+	  // @ts-expect-error need type of this
+      this.emitFile({
+        type: "asset",
+        fileName: "files.txt",
+        source: stringValue.substring(1, stringValue.length - 1),
+      });
 
-			this.emitFile({
-				type: 'asset',
-				fileName: "sw.txt",
-				source: sw
-			});
-		}
-	};
+	  // @ts-expect-error need type of this
+      this.emitFile({
+        type: "asset",
+        fileName: "sw.txt",
+        source: sw,
+      });
+    },
+  };
 }
 
 export default defineConfig({
   plugins: [
     react(),
-	writeAssetNames(),
+    writeAssetNames(),
     {
-	  name: "write-service-worker",
+      name: "write-service-worker",
       apply: "build",
       enforce: "post",
       transformIndexHtml() {
@@ -90,13 +92,10 @@ export default defineConfig({
         });
       },
     },
-
   ],
-  base: './',
+  base: "./",
   server: {
-    host: true
+    host: true,
   },
-  root: "./src"
-  },
-  
-)
+  root: "./src",
+});

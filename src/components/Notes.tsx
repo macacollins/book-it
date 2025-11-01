@@ -7,10 +7,10 @@ import { Column } from "primereact/column";
 import ChessBoard from "./ChessBoard";
 import { Dropdown } from "primereact/dropdown";
 import { Button } from "primereact/button";
-import { Dialog} from 'primereact/dialog';
+import { Dialog } from "primereact/dialog";
 
-import { InputTextarea } from 'primereact/inputtextarea';
-import { InputText } from 'primereact/inputtext'; 
+import { InputTextarea } from "primereact/inputtextarea";
+import { InputText } from "primereact/inputtext";
 import JSZip from "jszip";
 // @ts-ignore
 import FileSaver from "file-saver";
@@ -33,7 +33,7 @@ export default function Notes() {
   const [editingID, setEditingID] = useState<number | undefined>();
 
   const [filters, setFilters] = useState({
-    repertoire: { value: null, matchMode: FilterMatchMode.IN }
+    repertoire: { value: null, matchMode: FilterMatchMode.IN },
   });
 
   const [selectedRepertoire, setSelectedRepertoire] = useState<any>(null);
@@ -41,15 +41,19 @@ export default function Notes() {
   const [shouldRefresh, setShouldRefresh] = useState<boolean>(true);
 
   const updateNote = (noteData: NotesItem) => {
-    setResults(results.map(result => {
-      if (result.key === noteData.key) {
-        return noteData;
-      }
-      return result;
-    }));
-  }
+    setResults(
+      results.map((result) => {
+        if (result.key === noteData.key) {
+          return noteData;
+        }
+        return result;
+      }),
+    );
+  };
 
-  const currentItem: NotesItem | undefined = results.find(a => a.key === editingID);
+  const currentItem: NotesItem | undefined = results.find(
+    (a) => a.key === editingID,
+  );
 
   // Load stuff
   useEffect(() => {
@@ -153,7 +157,14 @@ export default function Notes() {
           }}
         />
       </section>
-      <DataTable filters={filters} paginator paginatorPosition="both" rows={5} rowsPerPageOptions={[5, 10, 25, 50]} value={results}>
+      <DataTable
+        filters={filters}
+        paginator
+        paginatorPosition="both"
+        rows={5}
+        rowsPerPageOptions={[5, 10, 25, 50]}
+        value={results}
+      >
         <Column
           header="FEN"
           field="fen"
@@ -161,7 +172,13 @@ export default function Notes() {
         />
         <Column header="Notes" field="notes" />
         <Column header="Move" field="move" />
-        <Column header="Repertoire" field="repertoire" filterMatchMode="" filter filterField="repertoire"/>
+        <Column
+          header="Repertoire"
+          field="repertoire"
+          filterMatchMode=""
+          filter
+          filterField="repertoire"
+        />
         <Column
           header="Link"
           field="original_location"
@@ -205,61 +222,74 @@ export default function Notes() {
           )}
         />
       </DataTable>
-      <Dialog header={`Editing ${editingID}`} visible={!!editingID} style={{ width: '50vw' }} onHide={() => {if (!editingID) return; setEditingID(undefined); }}>
-        <div className="flex flex-column gap-2">{currentItem && <TinyFENDisplay fen={currentItem.fen} keyID={currentItem.key}/>}
-        <label>Notes</label>
-        <InputTextarea 
-          className="w-full"
-          rows={5}
-          value={currentItem?.notes} 
-          onChange={(e) => { 
-            if (currentItem) {
-              updateNote({ ...currentItem, notes: e.target.value });
-            }
-          }} 
-        />
-        <label>Move</label>
-        <InputText 
-          className="w-full"
-          value={currentItem?.move} 
-          onChange={(e) => { 
-            if (currentItem) {
-              updateNote({ ...currentItem, move: e.target.value });
-            }
-          }} 
-        />
-        <label>Repertoire</label>
-        <Dropdown
-          value={currentItem?.repertoire}
-          options={options}
-          className="w-full"
-          onChange={(e) => { 
-            if (currentItem) {
-              updateNote({ ...currentItem, repertoire: e.value });
-            }
-          }} 
-          optionLabel="code"
-          optionValue="code"
-        />
-        
-        <Button label="Save Changes" onClick={() => {
-          alert('sup');
+      <Dialog
+        header={`Editing ${editingID}`}
+        visible={!!editingID}
+        style={{ width: "50vw" }}
+        onHide={() => {
+          if (!editingID) return;
+          setEditingID(undefined);
+        }}
+      >
+        <div className="flex flex-column gap-2">
+          {currentItem && (
+            <TinyFENDisplay fen={currentItem.fen} keyID={currentItem.key} />
+          )}
+          <label>Notes</label>
+          <InputTextarea
+            className="w-full"
+            rows={5}
+            value={currentItem?.notes}
+            onChange={(e) => {
+              if (currentItem) {
+                updateNote({ ...currentItem, notes: e.target.value });
+              }
+            }}
+          />
+          <label>Move</label>
+          <InputText
+            className="w-full"
+            value={currentItem?.move}
+            onChange={(e) => {
+              if (currentItem) {
+                updateNote({ ...currentItem, move: e.target.value });
+              }
+            }}
+          />
+          <label>Repertoire</label>
+          <Dropdown
+            value={currentItem?.repertoire}
+            options={options}
+            className="w-full"
+            onChange={(e) => {
+              if (currentItem) {
+                updateNote({ ...currentItem, repertoire: e.value });
+              }
+            }}
+            optionLabel="code"
+            optionValue="code"
+          />
 
-          const results = fetch("http://localhost:3001/notes", {
-            method: "POST",
-            headers: {
-              'Accept': '*',
-              'Content-Type': 'application/json'
-            },
+          <Button
+            label="Save Changes"
+            onClick={() => {
+              alert("sup");
 
-            //make sure to serialize your JSON body
-            body: JSON.stringify(currentItem)
-          })
-          .then( (response) => {
-            //do something awesome that makes the world a better place
-            console.log("Got", response);
-          });
-        }}/>
+              const results = fetch("http://localhost:3001/notes", {
+                method: "POST",
+                headers: {
+                  Accept: "*",
+                  "Content-Type": "application/json",
+                },
+
+                //make sure to serialize your JSON body
+                body: JSON.stringify(currentItem),
+              }).then((response) => {
+                //do something awesome that makes the world a better place
+                console.log("Got", response);
+              });
+            }}
+          />
         </div>
       </Dialog>
     </>

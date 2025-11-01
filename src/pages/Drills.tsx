@@ -16,10 +16,10 @@ import { ArrowConfig } from "../types/ArrowConfig";
 import AnalysisResult from "../types/AnalysisResult";
 import generateArrowConfig from "../analysis/generateArrowConfig";
 
-import { Dropdown } from 'primereact/dropdown';
-import { Button } from 'primereact/button';
+import { Dropdown } from "primereact/dropdown";
+import { Button } from "primereact/button";
 import { Checkbox } from "primereact/checkbox";
-import { SelectButton } from 'primereact/selectbutton';
+import { SelectButton } from "primereact/selectbutton";
 
 // TODO make this happen
 
@@ -61,7 +61,7 @@ export default function Drills(props: {
   const [moves, setMoves] = useState<string[]>([]);
   let newMoves = [...moves];
 
-  let [ selectedOpeningFilter, setSelectedOpeningFilter ] = useState();
+  let [selectedOpeningFilter, setSelectedOpeningFilter] = useState();
 
   // cache drills to run to avoid re-computing each time
   useEffect(() => {
@@ -226,27 +226,29 @@ export default function Drills(props: {
       14,
     );
 
-    const openingOptions = topOpenings.map(({opening, count}) => {
+    const openingOptions = topOpenings.map(({ opening, count }) => {
       return {
         code: opening + " " + count,
-        label: opening
-      }
+        label: opening,
+      };
     });
 
     const openingFiltersFull = (
       <>
         <label>Opening Filter</label>
         <div>
-          <Dropdown value={selectedOpeningFilter} 
+          <Dropdown
+            value={selectedOpeningFilter}
             onChange={(e) => {
               setSelectedOpeningFilter(e.value);
               setCurrentOpeningFilter(e.value);
             }}
-            options={openingOptions} 
+            options={openingOptions}
             optionLabel="code"
-            optionValue="label" 
-            placeholder="Select an Opening" 
-            className="w-25rem" />
+            optionValue="label"
+            placeholder="Select an Opening"
+            className="w-25rem"
+          />
         </div>
       </>
     );
@@ -256,31 +258,32 @@ export default function Drills(props: {
         <label>Color</label>
         <SelectButton
           value={color}
-          options={['White', 'Black']}
-          onChange={(e: any) => setColor(e.value)} 
-        >
-
-        </SelectButton>
+          options={["White", "Black"]}
+          onChange={(e: any) => setColor(e.value)}
+        ></SelectButton>
       </div>
     );
 
-    let depthSelections = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((number) => (
-      {code: number, value: number}
-    ));
+    let depthSelections = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((number) => ({
+      code: number,
+      value: number,
+    }));
 
     const depthFull = (
       <div>
         <label>Depth</label>
         <br></br>
-        <Dropdown value={depth} 
-            onChange={(e) => {
-              setDepth(e.value);
-            }}
-            options={depthSelections} 
-            optionLabel="code"
-            optionValue="value" 
-            placeholder="Select Depth" 
-            className="w-25rem" />
+        <Dropdown
+          value={depth}
+          onChange={(e) => {
+            setDepth(e.value);
+          }}
+          options={depthSelections}
+          optionLabel="code"
+          optionValue="value"
+          placeholder="Select Depth"
+          className="w-25rem"
+        />
       </div>
     );
 
@@ -288,54 +291,52 @@ export default function Drills(props: {
       <>
         <label>Drill Type</label>
         <SelectButton
-          value={blindfold ? 'Blindfold' : 'Visual'}
-          options={['Visual', 'Blindfold']}
-          onChange={(e: any) => setBlindfold(e.value === 'Blindfold')} 
-        >
-
-        </SelectButton>
+          value={blindfold ? "Blindfold" : "Visual"}
+          options={["Visual", "Blindfold"]}
+          onChange={(e: any) => setBlindfold(e.value === "Blindfold")}
+        ></SelectButton>
 
         <label>Start Drills</label>
         <div className="flex gap-3">
-        <Button
-          data-testid={"time-button"}
-          className={"time-button"}
-          onClick={() => {
-            setCurrentDrillMode("Time");
-          }}
-        >
-          Time
-        </Button>
+          <Button
+            data-testid={"time-button"}
+            className={"time-button"}
+            onClick={() => {
+              setCurrentDrillMode("Time");
+            }}
+          >
+            Time
+          </Button>
 
-        <Button
-          data-testid={"frequency-button"}
-          className={"frequency-button"}
-          onClick={() => {
-            setCurrentDrillMode("Frequency");
-          }}
-        >
-          Frequency
-        </Button>
+          <Button
+            data-testid={"frequency-button"}
+            className={"frequency-button"}
+            onClick={() => {
+              setCurrentDrillMode("Frequency");
+            }}
+          >
+            Frequency
+          </Button>
 
-        <Button
-          data-testid={"from-position-button"}
-          className={"from-position-button"}
-          onClick={() => {
-            setCurrentDrillMode("FromPosition");
-          }}
-        >
-          From Position
-        </Button>
+          <Button
+            data-testid={"from-position-button"}
+            className={"from-position-button"}
+            onClick={() => {
+              setCurrentDrillMode("FromPosition");
+            }}
+          >
+            From Position
+          </Button>
 
-        <Button
-          data-testid={"from-opening-button"}
-          className={"from-opening-button"}
-          onClick={() => {
-            setCurrentDrillMode("FromOpening");
-          }}
-        >
-          From Opening
-        </Button>
+          <Button
+            data-testid={"from-opening-button"}
+            className={"from-opening-button"}
+            onClick={() => {
+              setCurrentDrillMode("FromOpening");
+            }}
+          >
+            From Opening
+          </Button>
         </div>
         {depthFull}
 
@@ -423,9 +424,11 @@ export default function Drills(props: {
               draggable={!currentDrillResult}
               arrows={
                 currentDrillResult
-                  ? drillAnalysisResult.arrows.map((arrow: any, index: number) => (
-                      <Arrow  key={index} {...arrow}></Arrow>
-                    ))
+                  ? drillAnalysisResult.arrows.map(
+                      (arrow: any, index: number) => (
+                        <Arrow key={index} {...arrow}></Arrow>
+                      ),
+                    )
                   : []
               }
               madeMoveRef={madeMove}
@@ -545,9 +548,7 @@ export default function Drills(props: {
   const depthFull = (
     <>
       <h3>Repetitions</h3>
-      <select value={repetitions}>
-        {repetitionSelections}
-      </select>
+      <select value={repetitions}>{repetitionSelections}</select>
     </>
   );
 
@@ -569,9 +570,7 @@ export default function Drills(props: {
   const delaySecondsFull = (
     <>
       <h3>Delay (Seconds)</h3>
-      <select value={delaySeconds}>
-        {delaySecondsSelections}
-      </select>
+      <select value={delaySeconds}>{delaySecondsSelections}</select>
     </>
   );
 

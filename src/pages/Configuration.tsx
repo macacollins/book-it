@@ -4,10 +4,10 @@ import AnalysisDatabase from "../types/AnalysisDatabase";
 import Repertoire from "../types/Repertoire";
 import Game from "../types/Game";
 
-import { InputText}  from 'primereact/inputtext';
-import { RadioButton } from 'primereact/radiobutton';
+import { InputText } from "primereact/inputtext";
+import { RadioButton } from "primereact/radiobutton";
 
-import { Button } from 'primereact/button';
+import { Button } from "primereact/button";
 
 interface ConfigPageProps {
   playerName: string;
@@ -202,15 +202,16 @@ function ConfigPage({
 
       <h3>Clear Data</h3>
       {buttons}
-      {<Button onClick={
-        () => {
-          caches.keys().then(function(names) {
-            for (let name of names)
-                caches.delete(name);
-        });
-        
-        }
-      } label="Clear service worker cache" />}
+      {
+        <Button
+          onClick={() => {
+            caches.keys().then(function (names) {
+              for (let name of names) caches.delete(name);
+            });
+          }}
+          label="Clear service worker cache"
+        />
+      }
     </>
   );
 }

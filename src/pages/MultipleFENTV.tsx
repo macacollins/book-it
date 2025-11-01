@@ -84,7 +84,7 @@ export default function MultipleFENTV({
           if (gameQueue.length > 1) {
             setGameQueue(gameQueue.slice(1));
             const newPlan = getTVPlan(gameQueue[0]);
-            console.log("New Plan", newPlan)
+            console.log("New Plan", newPlan);
             setCurrentTVPlan(newPlan);
           } else {
             setGameQueue(resultPGNs ? shuffle(resultPGNs) : []);
@@ -103,7 +103,15 @@ export default function MultipleFENTV({
           chess.move(move.move);
         });
 
-        console.log("After", new Date(currentTVPlan.startTime), new Date(), filteredMoves?.length, "Got", chess.fen(), currentTVPlan);
+        console.log(
+          "After",
+          new Date(currentTVPlan.startTime),
+          new Date(),
+          filteredMoves?.length,
+          "Got",
+          chess.fen(),
+          currentTVPlan,
+        );
 
         boardRef?.current?.position(chess.fen());
         gameRef.current = new Chess(chess.fen());
@@ -331,7 +339,6 @@ export default function MultipleFENTV({
 
       const blackOffset = player === "white" ? offset : 0;
       const whiteOffset = player === "white" ? 0 : offset;
-      
 
       const format = (seconds: number) => {
         return `${Math.floor(seconds / 60)}:${Math.floor(seconds % 60) < 10 ? "0" : ""}${Math.floor(seconds % 60)}`;
@@ -391,8 +398,8 @@ export default function MultipleFENTV({
       </section>
 
       <section className="info-section">
-         {clock}
-         {showHeaders && headersInfo}
+        {clock}
+        {showHeaders && headersInfo}
         {controlButtons}
       </section>
     </div>

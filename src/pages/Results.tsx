@@ -8,10 +8,10 @@ import { Dispatch, SetStateAction, useState } from "react";
 import findTopOpenings from "../analysis/findTopOpenings";
 import AnalysisDatabase from "../types/AnalysisDatabase";
 import Game from "../types/Game";
-import { Button } from 'primereact/button';
+import { Button } from "primereact/button";
 import { Checkbox } from "primereact/checkbox";
 import { Dropdown } from "primereact/dropdown";
-import { Paginator, PaginatorPageChangeEvent } from 'primereact/paginator';
+import { Paginator, PaginatorPageChangeEvent } from "primereact/paginator";
 import { ProgressSpinner } from "primereact/progressspinner";
 
 interface ResultsProps {
@@ -117,9 +117,9 @@ export default function Results({
       <h3>Opening Filter</h3>
       <Dropdown
         value={currentOpeningFilter}
-        options={topOpenings.map(({opening,count}) => ({
+        options={topOpenings.map(({ opening, count }) => ({
           label: opening + " " + count,
-          value: opening
+          value: opening,
         }))}
         onChange={(e) => {
           setCurrentOpeningFilter(e.value);
@@ -147,7 +147,6 @@ export default function Results({
       checked={userLeftBookOnly}
       data-testid="leftBookCheckbox"
       className="mr-2"
-
       onClick={() => {
         setCurrentPage(1);
         setUserLeftBookOnly(!userLeftBookOnly);
@@ -210,18 +209,19 @@ export default function Results({
     );
   }
 
-  const [ first, setFirst ] = useState(0);
+  const [first, setFirst] = useState(0);
   const onPageChange = (event: PaginatorPageChangeEvent) => {
     setCurrentPage(event.page + 1);
     setFirst(event.first);
-};
+  };
 
   const paginationSection = (
-      <Paginator 
-      first={first} 
-      rows={10} 
-      totalRecords={filteredGamesLength} 
-      onPageChange={onPageChange} />
+    <Paginator
+      first={first}
+      rows={10}
+      totalRecords={filteredGamesLength}
+      onPageChange={onPageChange}
+    />
   );
 
   const syncingIndicator = syncingGames ? (
@@ -266,7 +266,7 @@ export default function Results({
         </Button>
         {syncingIndicator}
         {syncingIndicator2}
-        </section>
+      </section>
       <p>{`Found ${filteredGamesLength} results.`}</p>
       {paginationSection}
       <div className="flex flex-column gap-3">{listItems}</div>
