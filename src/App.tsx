@@ -40,6 +40,7 @@ import Repertoire from "./types/Repertoire";
 import Game from "./types/Game";
 import Viewer from "./pages/Viewer";
 import Book from "./pages/Book";
+import {HomePage} from "./pages/HomePage";
 import TV from "./pages/TV";
 import TVPicker from "./pages/TVPicker";
 import MissedMovesTV from "./pages/MissedMovesTV";
@@ -371,13 +372,14 @@ function App({
               element={<ChannelViewer />}
             />
             <Route path="/book-it/tv" element={<TV />} />
+            <Route path="/book-it/home" element={<HomePage />} />
             <Route path="/book-it/repertoire-tv" element={repertoireTV()} />
             <Route path="/book-it/notes" element={<Notes />} />
             <Route path="/book-it/annotations/:id" element={<Annotations />} />
             <Route path="/book-it/add-channel" element={channelForm} />
             <Route
               path="*"
-              element={<Navigate to="/book-it/config/" replace />}
+              element={<Navigate to="/book-it/home/" replace />}
             />
           </Route>
         </Routes>
