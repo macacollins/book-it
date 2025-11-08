@@ -38,7 +38,7 @@ function retrieveAnalysis(id: string) {
 export default function Annotations() {
   const width = useWindowSize()[0];
 
-  const { id = ""} = useParams();
+  const { id = "" } = useParams();
 
   // should be a LichessGame or similar
   const [currentTextBoxValue, setCurrentTextBoxValue] = useState<string>();

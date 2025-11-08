@@ -13,7 +13,6 @@ interface OutputAsset {
   source: string | Uint8Array;
   type: "asset";
 }
-
 interface OutputChunk {
   code: string;
   dynamicImports: string[];
@@ -22,7 +21,9 @@ interface OutputChunk {
   fileName: string;
   implicitlyLoadedBefore: string[];
   imports: string[];
-  importedBindings: { [imported: string]: string[] };
+  importedBindings: {
+    [imported: string]: string[];
+  };
   isDynamicEntry: boolean;
   isEntry: boolean;
   isImplicitEntry: boolean;
@@ -43,59 +44,52 @@ interface OutputChunk {
   sourcemapFileName: string | null;
   type: "chunk";
 }
-
 function writeAssetNames() {
   return {
     name: "write asset names",
     generateBundle(options: any, bundle: any, isWrite: any) {
       let css, js, sw;
       let keys = Object.keys(bundle);
-
-      let stringValue = JSON.stringify(keys.map((key) => "/book-it/" + key));
-      Object.keys(bundle).forEach((key) => {
+      let stringValue = JSON.stringify(keys.map(key => "/book-it/" + key));
+      Object.keys(bundle).forEach(key => {
         if (key.indexOf("service-worker-") !== -1) {
           sw = key;
         }
       });
 
-	  // @ts-expect-error need type of this
+      // @ts-expect-error need type of this
       this.emitFile({
         type: "asset",
         fileName: "files.txt",
-        source: stringValue.substring(1, stringValue.length - 1),
+        source: stringValue.substring(1, stringValue.length - 1)
       });
 
-	  // @ts-expect-error need type of this
+      // @ts-expect-error need type of this
       this.emitFile({
         type: "asset",
         fileName: "sw.txt",
-        source: sw,
+        source: sw
       });
-    },
+    }
   };
 }
-
 export default defineConfig({
-  plugins: [
-    react(),
-    writeAssetNames(),
-    {
-      name: "write-service-worker",
-      apply: "build",
-      enforce: "post",
-      transformIndexHtml() {
-        buildSync({
-          minify: true,
-          bundle: true,
-          entryPoints: [join(process.cwd(), "src", "service-worker.js")],
-          outfile: join(process.cwd(), "src", "dist", "service-worker.js"),
-        });
-      },
-    },
-  ],
+  plugins: [react(), writeAssetNames(), {
+    name: "write-service-worker",
+    apply: "build",
+    enforce: "post",
+    transformIndexHtml() {
+      buildSync({
+        minify: true,
+        bundle: true,
+        entryPoints: [join(process.cwd(), "src", "service-worker.js")],
+        outfile: join(process.cwd(), "src", "dist", "service-worker.js")
+      });
+    }
+  }],
   base: "./",
   server: {
-    host: true,
+    host: true
   },
   root: "./src",
 });

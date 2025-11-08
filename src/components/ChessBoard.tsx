@@ -45,7 +45,8 @@ const ChessBoard = ({
   // Initialize the board after the component mounts to the DOM
   useEffect(() => {
     setTimeout(() => {
-      gameRef.current = new Chess();
+      console.log("Timeout is running");
+      gameRef.current = new Chess(fen);
 
       function onDragStart(
         _source: string,
@@ -58,6 +59,8 @@ const ChessBoard = ({
         if (madeMoveRef.current) {
           console.log("already made move");
           return false;
+        } else {
+          console.log("Game ref", gameRef.current)
         }
 
         // only pick up pieces for the side to move
@@ -76,26 +79,25 @@ const ChessBoard = ({
       }
 
       function onDrop(source: any, target: any) {
-        console.log("onDrop called");
-
-        const chess = new Chess();
-        let move: Move = chess.move("e4");
+        console.log("onDrop called", gameRef.current);
 
         try {
           // see if the move is legal
-          move = gameRef.current.move({
+          const move = gameRef.current.move({
             from: source,
             to: target,
             // promotion: 'q' // NOTE: always promote to a queen for example simplicity
           });
 
           moveCallback(move);
+
+          console.log("After move", gameRef.current)
+
+          return;
         } catch (e) {
           //console.log("Invalid move attempted", e)
           return "snapback";
         }
-
-        moveCallback(move);
       }
 
       // wow

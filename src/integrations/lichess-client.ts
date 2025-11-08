@@ -1565,6 +1565,25 @@ export class LichessClient {
       return response.json();
     }
     
+    if (contentType && contentType.includes('application/x-chess-pgn')) {
+      const base64Text = await response.text();
+      const decodedText = atob(base64Text);
+      return decodedText as unknown as T;
+    }
+
+    if (contentType && contentType.includes('application/x-ndjson')) {
+      const base64Text = await response.text();
+      console.log("Text is", base64Text);
+
+
+      const split = base64Text.split('\n').filter(line => line.trim() !== '');      
+      const resultLines: T[] = split.map(line => JSON.parse(line) as unknown as T);
+      
+      console.log("Result lines", resultLines)
+      
+      return resultLines as unknown as T;
+    }
+    
     return response.text() as unknown as T;
   }
 
@@ -1899,8 +1918,10 @@ export class LichessClient {
     if (options?.sort !== undefined) queryParams.append('sort', String(options?.sort));
     const queryString = queryParams.toString();
     const fullPath = queryString ? `/api/games/user/${username}?${queryString}` : `/api/games/user/${username}`;
-    const headers: Record<string, string> = {};
-    return this.makeRequest<GameJson>(fullPath, 'GET', headers);
+    const headers: Record<string, string> = {
+      "Accept": "application/x-ndjson"
+    };
+    return this.makeRequest<GameJson>(fullPath, 'GET', undefined, headers);
   }
 
   /**
@@ -1919,7 +1940,9 @@ export class LichessClient {
     if (options?.literate !== undefined) queryParams.append('literate', String(options?.literate));
     const queryString = queryParams.toString();
     const fullPath = queryString ? `/api/games/export/_ids?${queryString}` : `/api/games/export/_ids`;
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = {
+      "Accept": "application/x-ndjson"
+    };
     return this.makeRequest<GameJson>(fullPath, 'POST', {}, headers);
   }
 
