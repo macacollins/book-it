@@ -1865,8 +1865,8 @@ export class LichessClient {
     if (options?.withBookmarked !== undefined) queryParams.append('withBookmarked', String(options?.withBookmarked));
     const queryString = queryParams.toString();
     const fullPath = queryString ? `/game/export/${gameId}?${queryString}` : `/game/export/${gameId}`;
-    const headers: Record<string, string> = {};
-    return this.makeRequest<GameJson>(fullPath, 'GET', headers);
+    const headers: Record<string, string> = {"Accept": "application/json" };
+    return this.makeRequest<GameJson>(fullPath, 'GET', undefined, headers);
   }
 
   /**
