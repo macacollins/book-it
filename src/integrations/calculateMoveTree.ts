@@ -70,7 +70,10 @@ export function calculateMoveTreeFromParsedPGN(parsed: ParsedPGN[], name: string
       const trimmedFEN = stepByStepHistory.fen();
 
       // Real format is [{"text":" The ambitious Sicilian Defense! Black is fighting for the center but from the side, without going for a symmetrical pawn structure. "}]
-      const notes = historyMove?.comments?.length ? (historyMove.comments as unknown as RealPGNComment[]).map(a => a.text.trim()).join("\n") : "";
+      const notes = historyMove?.comments?.length ? 
+        (historyMove.comments as unknown as RealPGNComment[])
+          .map(a => a.text?.trim() || '').join("\n") 
+        : "";
 
       fenRepo = addMoveNode(fenRepo, lastFEN, historyMove.move, trimmedFEN, notes);
 
