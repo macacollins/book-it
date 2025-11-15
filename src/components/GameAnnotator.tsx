@@ -63,6 +63,8 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
   const lichessClient = new LichessClient();
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const boardContainerRef = useRef<HTMLDivElement>(null);
+  const boardUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingBoardPositionRef = useRef<string | null>(null);
 
 
     const [{width: screenWidth, height: screenHeight}, setEventData] = useState({ width: 0, height: 0 });
@@ -161,11 +163,14 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
     }
   }, [currentPosition, savedNotes]);
 
-  // Cleanup timeout on unmount
+  // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
+      }
+      if (boardUpdateTimeoutRef.current) {
+        clearTimeout(boardUpdateTimeoutRef.current);
       }
     };
   }, []);
@@ -190,6 +195,24 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
       resizeObserver.disconnect();
     };
   }, [boardContainerRef.current]);
+
+  const updateBoardPosition = (targetFen: string) => {
+    // Cache the desired position
+    pendingBoardPositionRef.current = targetFen;
+    
+    // Clear existing timeout if any
+    if (boardUpdateTimeoutRef.current) {
+      clearTimeout(boardUpdateTimeoutRef.current);
+    }
+    
+    // Set a new timeout to update the board position after 200ms
+    boardUpdateTimeoutRef.current = setTimeout(() => {
+      if (chessboardRef.current && pendingBoardPositionRef.current) {
+        chessboardRef.current.position(pendingBoardPositionRef.current);
+        pendingBoardPositionRef.current = null;
+      }
+    }, 200);
+  };
 
   const loadLichessGames = async (targetUsername: string): Promise<GameRow[]> => {
     const cacheKey = `lichess-games-${targetUsername.trim()}`;
@@ -516,9 +539,8 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
       cacheGameState(selectedGame.id, 0);
     }
     
-    if (chessboardRef.current) {
-      chessboardRef.current.position(startingFEN);
-    }
+    // Use throttled board update to prevent jumping
+    updateBoardPosition(startingFEN);
   };
 
   const navigateToMove = (targetFen: string, moveIndex?: number) => {
@@ -534,9 +556,8 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
         cacheGameState(selectedGame.id, newMoveIndex);
       }
       
-      if (chessboardRef.current) {
-        chessboardRef.current.position(targetFen);
-      }
+      // Use throttled board update to prevent jumping
+      updateBoardPosition(targetFen);
     } catch (err) {
       console.error('Error navigating to position:', err);
     }
