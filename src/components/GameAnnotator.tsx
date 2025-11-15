@@ -15,6 +15,7 @@ import { MoveTree } from '../types/MoveTree';
 import { LichessClient, GameJson } from '../integrations/lichess-client';
 import pgnParser, { ParsedPGN } from 'pgn-parser';
 import { getGameAnnotations, getNotesWordCount, saveGameAnnotations } from '../services/AnnotationsService';
+import { useResizeListener } from 'primereact/hooks';
 
 interface GameAnnotatorProps {
   className?: string;
@@ -51,11 +52,39 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
   const [savedNotes, setSavedNotes] = useState<Map<string, string>>(new Map());
   const [isGameLoadingCollapsed, setIsGameLoadingCollapsed] = useState<boolean>(false);
   const [expandedRows, setExpandedRows] = useState<any>({});
+  const [boardSize, setBoardSize] = useState<string>('400px');
   
   const chessboardRef = useRef<any>(null);
   const gameRef = useRef<Chess>(new Chess());
   const lichessClient = new LichessClient();
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const boardContainerRef = useRef<HTMLDivElement>(null);
+
+
+    const [{width: screenWidth, height: screenHeight}, setEventData] = useState({ width: 0, height: 0 });
+
+    const [bindWindowResizeListener, unbindWindowResizeListener] = useResizeListener({
+        listener: (event) => {
+            setEventData({
+                // @ts-expect-error yeah
+                width: event.currentTarget?.innerWidth || 0,
+                // @ts-expect-error yeah
+                height: event.currentTarget?.innerHeight || 0
+            });
+        }
+    });
+
+    useEffect(() => {
+        setEventData({ width: window.innerWidth, height: window.innerHeight });
+    }, []);
+
+    useEffect(() => {
+        bindWindowResizeListener();
+
+        return () => {
+            unbindWindowResizeListener();
+        };
+    }, [bindWindowResizeListener, unbindWindowResizeListener]);
 
   // Initialize component with cached data
   useEffect(() => {
@@ -129,6 +158,27 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
       }
     };
   }, []);
+
+  // ResizeObserver to track board container size and update board accordingly
+  useEffect(() => {
+    if (!boardContainerRef.current) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        // Calculate board size based on available space, leaving room for controls
+        // Use the smaller dimension minus padding for a square board
+        const availableSize = Math.min(width-20, height-20); // Account for padding and controls
+        setBoardSize(`${availableSize}px`);
+      }
+    });
+
+    resizeObserver.observe(boardContainerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [boardContainerRef.current]);
 
   const loadGamesWithUsername = async (targetUsername: string) => {
     if (!targetUsername.trim()) {
@@ -590,17 +640,17 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
             </Card>}
 
       {currentMoveTree && (
-        <Splitter>
+        <Splitter layout={screenHeight > screenWidth ? 'vertical' : 'horizontal'} >
         
-          <SplitterPanel size={50} minSize={50}>
+          <SplitterPanel size={50} minSize={10}>
             <Card title={selectedGame ? `${selectedGame.white} vs ${selectedGame.black}` : "Select a game"} className="h-full">
               {currentMoveTree ? (
-                <div className="flex flex-column h-full">
+                <div ref={boardContainerRef} className="flex flex-column h-full">
                   <ChessBoard 
                     name="game-annotator"
                     game_url={selectedGame?.id || 'annotator'}
                     chessboardRef={chessboardRef}
-                    size="400px"
+                    size={boardSize}
                     fen={startingFEN}
                     draggable={false}
                   />
