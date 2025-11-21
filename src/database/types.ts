@@ -1,0 +1,89 @@
+import AnalysisResult from "../types/AnalysisResult";
+import { MoveTree } from "../types/MoveTree";
+
+export type GameSource = 'chess.com' | 'lichess.org' | 'manual';
+
+// Saved chess game
+// Should support:
+// - retrieval by ID
+// - insertion
+// - Deletion
+export interface SavedGame {
+    id: string;
+    timestamp: number;
+    pgn: string;
+    source: GameSource;
+}
+
+
+export type PGNType = 'tactics' | 'repertoire' | 'games';
+
+// Uploaded PGN file
+// Should support:
+// - retrieval by ID
+// - insertion
+export interface UploadedPGN {
+    id: string;
+    filename: string;
+    content: string;
+    type: PGNType;
+}
+
+// Automated analysis for a specific game
+// Should support:
+// - retrieval by gameID
+// - retrieval by repertoireID
+// - insertion
+export interface GameAnalysis {
+    gameID: string;
+    repertoireID: string; // UploadedPGN ID
+    analysisData: AnalysisResult;
+}
+
+// How the user did on a specific fen drill
+// Should support:
+// - retrieval by ID
+// - insertion
+export interface DrillResult {
+    id: string;
+    fen: string;
+    correct: boolean;
+    timeTakenSeconds: number;
+    timestamp: number;
+}
+
+// Progress tracking for tactics training
+// Should support:
+// - retrieval by ID
+// - insertion
+// - updating tacticsSolved and totalTactics
+export interface TacticsProgress {
+    id: string;
+    tacticsSolved: number[]; // indices solved
+    totalTactics: number;
+    lastSolvedTimestamp: number;
+}
+
+// Positions the user wants / needs to study move
+// Should support:
+// - retrieval by ID
+// - insertion
+// - updating notes
+export interface QueuedPosition {
+    id: string;
+    fen: string;
+    timestamp: number;
+    notes: string;
+}
+
+// Games the user wants / needs to study
+// Should support:
+// - retrieval by ID
+// - insertion
+// - updating notes
+export interface QueuedGame {
+    id: string;
+    gameID: string;
+    timestamp: number;  
+    notes: MoveTree;
+}

@@ -9,7 +9,7 @@ export function calculateMoveTree(lines: string | string[], name: string): MoveT
   try {
     // allLines.loadPgn(lines.join("\n"));
     parsed = pgnParser.parse(Array.isArray(lines) ? lines.join("\n") : lines);
-    // console.log("Got full single pgn", parsed);
+    console.log("Got full single pgn", parsed);
 
     return calculateMoveTreeFromParsedPGN(parsed, name);
   } catch (e) {

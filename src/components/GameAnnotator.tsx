@@ -57,6 +57,7 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
   const [isGameLoadingCollapsed, setIsGameLoadingCollapsed] = useState<boolean>(false);
   const [expandedRows, setExpandedRows] = useState<any>({});
   const [boardSize, setBoardSize] = useState<string>('400px');
+  const [isNotesFocused, setIsNotesFocused] = useState<boolean>(false);
   
   const chessboardRef = useRef<any>(null);
   const gameRef = useRef<Chess>(new Chess());
@@ -65,7 +66,6 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
   const boardContainerRef = useRef<HTMLDivElement>(null);
   const boardUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingBoardPositionRef = useRef<string | null>(null);
-
 
     const [{width: screenWidth, height: screenHeight}, setEventData] = useState({ width: 0, height: 0 });
 
@@ -79,6 +79,27 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
             });
         }
     });
+
+    const updateBoardPosition = (targetFen: string) => {
+        // Cache the desired position
+        pendingBoardPositionRef.current = targetFen;
+        console.log("Starting update logic");
+
+        // Clear existing timeout if any
+        if (boardUpdateTimeoutRef.current) {
+            clearTimeout(boardUpdateTimeoutRef.current);
+        }
+        
+        // Set a new timeout to update the board position after 200ms
+        boardUpdateTimeoutRef.current = setTimeout(() => {
+            if (chessboardRef.current && pendingBoardPositionRef.current) {
+                chessboardRef.current.position(pendingBoardPositionRef.current);
+                pendingBoardPositionRef.current = null;
+
+                console.log("Did the thing")
+            }
+        }, 200);
+    };
 
     useEffect(() => {
         setEventData({ width: window.innerWidth, height: window.innerHeight });
@@ -134,6 +155,7 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
     if (!currentMoveTree) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (isNotesFocused) return;
       if (event.key === 'ArrowLeft') {
         event.preventDefault();
         goToPreviousMove();
@@ -147,7 +169,7 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [currentMoveTree, currentMoveIndex]);
+  }, [currentMoveTree, currentMoveIndex, isNotesFocused]);
 
   // Update notes when position changes
   useEffect(() => {
@@ -157,13 +179,17 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
         clearTimeout(saveTimeoutRef.current);
         saveTimeoutRef.current = null;
       }
+
+    //   if (boardUpdateTimeoutRef.current) {
+    //     clearTimeout(boardUpdateTimeoutRef.current);
+    //   }
       
       const existingNotes = savedNotes.get(currentPosition) || '';
       setPositionNotes(existingNotes);
     }
   }, [currentPosition, savedNotes]);
 
-  // Cleanup timeouts on unmount
+  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (saveTimeoutRef.current) {
@@ -195,24 +221,6 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
       resizeObserver.disconnect();
     };
   }, [boardContainerRef.current]);
-
-  const updateBoardPosition = (targetFen: string) => {
-    // Cache the desired position
-    pendingBoardPositionRef.current = targetFen;
-    
-    // Clear existing timeout if any
-    if (boardUpdateTimeoutRef.current) {
-      clearTimeout(boardUpdateTimeoutRef.current);
-    }
-    
-    // Set a new timeout to update the board position after 200ms
-    boardUpdateTimeoutRef.current = setTimeout(() => {
-      if (chessboardRef.current && pendingBoardPositionRef.current) {
-        chessboardRef.current.position(pendingBoardPositionRef.current);
-        pendingBoardPositionRef.current = null;
-      }
-    }, 200);
-  };
 
   const loadLichessGames = async (targetUsername: string): Promise<GameRow[]> => {
     const cacheKey = `lichess-games-${targetUsername.trim()}`;
@@ -555,6 +563,8 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
       if (selectedGame) {
         cacheGameState(selectedGame.id, newMoveIndex);
       }
+
+      console.log("Navigating to", targetFen)
       
       // Use throttled board update to prevent jumping
       updateBoardPosition(targetFen);
@@ -876,6 +886,8 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
                       placeholder="Add notes for this position..."
                       rows={15}
                       className="w-full"
+                      onBlur={() => { setIsNotesFocused( false) }}
+                      onFocus={() => { setIsNotesFocused( true) }}
                     />
                   </div>
                   
