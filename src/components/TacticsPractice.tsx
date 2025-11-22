@@ -18,7 +18,7 @@ export const TacticsPractice = () => {
   const [selectedPGN, setSelectedPGN] = useState<UploadedPGN | null>(null);
   const [parsedPGNs, setParsedPGNs] = useState<ParsedPGN[]>([]);
   const [currentPuzzleIndex, setCurrentPuzzleIndex] = useState(500);
-  const [puzzleMoveIndex, setPuzzleMoveIndex] = useState(0);
+  const puzzleMoveIndexRef = useRef<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const chessboardRef = useRef<any>(null);
@@ -61,7 +61,7 @@ export const TacticsPractice = () => {
         const parsed = pgnParser.parse(selectedPGN.content);
         setParsedPGNs(parsed);
         setCurrentPuzzleIndex(500);
-        setPuzzleMoveIndex(0);
+        puzzleMoveIndexRef.current = 0;
         setError(null);
       } catch (err) {
         console.error('Error parsing PGN:', err);
@@ -71,7 +71,7 @@ export const TacticsPractice = () => {
     } else {
       setParsedPGNs([]);
       setCurrentPuzzleIndex(0);
-      setPuzzleMoveIndex(0);
+      puzzleMoveIndexRef.current = 0;
     }
   }, [selectedPGN]);
 
@@ -106,16 +106,78 @@ export const TacticsPractice = () => {
   const handlePrevious = () => {
     if (currentPuzzleIndex > 0) {
       setCurrentPuzzleIndex(currentPuzzleIndex - 1);
-      setPuzzleMoveIndex(0);
+      puzzleMoveIndexRef.current = 0;
     }
   };
 
   const handleNext = () => {
     if (currentPuzzleIndex < parsedPGNs.length - 1) {
       setCurrentPuzzleIndex(currentPuzzleIndex + 1);
-      setPuzzleMoveIndex(0);
+      puzzleMoveIndexRef.current = 0;
     }
   };
+
+  const getCurrentMoveIndex = () => {
+    return puzzleMoveIndexRef.current;
+  }
+
+  const moveHandler = (move: {san: string}) => {
+      console.log('Move made:', move);
+
+      console.log("Current move index ref:", puzzleMoveIndexRef.current);
+      console.log("Current move index function:", getCurrentMoveIndex());
+
+      const expectedMove = getExpectedMove(puzzleMoveIndexRef.current);
+      
+      console.log("Was expecting", expectedMove, "got", move.san);
+        const currentPuzzle = parsedPGNs[currentPuzzleIndex];
+        const totalMoves = currentPuzzle.moves.length;
+        console.log("Puzzle move index:", puzzleMoveIndexRef.current, "Total moves:", totalMoves);
+      if (move.san === expectedMove) {
+        // Correct move!
+
+        // Check if this was the last move
+        if (puzzleMoveIndexRef.current >= totalMoves - 1) {
+          toast.current?.show({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'You did it!',
+            life: 3000
+          });
+          puzzleMoveIndexRef.current = 0;
+          console.log("Puzzle completed. Resetting move index to 0.");
+        } else {
+          // More moves to go - increment and make opponent's move
+          const newMoveIndex = puzzleMoveIndexRef.current + 1;
+          puzzleMoveIndexRef.current = newMoveIndex;
+          console.log("Incremented move index to " + newMoveIndex);
+          
+          // Wait 1 second, then make opponent's move
+          setTimeout(() => {
+            const opponentMove = getExpectedMove(newMoveIndex);
+            if (opponentMove && gameRef.current && chessboardRef.current) {
+              const moveResult = gameRef.current.move(opponentMove);
+              if (moveResult) {
+                chessboardRef.current.position(gameRef.current.fen());
+                puzzleMoveIndexRef.current = newMoveIndex + 1;
+                console.log("Setting move index to "  + (newMoveIndex + 1));
+              }
+            }
+          }, 300);
+        }
+        
+        return true;
+      } else {
+        // Incorrect move
+        toast.current?.show({
+          severity: 'error',
+          summary: 'Incorrect',
+          detail: "That's not it.",
+          life: 3000
+        });
+        return false;
+      }
+    }
 
   return (
     <div className="p-1 flex align-items-center justify-content-center">
@@ -174,55 +236,7 @@ export const TacticsPractice = () => {
               chessboardRef={chessboardRef}
               gameRef={gameRef}
               madeMoveRef={{ current: false }}
-              moveCallback={(move) => {
-                console.log('Move made:', move);
-
-                const expectedMove = getExpectedMove(puzzleMoveIndex);
-                
-                if (move.san === expectedMove) {
-                  // Correct move!
-                  const currentPuzzle = parsedPGNs[currentPuzzleIndex];
-                  const totalMoves = currentPuzzle.moves.length;
-                  
-                  // Check if this was the last move
-                  if (puzzleMoveIndex >= totalMoves - 1) {
-                    toast.current?.show({
-                      severity: 'success',
-                      summary: 'Success',
-                      detail: 'You did it!',
-                      life: 3000
-                    });
-                    setPuzzleMoveIndex(0);
-                  } else {
-                    // More moves to go - increment and make opponent's move
-                    const newMoveIndex = puzzleMoveIndex + 1;
-                    setPuzzleMoveIndex(newMoveIndex);
-                    
-                    // Wait 1 second, then make opponent's move
-                    setTimeout(() => {
-                      const opponentMove = getExpectedMove(newMoveIndex);
-                      if (opponentMove && gameRef.current && chessboardRef.current) {
-                        const moveResult = gameRef.current.move(opponentMove);
-                        if (moveResult) {
-                          chessboardRef.current.position(gameRef.current.fen());
-                          setPuzzleMoveIndex(newMoveIndex + 1);
-                        }
-                      }
-                    }, 1000);
-                  }
-                  
-                  return true;
-                } else {
-                  // Incorrect move
-                  toast.current?.show({
-                    severity: 'error',
-                    summary: 'Incorrect',
-                    detail: "That's not it.",
-                    life: 3000
-                  });
-                  return false;
-                }
-              }}
+              moveCallback={moveHandler}
               size={`${boardSize}px`}
             />
 
@@ -243,7 +257,11 @@ export const TacticsPractice = () => {
                 onClick={handleNext}
                 disabled={currentPuzzleIndex >= parsedPGNs.length - 1}
               />
+
             </div>
+            {getExpectedMove(puzzleMoveIndexRef.current)}
+            Puzzle Index: {currentPuzzleIndex}
+            Puzzle move index: {puzzleMoveIndexRef.current}
 
           </div>
         )}
