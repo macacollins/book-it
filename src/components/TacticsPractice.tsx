@@ -7,15 +7,22 @@ import { UploadedPGNClient } from '../database/UploadedPGNClient';
 import { UploadedPGN } from '../database/types';
 import pgnParser, { ParsedPGN } from 'pgn-parser';
 import ChessBoard from './ChessBoard';
+import useWindowSize from '../hooks/useWindowSize';
+import { Button } from 'primereact/button';
 
-export default () => {
+const SELECTED_TACTICS_PGN_KEY = 'SELECTED_TACTICS_PGN';
+
+export const TacticsPractice = () => {
   const [uploadedPGNs, setUploadedPGNs] = useState<UploadedPGN[]>([]);
   const [selectedPGN, setSelectedPGN] = useState<UploadedPGN | null>(null);
   const [parsedPGNs, setParsedPGNs] = useState<ParsedPGN[]>([]);
+  const [currentPuzzleIndex, setCurrentPuzzleIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const chessboardRef = useRef<any>(null);
   const gameRef = useRef<any>(null);
+  const [width, height] = useWindowSize();
+  const boardSize = Math.min(width, height) - 20;
 
   // Load all tactics PGNs from database
   useEffect(() => {
@@ -24,6 +31,15 @@ export default () => {
         setLoading(true);
         const tacticsPGNs = await UploadedPGNClient.getByType('tactics');
         setUploadedPGNs(tacticsPGNs);
+        
+        // Restore previously selected PGN if available
+        const savedFilename = localStorage.getItem(SELECTED_TACTICS_PGN_KEY);
+        if (savedFilename && tacticsPGNs.length > 0) {
+          const matchingPGN = tacticsPGNs.find(pgn => pgn.filename === savedFilename);
+          if (matchingPGN) {
+            setSelectedPGN(matchingPGN);
+          }
+        }
       } catch (err) {
         console.error('Error loading tactics PGNs:', err);
         setError('Failed to load tactics from database');
@@ -41,6 +57,7 @@ export default () => {
       try {
         const parsed = pgnParser.parse(selectedPGN.content);
         setParsedPGNs(parsed);
+        setCurrentPuzzleIndex(0);
         setError(null);
       } catch (err) {
         console.error('Error parsing PGN:', err);
@@ -49,6 +66,7 @@ export default () => {
       }
     } else {
       setParsedPGNs([]);
+      setCurrentPuzzleIndex(0);
     }
   }, [selectedPGN]);
 
@@ -65,22 +83,34 @@ export default () => {
     value: pgn
   }));
 
-  const firstFEN = parsedPGNs.length > 0 && parsedPGNs[0].headers 
-    ? parsedPGNs[0].headers.find(h => h.name === 'FEN')?.value || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+  const currentFEN = parsedPGNs.length > 0 && parsedPGNs[currentPuzzleIndex]?.headers 
+    ? parsedPGNs[currentPuzzleIndex].headers.find(h => h.name === 'FEN')?.value || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
     : 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
   const getExpectedMove = (index: number): string | null => {
-    if (parsedPGNs.length === 0) return null;
+    if (parsedPGNs.length === 0 || currentPuzzleIndex >= parsedPGNs.length) return null;
 
-    const game = parsedPGNs[0];
+    const game = parsedPGNs[currentPuzzleIndex];
     if (index < 0 || index >= game.moves.length) return null;
 
     return game.moves[index].move;
   }
 
+  const handlePrevious = () => {
+    if (currentPuzzleIndex > 0) {
+      setCurrentPuzzleIndex(currentPuzzleIndex - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentPuzzleIndex < parsedPGNs.length - 1) {
+      setCurrentPuzzleIndex(currentPuzzleIndex + 1);
+    }
+  };
+
   return (
-    <div className="p-4">
-      <Card title="Tactics Practice">
+    <div className="p-1 flex align-items-center justify-content-center">
+      {!selectedPGN && <Card title="Tactics Practice">
         <div className="mb-4">
           <label htmlFor="pgn-select" className="block mb-2 font-semibold">
             Select Tactics PGN:
@@ -89,7 +119,15 @@ export default () => {
             id="pgn-select"
             value={selectedPGN}
             options={pgnOptions}
-            onChange={(e) => setSelectedPGN(e.value)}
+            onChange={(e) => {
+              const newPGN = e.value;
+              setSelectedPGN(newPGN);
+              if (newPGN) {
+                localStorage.setItem(SELECTED_TACTICS_PGN_KEY, newPGN.filename);
+              } else {
+                localStorage.removeItem(SELECTED_TACTICS_PGN_KEY);
+              }
+            }}
             placeholder="Choose a tactics file..."
             className="w-full"
             disabled={uploadedPGNs.length === 0}
@@ -107,15 +145,21 @@ export default () => {
           <Message severity="error" text={error} className="mb-4" />
         )}
 
-        {selectedPGN && parsedPGNs.length > 0 && (
-          <div className="mt-4">
-            <div className="mb-2">
-              <strong>Loaded {parsedPGNs.length} puzzle(s)</strong>
-            </div>
+        {selectedPGN && parsedPGNs.length === 0 && !error && (
+          <Message 
+            severity="warn" 
+            text="No valid puzzles found in the selected PGN file." 
+            className="mt-4"
+          />
+        )}
+      </Card>}
+
+      {selectedPGN && parsedPGNs.length > 0 && (
+          <div>
             <ChessBoard
               name="tactics-practice"
               game_url={selectedPGN.id}
-              fen={firstFEN}
+              fen={currentFEN}
               draggable={true}
               chessboardRef={chessboardRef}
               gameRef={gameRef}
@@ -131,19 +175,30 @@ export default () => {
                   return false;
                 }
               }}
-              size="512px"
+              size={`${boardSize}px`}
             />
+
+            <div className="flex justify-content-center gap-2 mt-3">
+              <Button
+                label="Previous"
+                icon="pi pi-chevron-left"
+                onClick={handlePrevious}
+                disabled={currentPuzzleIndex === 0}
+              />
+              <span className="flex align-items-center px-3">
+                Puzzle {currentPuzzleIndex + 1} of {parsedPGNs.length}
+              </span>
+              <Button
+                label="Next"
+                icon="pi pi-chevron-right"
+                iconPos="right"
+                onClick={handleNext}
+                disabled={currentPuzzleIndex >= parsedPGNs.length - 1}
+              />
+            </div>
+
           </div>
         )}
-
-        {selectedPGN && parsedPGNs.length === 0 && !error && (
-          <Message 
-            severity="warn" 
-            text="No valid puzzles found in the selected PGN file." 
-            className="mt-4"
-          />
-        )}
-      </Card>
     </div>
   );
 };
