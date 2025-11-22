@@ -8,6 +8,8 @@ import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Divider } from 'primereact/divider';
 import { Tree } from 'primereact/tree';
+import { Dropdown } from 'primereact/dropdown';
+import { ProgressSpinner } from 'primereact/progressspinner';
 import { Chess } from 'chess.js';
 import ChessBoard from './ChessBoard';
 import processNewRepertoire from '../integrations/processNewRepertoire';
@@ -15,6 +17,8 @@ import Repertoire from '../types/Repertoire';
 import { calculateRepertoire } from '../integrations/calculateRepertoire';
 import { calculateMoveTree } from '../integrations/calculateMoveTree';
 import { findNodeByFEN, MoveTree, MoveNode, StartNode } from '../types/MoveTree';
+import { UploadedPGNClient } from '../database/UploadedPGNClient';
+import { UploadedPGN } from '../database/types';
 
 interface RepertoireUploadProps {
   className?: string;
@@ -28,6 +32,9 @@ const startingFEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
 const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
 }) => {
+  const [uploadedPGNs, setUploadedPGNs] = useState<UploadedPGN[]>([]);
+  const [selectedPGN, setSelectedPGN] = useState<UploadedPGN | null>(null);
+  const [loading, setLoading] = useState(true);
   const [newRepertoireNameField, setNewRepertoireNameField] = useState('test');
   const [uploadedRepertoire, setUploadedRepertoire] = useState<MoveTree | null>(null);
   const [currentPosition, setCurrentPosition] = useState(startingFEN);
@@ -39,6 +46,24 @@ const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
   
   const chessboardRef = useRef<any>(null);
   const gameRef = useRef<Chess>(new Chess());
+
+  // Load all repertoire PGNs from database
+  useEffect(() => {
+    const loadRepertoirePGNs = async () => {
+      try {
+        setLoading(true);
+        const repertoirePGNs = await UploadedPGNClient.getByType('repertoire');
+        setUploadedPGNs(repertoirePGNs);
+      } catch (err) {
+        console.error('Error loading repertoire PGNs:', err);
+        setError('Failed to load repertoires from database');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRepertoirePGNs();
+  }, []);
 
   // Force tree re-render when position changes to update current position indicator
   useEffect(() => {
@@ -85,6 +110,37 @@ const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
     return moveTree.nodes.map((startNode, index) => convertStartNode(startNode, index));
   };
 
+  // Process selected repertoire from database
+  const processRepertoireContent = (content: string, name: string) => {
+    try {
+      setError(null);
+      setSuccess(null);
+
+      const repertoire = calculateMoveTree(content, name);
+
+      // Get the newly created repertoire
+      if (repertoire) {
+        setUploadedRepertoire(repertoire);
+        // Convert to tree data for visualization
+        const treeDataConverted = convertMoveTreeToTreeData(repertoire);
+        setTreeData(treeDataConverted);
+        // Reset to starting position
+        resetToStartingPosition();
+        setSuccess(`Repertoire "${name}" loaded successfully!`);
+        updateAvailableMoves(startingFEN);
+      }
+    } catch (err) {
+      setError(`Failed to process repertoire: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      console.error('Error processing repertoire:', err);
+    }
+  };
+
+  // Handle selection of repertoire from dropdown
+  const handleRepertoireSelect = (pgn: UploadedPGN) => {
+    setSelectedPGN(pgn);
+    processRepertoireContent(pgn.content, pgn.filename);
+  };
+
   const handleFileUpload = (event: any) => {
     const file = event.files[0];
     if (!file) return;
@@ -100,26 +156,7 @@ const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
     const reader = new FileReader();
     reader.onload = (e) => {
       const fileContents = e.target?.result as string;
-      
-      try {
-
-        const repertoire = calculateMoveTree(fileContents, newRepertoireNameField);
-
-        // Get the newly created repertoire
-        if (repertoire) {
-          setUploadedRepertoire(repertoire);
-          // Convert to tree data for visualization
-          const treeDataConverted = convertMoveTreeToTreeData(repertoire);
-          setTreeData(treeDataConverted);
-          // Reset to starting position
-          resetToStartingPosition();
-          setSuccess(`Repertoire "${newRepertoireNameField}" uploaded successfully!`);
-          updateAvailableMoves(startingFEN);
-        }
-      } catch (err) {
-        setError(`Failed to process repertoire file: ${err instanceof Error ? err.message : 'Unknown error'}`);
-        console.error('Error processing repertoire:', err);
-      }
+      processRepertoireContent(fileContents, newRepertoireNameField);
     };
 
     reader.readAsText(file);
@@ -240,30 +277,63 @@ const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
     );
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
+        <ProgressSpinner />
+      </div>
+    );
+  }
+
+  const pgnOptions = uploadedPGNs.map(pgn => ({
+    label: pgn.filename,
+    value: pgn
+  }));
+
   return (
     <div className={`repertoire-upload`}>
       <Card title="Repertoire Upload & Explorer" className="mb-4">
         <div className="grid">
           <div className="col-12 lg:col-6">
-            <Panel header="Upload Repertoire" className="mb-4">
+            <Panel header="Select Repertoire" className="mb-4">
               <div className="flex flex-column gap-3">
                 <div className="field">
+                  <label htmlFor="repertoire-select" className="block font-bold mb-2">
+                    Select from Uploaded Repertoires
+                  </label>
+                  <Dropdown
+                    id="repertoire-select"
+                    value={selectedPGN}
+                    options={pgnOptions}
+                    onChange={(e) => handleRepertoireSelect(e.value)}
+                    placeholder="Choose a repertoire..."
+                    className="w-full"
+                    disabled={uploadedPGNs.length === 0}
+                  />
+                  {uploadedPGNs.length === 0 && (
+                    <Message 
+                      severity="info" 
+                      text="No repertoires found. Upload a repertoire PGN from the Database page." 
+                      className="mt-2"
+                    />
+                  )}
+                </div>
+
+                <Divider align="center">
+                  <span className="text-500">OR</span>
+                </Divider>
+
+                <div className="field">
                   <label htmlFor="repertoire-name" className="block font-bold mb-2">
-                    Repertoire Name
+                    Upload New Repertoire
                   </label>
                   <InputText
                     id="repertoire-name"
                     value={newRepertoireNameField}
                     onChange={(e) => setNewRepertoireNameField(e.target.value)}
                     placeholder="Enter repertoire name"
-                    className="w-full"
+                    className="w-full mb-2"
                   />
-                </div>
-
-                <div className="field">
-                  <label className="block font-bold mb-2">
-                    Select Repertoire File
-                  </label>
                   <FileUpload
                     mode="basic"
                     name="repertoire-file"

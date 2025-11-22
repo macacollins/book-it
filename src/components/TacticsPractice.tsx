@@ -6,7 +6,8 @@ import { Message } from 'primereact/message';
 import { Toast } from 'primereact/toast';
 import { Checkbox } from 'primereact/checkbox';
 import { UploadedPGNClient } from '../database/UploadedPGNClient';
-import { UploadedPGN } from '../database/types';
+import { TacticsProgressClient } from '../database/TacticsProgressClient';
+import { UploadedPGN, TacticsProgress } from '../database/types';
 import pgnParser, { ParsedPGN } from 'pgn-parser';
 import ChessBoard from './ChessBoard';
 import useWindowSize from '../hooks/useWindowSize';
@@ -20,6 +21,7 @@ export const TacticsPractice = () => {
   const [selectedPGN, setSelectedPGN] = useState<UploadedPGN | null>(null);
   const [parsedPGNs, setParsedPGNs] = useState<ParsedPGN[]>([]);
   const [currentPuzzleIndex, setCurrentPuzzleIndex] = useState(500);
+  const [tacticsProgress, setTacticsProgress] = useState<TacticsProgress | null>(null);
   const puzzleMoveIndexRef = useRef<number>(0);
   
   // Initialize autoNext from localStorage
@@ -65,25 +67,53 @@ export const TacticsPractice = () => {
     loadTacticsPGNs();
   }, []);
 
-  // Parse PGN when selection changes
+  // Parse PGN when selection changes and load/create progress
   useEffect(() => {
-    if (selectedPGN) {
-      try {
-        const parsed = pgnParser.parse(selectedPGN.content);
-        setParsedPGNs(parsed);
-        setCurrentPuzzleIndex(500);
-        puzzleMoveIndexRef.current = 0;
-        setError(null);
-      } catch (err) {
-        console.error('Error parsing PGN:', err);
-        setError('Failed to parse selected PGN file');
+    const loadPGNAndProgress = async () => {
+      if (selectedPGN) {
+        try {
+          const parsed = pgnParser.parse(selectedPGN.content);
+          setParsedPGNs(parsed);
+          setCurrentPuzzleIndex(500);
+          puzzleMoveIndexRef.current = 0;
+          setError(null);
+
+          // Load or create progress record
+          let progress = await TacticsProgressClient.getById(selectedPGN.id);
+          if (!progress) {
+            // Create new progress record
+            progress = {
+              id: selectedPGN.id,
+              tacticsSolved: [],
+              totalTactics: parsed.length,
+              lastSolvedTimestamp: Date.now()
+            };
+            await TacticsProgressClient.insert(progress);
+          }
+          setTacticsProgress(progress);
+          
+          // Set current puzzle index to one more than the highest solved index
+          if (progress.tacticsSolved.length > 0) {
+            const highestSolved = Math.max(...progress.tacticsSolved);
+            setCurrentPuzzleIndex(highestSolved + 1);
+          } else {
+            setCurrentPuzzleIndex(0);
+          }
+        } catch (err) {
+          console.error('Error parsing PGN:', err);
+          setError('Failed to parse selected PGN file');
+          setParsedPGNs([]);
+          setTacticsProgress(null);
+        }
+      } else {
         setParsedPGNs([]);
+        setCurrentPuzzleIndex(0);
+        puzzleMoveIndexRef.current = 0;
+        setTacticsProgress(null);
       }
-    } else {
-      setParsedPGNs([]);
-      setCurrentPuzzleIndex(0);
-      puzzleMoveIndexRef.current = 0;
-    }
+    };
+
+    loadPGNAndProgress();
   }, [selectedPGN]);
 
   if (loading) {
@@ -157,6 +187,22 @@ export const TacticsPractice = () => {
           });
           puzzleMoveIndexRef.current = 0;
           console.log("Puzzle completed. Resetting move index to 0.");
+          
+          // Update tactics progress
+          if (selectedPGN) {
+            TacticsProgressClient.updateTacticsSolved(selectedPGN.id, [currentPuzzleIndex])
+              .then(async () => {
+                // Refresh progress state
+                const updatedProgress = await TacticsProgressClient.getById(selectedPGN.id);
+                if (updatedProgress) {
+                  setTacticsProgress(updatedProgress);
+                }
+                console.log(`Progress updated: puzzle ${currentPuzzleIndex} marked as solved`);
+              })
+              .catch(err => {
+                console.error('Error updating tactics progress:', err);
+              });
+          }
           
           // Auto-advance to next puzzle if enabled
           if (autoNextRef.current && currentPuzzleIndex < parsedPGNs.length - 1) {
