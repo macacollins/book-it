@@ -14,6 +14,7 @@ import ChessBoard from './ChessBoard';
 import { calculateSlimRepertoire } from '../integrations/calculateSlimRepertoire';
 import { UploadedPGNClient } from '../database/UploadedPGNClient';
 import { UploadedPGN } from '../database/types';
+import { useSlimRepertoire, clearRepertoireCache } from '../hooks/useSlimRepertoire';
 
 interface RepertoireUploadProps {
   className?: string;
@@ -27,17 +28,18 @@ const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
   const [selectedPGN, setSelectedPGN] = useState<UploadedPGN | null>(null);
   const [loading, setLoading] = useState(true);
   const [newRepertoireNameField, setNewRepertoireNameField] = useState('test');
-  const [uploadedRepertoire, setUploadedRepertoire] = useState<Record<string, string[]> | null>(null);
-  const [repertoireName, setRepertoireName] = useState<string>('');
   const [currentPosition, setCurrentPosition] = useState(startingFEN);
   const [availableMoves, setAvailableMoves] = useState<string[]>([]);
   const [currentNotes, setCurrentNotes] = useState<string>("");
-  const [positionNotes, setPositionNotes] = useState<Record<string, string>>({});
-  const [error, setError] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
   const chessboardRef = useRef<any>(null);
   const gameRef = useRef<Chess>(new Chess());
+
+  // Use the hook to load repertoire
+  const { repertoire: uploadedRepertoire, positionNotes, loading: repertoireLoading, error: repertoireError } = 
+    useSlimRepertoire(selectedPGN?.filename || null);
 
   // Load all repertoire PGNs from database
   useEffect(() => {
@@ -48,7 +50,7 @@ const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
         setUploadedPGNs(repertoirePGNs);
       } catch (err) {
         console.error('Error loading repertoire PGNs:', err);
-        setError('Failed to load repertoires from database');
+        setUploadError('Failed to load repertoires from database');
       } finally {
         setLoading(false);
       }
@@ -57,86 +59,60 @@ const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
     loadRepertoirePGNs();
   }, []);
 
-  // Process selected repertoire from database
-  const processRepertoireContent = async (content: string, name: string) => {
-    try {
-      setError(null);
-      setSuccess(null);
-
-      // Function to handle position notes
-      const setComments = (fen: string, _repertoireName: string, comments: any[]) => {
-        const commentText = comments.map(c => c.text || c).join(' ');
-        setPositionNotes(prev => ({ ...prev, [fen]: commentText }));
-      };
-
-      const startTime = performance.now();
-      const repertoire = calculateSlimRepertoire(content, name, setComments);
-      const endTime = performance.now();
-      const totalTime = endTime - startTime;
-      console.log(`Total repertoire processing time: ${totalTime.toFixed(2)}ms`);
-      
-      // Get the newly created repertoire
-      if (repertoire) {
-        const stateUpdateStart = performance.now();
-        
-        const setRepertoireStart = performance.now();
-        setUploadedRepertoire(repertoire);
-        console.log(`setUploadedRepertoire: ${(performance.now() - setRepertoireStart).toFixed(2)}ms`);
-        
-        const setNameStart = performance.now();
-        setRepertoireName(name);
-        console.log(`setRepertoireName: ${(performance.now() - setNameStart).toFixed(2)}ms`);
-        
-        // Reset to starting position
-        const resetStart = performance.now();
-        resetToStartingPosition();
-        console.log(`resetToStartingPosition: ${(performance.now() - resetStart).toFixed(2)}ms`);
-        
-        const setSuccessStart = performance.now();
-        setSuccess(`Repertoire "${name}" loaded successfully!`);
-        console.log(`setSuccess: ${(performance.now() - setSuccessStart).toFixed(2)}ms`);
-        
-        const updateMovesStart = performance.now();
-        updateAvailableMoves(startingFEN);
-        console.log(`updateAvailableMoves: ${(performance.now() - updateMovesStart).toFixed(2)}ms`);
-        
-        const stateUpdateEnd = performance.now();
-        const stateUpdateTime = stateUpdateEnd - stateUpdateStart;
-        console.log(`State update time: ${stateUpdateTime.toFixed(2)}ms`);
-      }
-    } catch (err) {
-      setError(`Failed to process repertoire: ${err instanceof Error ? err.message : 'Unknown error'}`);
-      console.error('Error processing repertoire:', err);
-    }
-  };
-
+  // Update UI when repertoire is loaded
   useEffect(() => {
-    if (selectedPGN) {
-      processRepertoireContent(selectedPGN.content, selectedPGN.filename);
+    if (uploadedRepertoire) {
+      resetToStartingPosition();
+      setSuccess(`Repertoire "${selectedPGN?.filename}" loaded successfully!`);
     }
-  }, [selectedPGN]);
+  }, [uploadedRepertoire]);
 
   // Handle selection of repertoire from dropdown
   const handleRepertoireSelect = async (pgn: UploadedPGN) => {
+    setUploadError(null);
+    setSuccess(null);
     setSelectedPGN(pgn);
   };
 
-  const handleFileUpload = (event: any) => {
+  const handleFileUpload = async (event: any) => {
     const file = event.files[0];
     if (!file) return;
 
     if (!newRepertoireNameField.trim()) {
-      setError('Please enter a repertoire name before uploading.');
+      setUploadError('Please enter a repertoire name before uploading.');
       return;
     }
 
-    setError(null);
+    setUploadError(null);
     setSuccess(null);
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const fileContents = e.target?.result as string;
-      processRepertoireContent(fileContents, newRepertoireNameField);
+      
+      try {
+        // Calculate and cache the repertoire
+        const notes: Record<string, string> = {};
+        const setComments = (fen: string, _repertoireName: string, comments: any[]) => {
+          const commentText = comments.map((c: any) => c.text || c).join(' ');
+          notes[fen] = commentText;
+        };
+
+        const repertoire = calculateSlimRepertoire(fileContents, newRepertoireNameField, setComments);
+        
+        // Store in localStorage
+        const cacheKey = 'SLIM_REPERTOIRE_CACHE_' + newRepertoireNameField;
+        const notesKey = 'SLIM_REPERTOIRE_NOTES_' + newRepertoireNameField;
+        localStorage.setItem(cacheKey, JSON.stringify(repertoire));
+        localStorage.setItem(notesKey, JSON.stringify(notes));
+        
+        // Create a pseudo-PGN entry to trigger the hook
+        setSelectedPGN({ filename: newRepertoireNameField, content: fileContents } as UploadedPGN);
+        setSuccess(`Repertoire "${newRepertoireNameField}" uploaded and cached successfully!`);
+      } catch (err) {
+        setUploadError(`Failed to process repertoire: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        console.error('Error processing repertoire:', err);
+      }
     };
 
     reader.readAsText(file);
@@ -205,7 +181,7 @@ const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
       updateAvailableMoves(newFEN);
       
     } catch (err) {
-      setError(`Invalid move: ${move}`);
+      setUploadError(`Invalid move: ${move}`);
       console.error('Error making move:', err);
     }
   };
@@ -228,8 +204,13 @@ const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
     if (!uploadedRepertoire) return;
 
     // Update notes for the current position
-    setPositionNotes(prev => ({ ...prev, [currentPosition]: newNotes }));
+    // Note: positionNotes is read-only from the hook, so we just update local state
     setCurrentNotes(newNotes);
+    
+    // Optionally, save to localStorage if you want persistence
+    const notesKey = 'SLIM_REPERTOIRE_NOTES_' + selectedPGN?.filename;
+    const allNotes = { ...positionNotes, [currentPosition]: newNotes };
+    localStorage.setItem(notesKey, JSON.stringify(allNotes));
   };
 
   const formatMoveButton = (move: string, index: number) => {
@@ -245,10 +226,14 @@ const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
     );
   };
 
-  if (loading) {
+  if (loading || repertoireLoading) {
     return (
       <div className="flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
         <ProgressSpinner />
+        <div className="ml-3">
+          {loading && <p>Loading repertoires...</p>}
+          {repertoireLoading && <p>Loading repertoire data...</p>}
+        </div>
       </div>
     );
   }
@@ -316,8 +301,8 @@ const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
                   />
                 </div>
 
-                {error && (
-                  <Message severity="error" text={error} className="w-full" />
+                {(uploadError || repertoireError) && (
+                  <Message severity="error" text={uploadError || repertoireError || ''} className="w-full" />
                 )}
 
                 {success && (
@@ -428,7 +413,7 @@ const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
               <Divider />
               <Panel header="Repertoire Statistics" className="mt-4">
                 <div className="text-sm text-600">
-                  <strong>Repertoire Name:</strong> {repertoireName}
+                  <strong>Repertoire Name:</strong> {selectedPGN?.filename || 'N/A'}
                   <br />
                   <strong>Total Positions:</strong> {Object.keys(uploadedRepertoire).length}
                   <br />
