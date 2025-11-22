@@ -15,6 +15,7 @@ interface GameDivergence {
   divergenceFen: string;
   movePlayed: string;
   expectedMoves: string[];
+  player: string;
 }
 
 export const RepertoireDiff = () => {
@@ -67,47 +68,30 @@ export const RepertoireDiff = () => {
         const chessForAnalysis = new Chess();
         let diverged = false;
 
-        for (const move of history) {
-          const currentFen = chessForAnalysis.fen();
-          
-          // Check if this position is in the repertoire
-          if (repertoire[currentFen]) {
-            const expectedMoves = repertoire[currentFen];
-            const moveSan = move.san;
-            
-            // Check if the move played is in the expected moves
-            if (!expectedMoves.includes(moveSan)) {
+        let currentDivergence = null;
 
-              // check for transposition
-              let transposed = false;
-              try {
-                const chess = new Chess(currentFen);
-                chess.move(move.san);
-                const transposedFen = chess.fen();
-                if (repertoire[transposedFen]) {
-                  transposed = true;
-                }
-              } catch (err) {
-                console.error('Error checking transposition:', err);
-              }
-              
-              if (!transposed) {
-                // This is where the game diverged
-                analyzedDivergences.push({
-                  gameId: game.id,
-                  gameTimestamp: game.timestamp,
-                  divergenceFen: currentFen,
-                  movePlayed: moveSan,
-                  expectedMoves: expectedMoves,
-                });
-                diverged = true;
-                break;
-              }
+        for (const move of history) {
+
+          console.log('Analyzing move:', move);
+          // debugger;
+          const player = move.color === 'w' ? 
+            chess.header()["White"] : 
+            chess.header()["Black"]
+
+          if (repertoire[move.before] && !repertoire[move.after]) {
+            currentDivergence = {
+              gameId: game.id,
+              gameTimestamp: game.timestamp,
+              divergenceFen: move.before,
+              movePlayed: move.san,
+              expectedMoves: repertoire[move.before],
+              player: player || ""
             }
           }
-          
-          // Make the move to continue
-          chessForAnalysis.move(move.san);
+        }
+
+        if (currentDivergence) {
+          analyzedDivergences.push(currentDivergence);
         }
       } catch (err) {
         console.error(`Error analyzing game ${game.id}:`, err);
@@ -128,6 +112,24 @@ export const RepertoireDiff = () => {
 
   const expectedMovesBodyTemplate = (rowData: GameDivergence) => {
     return rowData.expectedMoves.join(', ');
+  };
+
+  const lichessButtonBodyTemplate = (rowData: GameDivergence) => {
+    const lichessUrl = `https://lichess.org/analysis/${rowData.divergenceFen}`;
+    return (
+      <a href={lichessUrl} target="_blank" rel="noopener noreferrer" className="p-button p-button-sm p-button-outlined">
+        Lichess
+      </a>
+    );
+  };
+
+  const chessableButtonBodyTemplate = (rowData: GameDivergence) => {
+    const chessableUrl = `https://www.chessable.com/courses/fen/${encodeURIComponent(rowData.divergenceFen)}`;
+    return (
+      <a href={chessableUrl} target="_blank" rel="noopener noreferrer" className="p-button p-button-sm p-button-outlined">
+        Chessable
+      </a>
+    );
   };
 
   return (
@@ -194,6 +196,25 @@ export const RepertoireDiff = () => {
               header="Expected Moves"
               body={expectedMovesBodyTemplate}
               style={{ width: '40%' }}
+            />
+
+            <Column
+              field="player"
+              header="Player"
+              style={{ width: '15%' }}
+            />
+
+            <Column
+              field="player"
+              header="Lichess"
+              body={lichessButtonBodyTemplate}
+              style={{ width: '15%' }}
+            />
+            <Column
+              field="player"
+              header="Chessable"
+              body={chessableButtonBodyTemplate}
+              style={{ width: '15%' }}
             />
           </DataTable>
         </div>
