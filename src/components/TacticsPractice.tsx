@@ -4,6 +4,7 @@ import { Card } from 'primereact/card';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Message } from 'primereact/message';
 import { Toast } from 'primereact/toast';
+import { Checkbox } from 'primereact/checkbox';
 import { UploadedPGNClient } from '../database/UploadedPGNClient';
 import { UploadedPGN } from '../database/types';
 import pgnParser, { ParsedPGN } from 'pgn-parser';
@@ -12,6 +13,7 @@ import useWindowSize from '../hooks/useWindowSize';
 import { Button } from 'primereact/button';
 
 const SELECTED_TACTICS_PGN_KEY = 'SELECTED_TACTICS_PGN';
+const AUTO_NEXT_KEY = 'TACTICS_AUTO_NEXT';
 
 export const TacticsPractice = () => {
   const [uploadedPGNs, setUploadedPGNs] = useState<UploadedPGN[]>([]);
@@ -19,6 +21,15 @@ export const TacticsPractice = () => {
   const [parsedPGNs, setParsedPGNs] = useState<ParsedPGN[]>([]);
   const [currentPuzzleIndex, setCurrentPuzzleIndex] = useState(500);
   const puzzleMoveIndexRef = useRef<number>(0);
+  
+  // Initialize autoNext from localStorage
+  const getInitialAutoNext = () => {
+    const saved = localStorage.getItem(AUTO_NEXT_KEY);
+    return saved ? JSON.parse(saved) : false;
+  };
+  const autoNextRef = useRef<boolean>(getInitialAutoNext());
+  const [autoNextDisplay, setAutoNextDisplay] = useState(autoNextRef.current);
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const chessboardRef = useRef<any>(null);
@@ -142,10 +153,17 @@ export const TacticsPractice = () => {
             severity: 'success',
             summary: 'Success',
             detail: 'You did it!',
-            life: 3000
+            life: 1000
           });
           puzzleMoveIndexRef.current = 0;
           console.log("Puzzle completed. Resetting move index to 0.");
+          
+          // Auto-advance to next puzzle if enabled
+          if (autoNextRef.current && currentPuzzleIndex < parsedPGNs.length - 1) {
+            setTimeout(() => {
+              setCurrentPuzzleIndex(currentPuzzleIndex + 1);
+            }, 1000);
+          }
         } else {
           // More moves to go - increment and make opponent's move
           const newMoveIndex = puzzleMoveIndexRef.current + 1;
@@ -257,7 +275,21 @@ export const TacticsPractice = () => {
                 onClick={handleNext}
                 disabled={currentPuzzleIndex >= parsedPGNs.length - 1}
               />
-
+              <div className="flex align-items-center gap-2 ml-3">
+                <Checkbox
+                  inputId="auto-next"
+                  checked={autoNextDisplay}
+                  onChange={(e) => {
+                    const newValue = e.checked || false;
+                    autoNextRef.current = newValue;
+                    setAutoNextDisplay(newValue);
+                    localStorage.setItem(AUTO_NEXT_KEY, JSON.stringify(newValue));
+                  }}
+                />
+                <label htmlFor="auto-next" className="cursor-pointer">
+                  Auto Next
+                </label>
+              </div>
             </div>
             {getExpectedMove(puzzleMoveIndexRef.current)}
             Puzzle Index: {currentPuzzleIndex}
