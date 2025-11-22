@@ -18,7 +18,7 @@ export interface ChessBoardProps {
   arrows?: ReactElement[];
 
   size?: string;
-  moveCallback?: (move: Move) => void;
+  moveCallback?: (move: Move) => boolean;
 }
 
 const ChessBoard = ({
@@ -32,6 +32,7 @@ const ChessBoard = ({
   madeMoveRef = { current: true },
   moveCallback = (move: Move) => {
     console.log("Got move", move);
+    return true;
   },
   moves = [],
   chessboardRef = { current: undefined },
@@ -82,16 +83,33 @@ const ChessBoard = ({
         console.log("onDrop called", gameRef.current);
 
         try {
+
+          const oldFEN = gameRef.current.fen();
+          const testChess = new Chess(oldFEN);
+
           // see if the move is legal
-          const move = gameRef.current.move({
+          const move = testChess.move({
             from: source,
             to: target,
             // promotion: 'q' // NOTE: always promote to a queen for example simplicity
           });
 
-          moveCallback(move);
+          console.log("About to call move callback");
+
+          if (!moveCallback(move)) {
+            gameRef.current = new Chess(oldFEN);
+            return 'snapback';
+          }
+
+          gameRef.current.move({
+            from: source,
+            to: target,
+            // promotion: 'q' // NOTE: always promote to a queen for example simplicity
+          });
 
           console.log("After move", gameRef.current)
+
+          
 
           return;
         } catch (e) {

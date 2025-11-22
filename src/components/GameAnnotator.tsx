@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from 'primereact/card';
-import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Button } from 'primereact/button';
-import { Message } from 'primereact/message';
+import { Toast } from 'primereact/toast';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Splitter, SplitterPanel } from 'primereact/splitter';
 import { DataTable } from 'primereact/datatable';
@@ -12,11 +11,11 @@ import { Chess } from 'chess.js';
 import ChessBoard from './ChessBoard';
 import { calculateMoveTreeFromParsedPGN } from '../integrations/calculateMoveTree';
 import { MoveTree } from '../types/MoveTree';
-import { LichessClient, GameJson } from '../integrations/lichess-client';
-import { fetchChessComGames } from '../integrations/chess-com-client';
 import pgnParser, { ParsedPGN } from 'pgn-parser';
 import { getGameAnnotations, getNotesWordCount, saveGameAnnotations } from '../services/AnnotationsService';
 import { useResizeListener } from 'primereact/hooks';
+import { SavedGameClient } from '../database/SavedGameClient';
+import { SavedGame } from '../database/types';
 
 interface GameAnnotatorProps {
   className?: string;
@@ -25,47 +24,97 @@ interface GameAnnotatorProps {
 interface GameRow {
   id: string;
   date: string;
-  eco: string;
-  result: string;
+  eco?: string;
+  result?: string;
   pgn: string;
-  white: string;
-  black: string;
-  timeControl: string;
-  termination: string;
-  event: string;
-  site: string;
-  opening: string;
-  source: 'lichess' | 'chess.com';
-  createdAt?: number;
+  white?: string;
+  black?: string;
+  timeControl?: string;
+  termination?: string;
+  event?: string;
+  site?: string;
+  opening?: string;
+  source: string;
+  createdAt: number;
+  annotationWordCount: number;
 }
 
 const startingFEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
+const convertSavedGameToGameRow = (savedGame: SavedGame): GameRow => {
+  // Try to parse PGN to extract game metadata
+  let white = 'Unknown';
+  let black = 'Unknown';
+  let result = '1/2-1/2';
+  let eco = 'Unknown';
+  let opening = 'Unknown';
+  let event = 'Unknown';
+  let site: string = savedGame.source;
+  let timeControl = 'Unknown';
+  let termination = 'Unknown';
+  
+  try {
+    const parsedPGNs = pgnParser.parse(savedGame.pgn);
+    if (parsedPGNs.length > 0 && parsedPGNs[0].headers) {
+      const headers = parsedPGNs[0].headers;
+      const getHeader = (name: string) => {
+        const header = headers.find(h => h.name === name);
+        return header?.value || null;
+      };
+      
+      white = getHeader('White') || 'Unknown';
+      black = getHeader('Black') || 'Unknown';
+      result = getHeader('Result') || '1/2-1/2';
+      eco = getHeader('ECO') || 'Unknown';
+      opening = getHeader('Opening') || eco;
+      event = getHeader('Event') || 'Unknown';
+      site = getHeader('Site') || savedGame.source;
+      timeControl = getHeader('TimeControl') || 'Unknown';
+      termination = getHeader('Termination') || 'Unknown';
+    }
+  } catch (err) {
+    console.warn('Error parsing PGN for game metadata:', err);
+  }
+
+  return {
+    id: savedGame.id,
+    date: new Date(savedGame.timestamp).toLocaleDateString(),
+    eco,
+    result,
+    pgn: savedGame.pgn,
+    white,
+    black,
+    timeControl,
+    termination,
+    event,
+    site,
+    opening,
+    source: savedGame.source,
+    createdAt: savedGame.timestamp,
+    annotationWordCount: getNotesWordCount(savedGame.id)
+  };
+};
+
 const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
-  const [lichessUsername, setLichessUsername] = useState<string>('');
-  const [chessComUsername, setChessComUsername] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [games, setGames] = useState<GameRow[]>([]);
   const [selectedGame, setSelectedGame] = useState<GameRow | null>(null);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
   const [currentMoveTree, setCurrentMoveTree] = useState<MoveTree | null>(null);
   const [currentPosition, setCurrentPosition] = useState(startingFEN);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [positionNotes, setPositionNotes] = useState<string>('');
   const [savedNotes, setSavedNotes] = useState<Map<string, string>>(new Map());
-  const [isGameLoadingCollapsed, setIsGameLoadingCollapsed] = useState<boolean>(false);
   const [expandedRows, setExpandedRows] = useState<any>({});
   const [boardSize, setBoardSize] = useState<string>('400px');
   const [isNotesFocused, setIsNotesFocused] = useState<boolean>(false);
   
   const chessboardRef = useRef<any>(null);
   const gameRef = useRef<Chess>(new Chess());
-  const lichessClient = new LichessClient();
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const boardContainerRef = useRef<HTMLDivElement>(null);
   const boardUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingBoardPositionRef = useRef<string | null>(null);
+  const toast = useRef<Toast>(null);
 
     const [{width: screenWidth, height: screenHeight}, setEventData] = useState({ width: 0, height: 0 });
 
@@ -113,41 +162,50 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
         };
     }, [bindWindowResizeListener, unbindWindowResizeListener]);
 
-  // Initialize component with cached data
+  // Initialize component by loading games from database
   useEffect(() => {
-    const initializeFromCache = async () => {
+    const loadGamesFromDatabase = async () => {
       try {
-        const cachedLichessUsername = localStorage.getItem('lichess-username');
-        const cachedChessComUsername = localStorage.getItem('chess-com-username');
+        setLoading(true);
+        const savedGames = await SavedGameClient.getAll();
+        
+        const gameRows: GameRow[] = savedGames.map(convertSavedGameToGameRow);
+        
+        // Sort by timestamp (newest first)
+        gameRows.sort((a, b) => b.createdAt - a.createdAt);
+        
+        setGames(gameRows);
+        toast.current?.show({ 
+          severity: 'success', 
+          summary: 'Success', 
+          detail: `Loaded ${gameRows.length} games from database` 
+        });
+        
+        // Try to restore cached game state
         const cachedGameId = localStorage.getItem('game-annotator-current-game-id');
         const cachedMoveIndex = localStorage.getItem('game-annotator-current-move-index');
         
-        if (cachedLichessUsername) {
-          setLichessUsername(cachedLichessUsername);
-        }
-        if (cachedChessComUsername) {
-          setChessComUsername(cachedChessComUsername);
-        }
-        
-        // Auto-load games if we have cached usernames
-        if (cachedLichessUsername || cachedChessComUsername) {
-          await loadGames(cachedLichessUsername || "", cachedChessComUsername || "");
-          
-          // Store cached game data for later restoration
-          if (cachedGameId && cachedMoveIndex) {
-            // We'll restore this after games are loaded
-            localStorage.setItem('game-annotator-pending-restore', JSON.stringify({
-              gameId: cachedGameId,
-              moveIndex: parseInt(cachedMoveIndex, 10)
-            }));
+        if (cachedGameId && cachedMoveIndex) {
+          const gameToRestore = gameRows.find(game => game.id === cachedGameId);
+          if (gameToRestore) {
+            setTimeout(async () => {
+              await loadGame(gameToRestore, parseInt(cachedMoveIndex, 10));
+            }, 100);
           }
         }
       } catch (err) {
-        console.warn('Error loading cached data:', err);
+        toast.current?.show({ 
+          severity: 'error', 
+          summary: 'Error', 
+          detail: `Failed to load games: ${err instanceof Error ? err.message : 'Unknown error'}` 
+        });
+        console.error('Error loading games:', err);
+      } finally {
+        setLoading(false);
       }
     };
 
-    initializeFromCache();
+    loadGamesFromDatabase();
   }, []); // Run once on component mount
 
   // Keyboard navigation effect
@@ -222,182 +280,7 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
     };
   }, [boardContainerRef.current]);
 
-  const loadLichessGames = async (targetUsername: string): Promise<GameRow[]> => {
-    const cacheKey = `lichess-games-${targetUsername.trim()}`;
-    
-    // Check for cached data first
-    let gameData;
-    try {
-      const cachedData = localStorage.getItem(cacheKey);
-      if (cachedData) {
-        const parsed = JSON.parse(cachedData);
-        // Check if cache is less than 1 hour old
-        const cacheAge = Date.now() - parsed.timestamp;
-        const oneHour = 60 * 60 * 1000;
-        
-        if (cacheAge < oneHour) {
-          gameData = parsed.data;
-        }
-      }
-    } catch (cacheErr) {
-      console.warn('Error reading lichess cache:', cacheErr);
-    }
 
-    // If no valid cache, fetch from API
-    if (!gameData) {
-      // Calculate timestamp for 3 months ago
-      const threeMonthsAgo = Date.now() - (3 * 30 * 24 * 60 * 60 * 1000);
-      
-      gameData = await lichessClient.apiGamesUser(targetUsername.trim(), {
-        since: threeMonthsAgo,
-        max: 100,
-        moves: true,
-        opening: true,
-        tags: true,
-        sort: 'dateDesc',
-        pgnInJson: true
-      });
-
-      // Cache the result
-      try {
-        const cacheData = {
-          data: gameData,
-          timestamp: Date.now()
-        };
-        localStorage.setItem(cacheKey, JSON.stringify(cacheData));
-      } catch (cacheErr) {
-        console.warn('Error saving lichess cache:', cacheErr);
-      }
-    }
-
-    // Handle both single game and array of games
-    const gamesArray = Array.isArray(gameData) ? gameData : [gameData];
-    
-    return gamesArray.map((game: GameJson) => {
-      const date = new Date(game.createdAt).toLocaleDateString();
-      const eco = game.opening?.eco || 'Unknown';
-      const opening = game.opening?.name || 'Unknown';
-
-      const annotationWordCount = getNotesWordCount(game.id);
-      
-      // Determine result from winner and players
-      let result = '1/2-1/2'; // Draw by default
-      if (game.winner) {
-        if (game.players.white.user?.name === targetUsername && game.winner === 'white') {
-          result = 'win';
-        } else if (game.players.black.user?.name === targetUsername && game.winner === 'black') {
-          result = 'win';
-        } else if (game.players.white.user?.name === targetUsername && game.winner === 'black') {
-          result = 'loss';
-        } else if (game.players.black.user?.name === targetUsername && game.winner === 'white') {
-          result = 'loss';
-        }
-      }
-
-      return {
-        id: game.id,
-        date,
-        eco,
-        result,
-        pgn: game.pgn || '',
-        white: game.players.white.user?.name || 'Anonymous',
-        black: game.players.black.user?.name || 'Anonymous',
-        timeControl: game.clock ? `${game.clock.initial}+${game.clock.increment}` : 'Unlimited',
-        termination: game.status,
-        event: game.perf || 'Unknown',
-        site: 'lichess.org',
-        opening,
-        annotationWordCount,
-        source: 'lichess' as const,
-        createdAt: game.createdAt
-      };
-    });
-  };
-
-  const loadChessComGames = async (targetUsername: string): Promise<GameRow[]> => {
-    const cacheKey = `chess-com-games-${targetUsername.trim()}`;
-    
-    // Check for cached data first
-    let gameData;
-    try {
-      const cachedData = localStorage.getItem(cacheKey);
-      if (cachedData) {
-        const parsed = JSON.parse(cachedData);
-        // Check if cache is less than 1 hour old
-        const cacheAge = Date.now() - parsed.timestamp;
-        const oneHour = 60 * 60 * 1000;
-        
-        if (cacheAge < oneHour) {
-          gameData = parsed.data;
-        }
-      }
-    } catch (cacheErr) {
-      console.warn('Error reading chess.com cache:', cacheErr);
-    }
-
-    // If no valid cache, fetch from API
-    if (!gameData) {
-      gameData = await fetchChessComGames(targetUsername.trim());
-
-      // Cache the result
-      try {
-        const cacheData = {
-          data: gameData,
-          timestamp: Date.now()
-        };
-        localStorage.setItem(cacheKey, JSON.stringify(cacheData));
-      } catch (cacheErr) {
-        console.warn('Error saving chess.com cache:', cacheErr);
-      }
-    }
-
-    // Convert Chess.com games to GameRow format
-    return gameData.map((game: any) => {
-      const date = new Date(game.end_time * 1000).toLocaleDateString();
-      const annotationWordCount = getNotesWordCount(game.url);
-      
-      // Extract player names and determine result
-      // For Chess.com, we need to parse the PGN or use other game properties
-      let white = 'Unknown';
-      let black = 'Unknown';
-      let result = '1/2-1/2';
-      
-      // Parse basic info from game object if available
-      if (game.white) {
-        white = game.white.username || 'Unknown';
-      }
-      if (game.black) {
-        black = game.black.username || 'Unknown';
-      }
-      
-      // Determine result based on target username
-      if (game.white?.result && game.black?.result) {
-        if (game.white.username === targetUsername) {
-          result = game.white.result === 'win' ? 'win' : game.white.result === 'timeout' || game.white.result === 'resigned' || game.white.result === 'checkmated' ? 'loss' : '1/2-1/2';
-        } else if (game.black.username === targetUsername) {
-          result = game.black.result === 'win' ? 'win' : game.black.result === 'timeout' || game.black.result === 'resigned' || game.black.result === 'checkmated' ? 'loss' : '1/2-1/2';
-        }
-      }
-
-      return {
-        id: game.url || game.uuid || `chess-com-${game.end_time}`,
-        date,
-        eco: game.eco || 'Unknown',
-        result,
-        pgn: game.pgn || '',
-        white,
-        black,
-        timeControl: game.time_control || 'Unknown',
-        termination: game.end_time ? 'finished' : 'unknown',
-        event: game.rules || 'chess',
-        site: 'chess.com',
-        opening: game.eco || 'Unknown',
-        annotationWordCount,
-        source: 'chess.com' as const,
-        createdAt: game.end_time * 1000 // Convert to milliseconds
-      };
-    });
-  };
 
   const cacheGameState = (gameId: string | null, moveIndex: number) => {
     try {
@@ -413,107 +296,25 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
     }
   };
 
-  const loadGames = async (cachedLichessUsername?: string, cachedChessComUsername?: string) => {
-    
-    const actualLichessUsername = cachedLichessUsername || lichessUsername;
-    const actualChessComUsername = cachedChessComUsername || chessComUsername;
-
-    if (!actualLichessUsername.trim() && !actualChessComUsername.trim()) {
-      setError("Please enter at least one username");
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    setSuccess('');
-    setGames([]);
-
-    try {
-      const allGames: GameRow[] = [];
-      let successMessages: string[] = [];
-
-      // Load Lichess games
-      if (actualLichessUsername.trim()) {
-        try {
-          localStorage.setItem('lichess-username', actualLichessUsername.trim());
-          const lichessGames = await loadLichessGames(actualLichessUsername.trim());
-          allGames.push(...lichessGames);
-          successMessages.push(`${lichessGames.length} Lichess games`);
-        } catch (err) {
-          console.error('Error loading Lichess games:', err);
-          setError(`Failed to load Lichess games: ${err instanceof Error ? err.message : 'Unknown error'}`);
-        }
-      }
-
-      // Load Chess.com games
-      if (actualChessComUsername.trim()) {
-        try {
-          localStorage.setItem('chess-com-username', actualChessComUsername.trim());
-          const chessComGames = await loadChessComGames(actualChessComUsername.trim());
-          allGames.push(...chessComGames);
-          successMessages.push(`${chessComGames.length} Chess.com games`);
-        } catch (err) {
-          console.error('Error loading Chess.com games:', err);
-          setError(`Failed to load Chess.com games: ${err instanceof Error ? err.message : 'Unknown error'}`);
-        }
-      }
-
-      // Sort all games by creation time (newest first)
-      allGames.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-      setGames(allGames);
-      setSuccess(`Loaded ${successMessages.join(' + ')}`);
-
-      // Auto-collapse after games are loaded
-      if (allGames.length > 0) {
-        setIsGameLoadingCollapsed(true);
-      }
-    } catch (err) {
-      setError(`Failed to load games: ${err instanceof Error ? err.message : 'Unknown error'}`);
-      console.error('Error loading games:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const loadGame = async (game: GameRow, moveIndex: number = 0) => {
     if (!game.pgn) {
-      // Need to fetch the full game with PGN
-      try {
-        if (game.source === 'lichess') {
-          const fullGame = await lichessClient.gamePgn(game.id, {
-              moves: true,
-              pgnInJson: true,
-              tags: true,
-              clocks: true,
-              evals: true,
-              accuracy: true,
-              opening: true,
-              division: true,
-              literate: true,
-              withBookmarked: true
-          });
-          
-          if (fullGame.pgn) {
-            game.pgn = fullGame.pgn;
-          }
-        } else if (game.source === 'chess.com') {
-          // For Chess.com, PGN should already be available from the initial fetch
-          // If not, we might need to make an additional API call
-          setError('Chess.com game PGN not available. Please try loading games again.');
-          return;
-        }
-      } catch (err) {
-        setError(`Failed to load game PGN: ${err instanceof Error ? err.message : 'Unknown error'}`);
-        return;
-      }
+      toast.current?.show({ 
+        severity: 'error', 
+        summary: 'Error', 
+        detail: 'Game PGN not available.' 
+      });
+      return;
     }
 
     try {
       const parsedPGNs: ParsedPGN[] = pgnParser.parse(game.pgn);
       
       if (parsedPGNs.length === 0) {
-        setError('No valid PGN found in the game.');
+        toast.current?.show({ 
+          severity: 'error', 
+          summary: 'Error', 
+          detail: 'No valid PGN found in the game.' 
+        });
         return;
       }
 
@@ -522,17 +323,22 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
       if (moveTree) {
         setCurrentMoveTree(moveTree);
         setSelectedGame(game);
-        // resetToStartingPosition();
-        setSuccess(`Loaded game: ${game.white} vs ${game.black}`);
-        // Cache the selected game
-        // cacheGameState(game.id, 0);
+        toast.current?.show({ 
+          severity: 'success', 
+          summary: 'Success', 
+          detail: `Loaded game: ${game.white} vs ${game.black}` 
+        });
         setTimeout(() => {
             navigateToMoveByIndex(moveIndex, moveTree);
             setCurrentMoveIndex(moveIndex);
         }, 500)
       }
     } catch (err) {
-      setError(`Failed to process game: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      toast.current?.show({ 
+        severity: 'error', 
+        summary: 'Error', 
+        detail: `Failed to process game: ${err instanceof Error ? err.message : 'Unknown error'}` 
+      });
       console.error('Error processing game:', err);
     }
   };
@@ -629,30 +435,7 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
     }, 1000);
   };
 
-  // Restore cached game state when games are loaded
-  useEffect(() => {
-    if (games.length > 0) {
-      try {
-        const pendingRestore = localStorage.getItem('game-annotator-pending-restore');
-        if (pendingRestore) {
-          const { gameId, moveIndex } = JSON.parse(pendingRestore);
-          localStorage.removeItem('game-annotator-pending-restore');
-          
-          // Find and restore the cached game
-          const gameToRestore = games.find(game => game.id === gameId);
-          if (gameToRestore) {
-            setTimeout(async () => {
-              await loadGame(gameToRestore, moveIndex);
-            }, 100);
-          }
-        }
-      } catch (err) {
-        console.warn('Error restoring cached game state:', err);
-      } finally {
-        localStorage.removeItem('game-annotator-pending-restore');
-      }
-    }
-  }, [games]);
+
 
   // Load saved notes when a game is selected
   useEffect(() => {
@@ -696,114 +479,20 @@ const GameAnnotator: React.FC<GameAnnotatorProps> = ({ className = '' }) => {
   const rowExpansionTemplate = (data: GameRow) => {
     return (
       <div className="p-3">
-        <h5>Game Details</h5>
-        <table className="w-full text-sm">
-          <tbody>
-            <tr><td className="font-semibold pr-4">White:</td><td>{data.white}</td></tr>
-            <tr><td className="font-semibold pr-4">Black:</td><td>{data.black}</td></tr>
-            <tr><td className="font-semibold pr-4">Event:</td><td>{data.event}</td></tr>
-            <tr><td className="font-semibold pr-4">Site:</td><td>{data.site}</td></tr>
-            <tr><td className="font-semibold pr-4">Time Control:</td><td>{data.timeControl}</td></tr>
-            <tr><td className="font-semibold pr-4">Termination:</td><td>{data.termination}</td></tr>
-            <tr><td className="font-semibold pr-4">Opening:</td><td>{data.opening}</td></tr>
-          </tbody>
-        </table>
+        <pre style={{ textOverflow: "wrap" }}>{data.pgn.replaceAll("]", "]\n")}</pre>
       </div>
     );
   };
 
-  const cardHeader = (
-    <div className="flex justify-content-between align-items-center">
-      <h1>Game Annotator
-        {games.length > 0 && (
-            <Button
-                label="expand"            
-                onClick={() => setIsGameLoadingCollapsed(!isGameLoadingCollapsed)}
-                className="p-button-text p-button-sm"
-                tooltip={isGameLoadingCollapsed ? "Expand game loading" : "Collapse game loading"}
-            />
-        )}
-      </h1>
-      
-    </div>
-  );
-
   return (
     <div className={`game-annotator ${className}`}>
-    
-      {isGameLoadingCollapsed ? (!currentMoveTree && cardHeader) : (
-        <Card header={cardHeader} className="mb-4">
-          <div className="p-fluid">
-            <div className="field">
-              <label htmlFor="lichess-username">Lichess Username</label>
-              <InputText
-                id="lichess-username"
-                value={lichessUsername}
-                onChange={(e) => {
-                  setLichessUsername(e.target.value);
-                  // Cache username as user types
-                  try {
-                    if (e.target.value.trim()) {
-                      localStorage.setItem('lichess-username', e.target.value.trim());
-                    }
-                  } catch (err) {
-                    console.warn('Error caching lichess username:', err);
-                  }
-                }}
-                placeholder="Enter lichess username"
-                disabled={loading}
-                onKeyDown={(e) => e.key === 'Enter' && loadGames()}
-              />
-            </div>
-
-            <div className="field">
-              <label htmlFor="chess-com-username">Chess.com Username</label>
-              <InputText
-                id="chess-com-username"
-                value={chessComUsername}
-                onChange={(e) => {
-                  setChessComUsername(e.target.value);
-                  // Cache username as user types
-                  try {
-                    if (e.target.value.trim()) {
-                      localStorage.setItem('chess-com-username', e.target.value.trim());
-                    }
-                  } catch (err) {
-                    console.warn('Error caching chess.com username:', err);
-                  }
-                }}
-                placeholder="Enter chess.com username"
-                disabled={loading}
-                onKeyDown={(e) => e.key === 'Enter' && loadGames()}
-              />
-            </div>
-
-            <div className="field">
-              <Button 
-                label="Load Games" 
-                onClick={() => loadGames()}
-                disabled={loading || (!lichessUsername.trim() && !chessComUsername.trim())}
-                loading={loading}
-                className="w-full"
-              />
-            </div>
-
-            {error && (
-              <Message severity="error" text={error} className="mb-3" />
-            )}
-
-            {success && (
-              <Message severity="success" text={success} className="mb-3" />
-            )}
-
-            {loading && (
-              <div className="text-center my-4">
-                <ProgressSpinner />
-                <p>Loading games...</p>
-              </div>
-            )}
-          </div>
-        </Card>
+      <Toast ref={toast} />
+      
+      {loading && (
+        <div className="text-center my-4">
+          <ProgressSpinner />
+          <p>Loading games...</p>
+        </div>
       )}
 
       {!currentMoveTree && 
