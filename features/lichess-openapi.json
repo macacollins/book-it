@@ -35152,7 +35152,7 @@
                     },
                     "access_token": {
                       "type": "string",
-                      "example": "lio_pLwAbN7lFPklzY2m8lTOI1DGApS84u57"
+                      "example": "test"
                     },
                     "expires_in": {
                       "type": "integer",
