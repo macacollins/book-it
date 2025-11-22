@@ -7,25 +7,16 @@ import { Panel } from 'primereact/panel';
 import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Divider } from 'primereact/divider';
-import { Tree } from 'primereact/tree';
 import { Dropdown } from 'primereact/dropdown';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Chess } from 'chess.js';
 import ChessBoard from './ChessBoard';
-import processNewRepertoire from '../integrations/processNewRepertoire';
-import Repertoire from '../types/Repertoire';
-import { calculateRepertoire } from '../integrations/calculateRepertoire';
-import { calculateMoveTree } from '../integrations/calculateMoveTree';
-import { findNodeByFEN, MoveTree, MoveNode, StartNode } from '../types/MoveTree';
+import { calculateSlimRepertoire } from '../integrations/calculateSlimRepertoire';
 import { UploadedPGNClient } from '../database/UploadedPGNClient';
 import { UploadedPGN } from '../database/types';
 
 interface RepertoireUploadProps {
   className?: string;
-  repertoire: { [name: string]: Repertoire };
-  setRepertoire: (newValue: { [name: string]: Repertoire }) => void;
-  repertoireList: string[];
-  setRepertoireList: (newValue: string[]) => void;
 }
 
 const startingFEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
@@ -36,13 +27,14 @@ const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
   const [selectedPGN, setSelectedPGN] = useState<UploadedPGN | null>(null);
   const [loading, setLoading] = useState(true);
   const [newRepertoireNameField, setNewRepertoireNameField] = useState('test');
-  const [uploadedRepertoire, setUploadedRepertoire] = useState<MoveTree | null>(null);
+  const [uploadedRepertoire, setUploadedRepertoire] = useState<Record<string, string[]> | null>(null);
+  const [repertoireName, setRepertoireName] = useState<string>('');
   const [currentPosition, setCurrentPosition] = useState(startingFEN);
   const [availableMoves, setAvailableMoves] = useState<string[]>([]);
   const [currentNotes, setCurrentNotes] = useState<string>("");
+  const [positionNotes, setPositionNotes] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [treeData, setTreeData] = useState<any[]>([]);
   
   const chessboardRef = useRef<any>(null);
   const gameRef = useRef<Chess>(new Chess());
@@ -65,69 +57,52 @@ const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
     loadRepertoirePGNs();
   }, []);
 
-  // Force tree re-render when position changes to update current position indicator
-  useEffect(() => {
-    if (uploadedRepertoire) {
-      const treeDataConverted = convertMoveTreeToTreeData(uploadedRepertoire);
-      setTreeData(treeDataConverted);
-    }
-  }, [currentPosition, uploadedRepertoire]);
-
-  // Convert MoveTree to PrimeReact Tree format
-  const convertMoveTreeToTreeData = (moveTree: MoveTree) => {
-    const convertMoveNode = (moveNode: MoveNode, parentKey: string = ''): any => {
-      const key = parentKey ? `${parentKey}-${moveNode.move}` : moveNode.move;
-      return {
-        key,
-        label: moveNode.move,
-        data: {
-          move: moveNode.move,
-          fen: moveNode.fen,
-          type: 'move'
-        },
-        children: moveNode.children.map((child, index) => 
-          convertMoveNode(child, key)
-        )
-      };
-    };
-
-    const convertStartNode = (startNode: StartNode, index: number): any => {
-      const key = `start-${index}`;
-      return {
-        key,
-        label: startNode.notes || `Position ${index + 1}`,
-        data: {
-          fen: startNode.startingFEN,
-          notes: startNode.notes,
-          type: 'start'
-        },
-        children: startNode.children.map((child, childIndex) => 
-          convertMoveNode(child, key)
-        )
-      };
-    };
-
-    return moveTree.nodes.map((startNode, index) => convertStartNode(startNode, index));
-  };
-
   // Process selected repertoire from database
-  const processRepertoireContent = (content: string, name: string) => {
+  const processRepertoireContent = async (content: string, name: string) => {
     try {
       setError(null);
       setSuccess(null);
 
-      const repertoire = calculateMoveTree(content, name);
+      // Function to handle position notes
+      const setComments = (fen: string, _repertoireName: string, comments: any[]) => {
+        const commentText = comments.map(c => c.text || c).join(' ');
+        setPositionNotes(prev => ({ ...prev, [fen]: commentText }));
+      };
 
+      const startTime = performance.now();
+      const repertoire = calculateSlimRepertoire(content, name, setComments);
+      const endTime = performance.now();
+      const totalTime = endTime - startTime;
+      console.log(`Total repertoire processing time: ${totalTime.toFixed(2)}ms`);
+      
       // Get the newly created repertoire
       if (repertoire) {
+        const stateUpdateStart = performance.now();
+        
+        const setRepertoireStart = performance.now();
         setUploadedRepertoire(repertoire);
-        // Convert to tree data for visualization
-        const treeDataConverted = convertMoveTreeToTreeData(repertoire);
-        setTreeData(treeDataConverted);
+        console.log(`setUploadedRepertoire: ${(performance.now() - setRepertoireStart).toFixed(2)}ms`);
+        
+        const setNameStart = performance.now();
+        setRepertoireName(name);
+        console.log(`setRepertoireName: ${(performance.now() - setNameStart).toFixed(2)}ms`);
+        
         // Reset to starting position
+        const resetStart = performance.now();
         resetToStartingPosition();
+        console.log(`resetToStartingPosition: ${(performance.now() - resetStart).toFixed(2)}ms`);
+        
+        const setSuccessStart = performance.now();
         setSuccess(`Repertoire "${name}" loaded successfully!`);
+        console.log(`setSuccess: ${(performance.now() - setSuccessStart).toFixed(2)}ms`);
+        
+        const updateMovesStart = performance.now();
         updateAvailableMoves(startingFEN);
+        console.log(`updateAvailableMoves: ${(performance.now() - updateMovesStart).toFixed(2)}ms`);
+        
+        const stateUpdateEnd = performance.now();
+        const stateUpdateTime = stateUpdateEnd - stateUpdateStart;
+        console.log(`State update time: ${stateUpdateTime.toFixed(2)}ms`);
       }
     } catch (err) {
       setError(`Failed to process repertoire: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -135,10 +110,15 @@ const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (selectedPGN) {
+      processRepertoireContent(selectedPGN.content, selectedPGN.filename);
+    }
+  }, [selectedPGN]);
+
   // Handle selection of repertoire from dropdown
-  const handleRepertoireSelect = (pgn: UploadedPGN) => {
+  const handleRepertoireSelect = async (pgn: UploadedPGN) => {
     setSelectedPGN(pgn);
-    processRepertoireContent(pgn.content, pgn.filename);
   };
 
   const handleFileUpload = (event: any) => {
@@ -175,6 +155,8 @@ const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
   };
 
   const updateAvailableMoves = (fen: string) => {
+    const funcStartTime = performance.now();
+    
     if (!uploadedRepertoire) {
       setAvailableMoves([]);
       setCurrentNotes("");
@@ -182,16 +164,29 @@ const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
     }
 
     // Look up moves available from this position in the repertoire
-    const nodeResult = findNodeByFEN(uploadedRepertoire, fen);
+    const lookupStartTime = performance.now();
+    const moves = uploadedRepertoire[fen] || [];
+    const lookupEndTime = performance.now();
+    console.log(`Move lookup time: ${(lookupEndTime - lookupStartTime).toFixed(2)}ms`);
     
-    if (nodeResult) {
-      const moves = nodeResult.node.children.map(child => child.move);
-      setAvailableMoves(moves);
-      setCurrentNotes(nodeResult.node.notes);
-    } else {
-      setAvailableMoves([]);
-      setCurrentNotes("");
-    }
+    const setMovesStartTime = performance.now();
+    setAvailableMoves(moves);
+    const setMovesEndTime = performance.now();
+    console.log(`Set available moves time: ${(setMovesEndTime - setMovesStartTime).toFixed(2)}ms`);
+    
+    // Get notes for this position
+    const notesLookupStartTime = performance.now();
+    const notes = positionNotes[fen] || "";
+    const notesLookupEndTime = performance.now();
+    console.log(`Notes lookup time: ${(notesLookupEndTime - notesLookupStartTime).toFixed(2)}ms`);
+    
+    const setNotesStartTime = performance.now();
+    setCurrentNotes(notes);
+    const setNotesEndTime = performance.now();
+    console.log(`Set notes time: ${(setNotesEndTime - setNotesStartTime).toFixed(2)}ms`);
+    
+    const funcEndTime = performance.now();
+    console.log(`Total updateAvailableMoves time: ${(funcEndTime - funcStartTime).toFixed(2)}ms`);
   };
 
   const makeMove = (move: string) => {
@@ -232,17 +227,9 @@ const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
   const updateCurrentNotes = (newNotes: string) => {
     if (!uploadedRepertoire) return;
 
-    // Find the current node and update its notes
-    const nodeResult = findNodeByFEN(uploadedRepertoire, currentPosition);
-    if (nodeResult) {
-      // Update the notes in the node
-      nodeResult.node.notes = newNotes;
-      setCurrentNotes(newNotes);
-      
-      // Trigger tree re-render to reflect changes
-      const treeDataConverted = convertMoveTreeToTreeData(uploadedRepertoire);
-      setTreeData(treeDataConverted);
-    }
+    // Update notes for the current position
+    setPositionNotes(prev => ({ ...prev, [currentPosition]: newNotes }));
+    setCurrentNotes(newNotes);
   };
 
   const formatMoveButton = (move: string, index: number) => {
@@ -255,25 +242,6 @@ const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
         size="small"
         outlined
       />
-    );
-  };
-
-  const nodeTemplate = (node: any) => {
-    const isCurrentPosition = node.data?.fen === currentPosition;
-    return (
-      <div className={`flex align-items-center gap-2 ${isCurrentPosition ? 'bg-blue-100 p-1 border-round' : ''}`}>
-        <span className={`${node.data?.type === 'start' ? 'font-bold text-primary' : ''}`}>
-          {node.label}
-        </span>
-        {node.data?.type === 'move' && (
-          <small className="text-500">
-            ({node.children?.length || 0} variations)
-          </small>
-        )}
-        {isCurrentPosition && (
-          <i className="pi pi-map-marker text-blue-500" title="Current position"></i>
-        )}
-      </div>
     );
   };
 
@@ -305,7 +273,7 @@ const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
                     id="repertoire-select"
                     value={selectedPGN}
                     options={pgnOptions}
-                    onChange={(e) => handleRepertoireSelect(e.value)}
+                    onChange={async (e) => handleRepertoireSelect(e.value)}
                     placeholder="Choose a repertoire..."
                     className="w-full"
                     disabled={uploadedPGNs.length === 0}
@@ -458,34 +426,14 @@ const RepertoireUpload: React.FC<RepertoireUploadProps> = ({
           {uploadedRepertoire && (
             <div className="col-12">
               <Divider />
-              <Panel header="Repertoire Structure" className="mt-4">
-                <div className="mb-3 text-sm text-600">
-                  <strong>Repertoire Name:</strong> {uploadedRepertoire.name}
+              <Panel header="Repertoire Statistics" className="mt-4">
+                <div className="text-sm text-600">
+                  <strong>Repertoire Name:</strong> {repertoireName}
                   <br />
-                  <strong>Total Positions:</strong> {uploadedRepertoire.nodes.length}
+                  <strong>Total Positions:</strong> {Object.keys(uploadedRepertoire).length}
+                  <br />
+                  <strong>Total Moves:</strong> {Object.values(uploadedRepertoire).flat().length}
                 </div>
-                <Tree
-                  value={treeData}
-                  className="w-full"
-                  selectionMode="single"
-                  nodeTemplate={nodeTemplate}
-                  onNodeClick={(e) => {
-                    const nodeData = e.node.data;
-                    if (nodeData && nodeData.fen) {
-                      // Navigate to the selected position
-                      try {
-                        gameRef.current = new Chess(nodeData.fen);
-                        setCurrentPosition(nodeData.fen);
-                        if (chessboardRef.current) {
-                          chessboardRef.current.position(nodeData.fen);
-                        }
-                        updateAvailableMoves(nodeData.fen);
-                      } catch (err) {
-                        console.error('Error navigating to position:', err);
-                      }
-                    }
-                  }}
-                />
               </Panel>
             </div>
           )}
