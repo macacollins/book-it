@@ -744,7 +744,7 @@ export default () => {
                 <FileUpload
                   mode="basic"
                   name="pgnFile"
-                  accept=".pgn,.txt"
+                  // accept=".pgn,.txt"
                   maxFileSize={10000000} // 10MB limit
                   onUpload={handleFileUpload}
                   onSelect={handleFileUpload}
