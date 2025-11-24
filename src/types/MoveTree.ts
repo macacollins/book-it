@@ -164,30 +164,6 @@ export const addMoveNode = (
 };
 
 /**
- * Update notes for a StartNode identified by FEN
- */
-export const updateNotes = (
-  moveTree: MoveTree, 
-  fen: string, 
-  notes: string
-): MoveTree => {
-  const startNode = findStartNode(moveTree, fen);
-  
-  if (!startNode) {
-    throw new Error(`StartNode with FEN ${fen} not found`);
-  }
-  
-  return {
-    ...moveTree,
-    nodes: moveTree.nodes.map(node => 
-      node.startingFEN === fen 
-        ? { ...node, notes }
-        : node
-    )
-  };
-};
-
-/**
  * Convert MoveTree to compact JSON representation
  */
 export const moveTreeToJSON = (moveTree: MoveTree): MoveTreeJSON => {

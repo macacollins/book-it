@@ -87,3 +87,15 @@ export interface QueuedGame {
     timestamp: number;  
     notes: MoveTree;
 }
+
+// Games the user wants / needs to study
+// Should support:
+// - retrieval by fen
+// - insertion
+// - updating notes
+export interface PositionNotes {
+    fen: string;
+    notes: string;
+    source: string;
+    status: "synced" | "not-synced";
+}

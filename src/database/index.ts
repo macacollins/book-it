@@ -7,6 +7,7 @@ export { DrillResultClient } from './DrillResultClient';
 export { TacticsProgressClient } from './TacticsProgressClient';
 export { QueuedPositionClient } from './QueuedPositionClient';
 export { QueuedGameClient } from './QueuedGameClient';
+export { PositionNotesClient } from './PositionNotesClient';
 
 // Re-export types for convenience
 export type {
@@ -17,6 +18,7 @@ export type {
   TacticsProgress,
   QueuedPosition,
   QueuedGame,
+  PositionNotes,
   GameSource,
   PGNType
 } from './types';

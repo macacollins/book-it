@@ -1,5 +1,5 @@
 import Dexie, { Table } from 'dexie';
-import { SavedGame, UploadedPGN, GameAnalysis, DrillResult, TacticsProgress, QueuedPosition, QueuedGame } from './types';
+import { SavedGame, UploadedPGN, GameAnalysis, DrillResult, TacticsProgress, QueuedPosition, QueuedGame, PositionNotes } from './types';
 
 export class BookItDatabase extends Dexie {
   savedGames!: Table<SavedGame, string>;
@@ -9,6 +9,7 @@ export class BookItDatabase extends Dexie {
   tacticsProgress!: Table<TacticsProgress, string>;
   queuedPositions!: Table<QueuedPosition, string>;
   queuedGames!: Table<QueuedGame, string>;
+  positionNotes!: Table<PositionNotes, string>;
 
   constructor() {
     super('BookItDatabase');
@@ -20,7 +21,8 @@ export class BookItDatabase extends Dexie {
       drillResults: 'id, fen, correct, timestamp',
       tacticsProgress: 'id, lastSolvedTimestamp',
       queuedPositions: 'id, fen, timestamp',
-      queuedGames: 'id, gameID, timestamp'
+      queuedGames: 'id, gameID, timestamp',
+      positionNotes: 'fen, source, status'
     });
   }
 }
