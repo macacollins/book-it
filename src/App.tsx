@@ -4,6 +4,7 @@ import DatabasePage from './pages/DatabasePage';
 import GameAnnotatorPage from './pages/GameAnnotatorPage';
 import RepertoireDiffPage from './pages/RepertoireDiffPage';
 import TacticsPracticePage from './pages/TacticsPracticePage';
+import RepertoireDrillPage from './pages/RepertoireDrillPage';
 import { SavedGameClient } from './database/SavedGameClient';
 import { Menubar } from 'primereact/menubar';
 import './App.css';
@@ -39,6 +40,11 @@ function App() {
       label: 'Tactics Practice',
       icon: 'pi pi-bolt',
       command: () => { window.location.hash = '#/tactics'; }
+    },
+    {
+      label: 'Repertoire Drill',
+      icon: 'pi pi-play',
+      command: () => { window.location.hash = '#/repertoire-drill'; }
     }
   ];
 
@@ -63,6 +69,7 @@ function App() {
             <Route path="/annotator" element={<GameAnnotatorPage />} />
             <Route path="/diff" element={<RepertoireDiffPage />} />
             <Route path="/tactics" element={<TacticsPracticePage />} />
+            <Route path="/repertoire-drill" element={<RepertoireDrillPage />} />
           </Routes>
         </div>
       </div>

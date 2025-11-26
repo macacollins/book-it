@@ -3,7 +3,10 @@ import { Chess, Move } from 'chess.js';
 import { Button } from 'primereact/button';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Card } from 'primereact/card';
+import { Splitter, SplitterPanel } from 'primereact/splitter';
 import ChessBoard from './ChessBoard';
+import { TinyFENDisplay } from '../pages/TinyFENDisplay';
+import useWindowSize from '../hooks/useWindowSize';
 import { 
   MoveTree, 
   createMoveTree, 
@@ -38,10 +41,16 @@ export const MoveTreeEditor: React.FC<MoveTreeEditorProps> = ({
   const [moveHistory, setMoveHistory] = useState<string[]>([]);
   const [notes, setNotes] = useState<string>('');
   const [childMoves, setChildMoves] = useState<MoveNode[]>([]);
+  const [isExpanded, setIsExpanded] = useState<boolean>(true);
+  
+  const [windowWidth, windowHeight] = useWindowSize();
   
   const chessboardRef = useRef<any>(null);
   const gameRef = useRef<Chess>(new Chess());
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Calculate board size as minimum of window dimensions and 400px
+  const boardSize = `${Math.min(windowWidth, windowHeight, 400)}px`;
 
   // Cleanup debounce timer on unmount
   useEffect(() => {
@@ -103,11 +112,11 @@ export const MoveTreeEditor: React.FC<MoveTreeEditorProps> = ({
 
     try {
       // Get the current position
-      const beforeFEN = gameRef.current.fen();
+      const beforeFEN = move.before
       
       // Make the move in the game reference
-      gameRef.current.move(move);
-      const afterFEN = gameRef.current.fen();
+      // gameRef.current.move(move);
+      const afterFEN = move.after;
       
       // Add the move to the move tree
       const updatedTree = addMoveNode(
@@ -216,84 +225,95 @@ export const MoveTreeEditor: React.FC<MoveTreeEditorProps> = ({
   return (
     <div className="move-tree-editor" style={{ padding: '1rem' }}>
       <Card title="Move Tree Editor">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {/* Chess Board */}
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <ChessBoard
-              name="move-tree-editor"
-              game_url=""
-              fen={currentFEN}
-              draggable={true}
-              moveCallback={handleMove}
-              madeMoveRef={{ current: false }}
-              chessboardRef={chessboardRef}
-              gameRef={gameRef}
-              size="400px"
-            />
-          </div>
-
-          {/* Navigation Buttons */}
-          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-            <Button 
-              label="Reset" 
-              icon="pi pi-refresh" 
-              onClick={handleReset}
-              severity="secondary"
-            />
-            <Button 
-              label="Back" 
-              icon="pi pi-arrow-left" 
-              onClick={handleBack}
-              disabled={moveHistory.length === 0}
-              severity="secondary"
-            />
-          </div>
-
-          {/* Move History */}
-          <div>
-            <strong>Moves:</strong> {moveHistory.length > 0 ? moveHistory.join(', ') : 'Starting position'}
-          </div>
-
-          {/* Current Position FEN */}
-          <div style={{ fontSize: '0.8rem', color: '#888' }}>
-            <strong>FEN:</strong> {currentFEN}
-          </div>
-
-          {/* Notes Editor */}
-          <div>
-            <label htmlFor="notes" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Notes for this position:
-            </label>
-            <InputTextarea
-              id="notes"
-              value={notes}
-              onChange={(e) => handleNotesChange(e.target.value)}
-              rows={5}
-              style={{ width: '100%' }}
-              placeholder="Add notes about this position..."
-            />
-          </div>
-
-          {/* Child Moves */}
-          {childMoves.length > 0 && (
-            <div>
-              <strong>Variations from this position:</strong>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
-                {childMoves.map((child, index) => (
-                  <Button
-                    key={index}
-                    label={child.move}
-                    onClick={() => handleChildMoveClick(child)}
-                    severity="info"
-                    outlined
+        <Splitter layout={windowHeight > windowWidth ? 'vertical' : 'horizontal'}>
+          
+          <SplitterPanel size={50} minSize={10}>
+            <div className="h-full w-full">
+              {/* Chess Board */}
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                {isExpanded ? (
+                  <ChessBoard
+                    name="move-tree-editor"
+                    game_url=""
+                    fen={currentFEN}
+                    draggable={true}
+                    moveCallback={handleMove}
+                    madeMoveRef={{ current: false }}
+                    chessboardRef={chessboardRef}
+                    gameRef={gameRef}
+                    size={boardSize}
                   />
-                ))}
+                ) : (
+                  <TinyFENDisplay fen={currentFEN} />
+                )}
               </div>
-            </div>
-          )}
-        </div>
 
-        <pre>{JSON.stringify(moveTree, null, 2)}</pre>
+              {/* Navigation Buttons */}
+              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '1rem' }}>
+                <Button 
+                  label="Reset" 
+                  icon="pi pi-refresh" 
+                  onClick={handleReset}
+                  severity="secondary"
+                />
+                <Button 
+                  label="Back" 
+                  icon="pi pi-arrow-left" 
+                  onClick={handleBack}
+                  disabled={moveHistory.length === 0}
+                  severity="secondary"
+                />
+                <Button 
+                  label={isExpanded ? "Shrink" : "Expand"}
+                  icon={isExpanded ? "pi pi-minus" : "pi pi-plus"}
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  severity="secondary"
+                />
+              </div>
+
+              {/* Child Moves */}
+              {childMoves.length > 0 && (
+                <div style={{ marginTop: '1rem' }}>
+                  <strong>Variations from this position:</strong>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+                    {childMoves.map((child, index) => (
+                      <Button
+                        key={index}
+                        label={child.move}
+                        onClick={() => handleChildMoveClick(child)}
+                        severity="info"
+                        outlined
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </SplitterPanel>
+
+          <SplitterPanel size={50} minSize={30}>
+            <div className="h-full w-full p-2">
+              {/* Notes Editor */}
+              <div>
+                <InputTextarea
+                  id="notes"
+                  value={notes}
+                  onChange={(e) => handleNotesChange(e.target.value)}
+                  rows={15}
+                  className="w-full"
+                  placeholder="Add notes about this position..."
+                />
+              </div>
+
+              {isExpanded && (
+                <div className="text-xs text-500 mt-2">
+                  <strong>FEN:</strong> {currentFEN}
+                </div>
+              )}
+            </div>
+          </SplitterPanel>
+
+        </Splitter>
       </Card>
     </div>
   );
