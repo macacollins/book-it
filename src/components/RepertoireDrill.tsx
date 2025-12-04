@@ -12,6 +12,9 @@ import ChessBoard from './ChessBoard';
 import useWindowSize from '../hooks/useWindowSize';
 
 const SELECTED_REPERTOIRE_PGN_KEY = 'SELECTED_REPERTOIRE_PGN';
+const STARTING_MOVE_KEY = 'REPERTOIRE_DRILL_STARTING_MOVE';
+const ENDING_MOVE_KEY = 'REPERTOIRE_DRILL_ENDING_MOVE';
+const DRILL_COLOR_KEY = 'REPERTOIRE_DRILL_COLOR';
 
 export const RepertoireDrill = () => {
   const [uploadedPGNs, setUploadedPGNs] = useState<UploadedPGN[]>([]);
@@ -22,6 +25,10 @@ export const RepertoireDrill = () => {
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
   const currentExerciseIndexRef = useRef<number>(0);
   const currentMoveIndexRef = useRef<number>(0);
+  
+  const [startingMove, setStartingMove] = useState<number>(1);
+  const [endingMove, setEndingMove] = useState<number>(20);
+  const [drillColor, setDrillColor] = useState<'white' | 'black'>('white');
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -91,7 +98,7 @@ export const RepertoireDrill = () => {
               
               // If we have at least some moves, add this variation
               if (currentPath.length > 0) {
-                result.push(currentPath.slice(0, 20)); // Limit to 20 moves
+                result.push(currentPath.slice(0, 50)); // Limit to 50 moves
               }
               
               // Recursively expand RAVs (alternative variations)
@@ -132,11 +139,33 @@ export const RepertoireDrill = () => {
             });
           }
         });
-        
-        setExercises(exerciseList.filter(ex => ex.length > 12 && ex.length % 2 === 1));
-        setCurrentExerciseIndex(0);
-        setCurrentMoveIndex(0);
-        setError(null);
+
+
+        const newExercises = exerciseList.filter(ex => ex.length > startingMove && ex.length % 2 === (drillColor === "white" ? 1 : 0));
+        console.log("Setting exercises to ", newExercises);
+        setExercises(newExercises);
+
+        if (drillColor === 'white') {
+          setCurrentExerciseIndex(0);
+          setCurrentMoveIndex(0);
+          setError(null);
+        } else {
+          setCurrentExerciseIndex(0);
+
+          setTimeout(() => {
+            const opponentMove = newExercises[0][0];
+            if (opponentMove && gameRef.current && chessboardRef.current) {
+              const moveResult = gameRef.current.move(opponentMove);
+              if (moveResult) {
+                chessboardRef.current.position(gameRef.current.fen());
+                setCurrentMoveIndex(1);
+              }
+            }
+          }, 300);
+          
+          setError(null);
+        }
+
       } catch (err) {
         console.error('Error parsing PGN:', err);
         setError('Failed to parse selected PGN file');
@@ -144,6 +173,8 @@ export const RepertoireDrill = () => {
         setExercises([]);
       }
     } else {
+
+      console.log("Clearing exercises");
       setParsedPGNs([]);
       setExercises([]);
       setCurrentExerciseIndex(0);
@@ -194,7 +225,7 @@ export const RepertoireDrill = () => {
     const currentExercise = exercises[currentExerciseIndexRef.current];
     
     // Only check white's moves (even indices: 0, 2, 4...)
-    if (currentMoveIndexRef.current % 2 === 1) {
+    if (currentMoveIndexRef.current % 2 === (drillColor === "white" ? 1 : 0)) {
       // This is black's move, automatically play it
       return true;
     }
@@ -223,6 +254,19 @@ export const RepertoireDrill = () => {
             setCurrentExerciseIndex(currentExerciseIndexRef.current + 1);
             chessboardRef.current?.position('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
             gameRef.current?.reset();
+
+            if (drillColor === 'black') {
+              setTimeout(() => {
+                const opponentMove = exercises[currentExerciseIndexRef.current][0];
+                if (opponentMove && gameRef.current && chessboardRef.current) {
+                  const moveResult = gameRef.current.move(opponentMove);
+                  if (moveResult) {
+                    chessboardRef.current.position(gameRef.current.fen());
+                    setCurrentMoveIndex(1);
+                  }
+                }
+              }, 300);
+            }
           }, 2000);
         }
       } else {
@@ -231,7 +275,7 @@ export const RepertoireDrill = () => {
         setCurrentMoveIndex(newMoveIndex);
         
         // If next move is black's move, play it automatically after a delay
-        if (newMoveIndex < totalMoves && newMoveIndex % 2 === 1) {
+        if (newMoveIndex < totalMoves && newMoveIndex % 2 === (drillColor === "white" ? 1 : 0)) {
           setTimeout(() => {
             const opponentMove = currentExercise[newMoveIndex];
             if (opponentMove && gameRef.current && chessboardRef.current) {
@@ -293,6 +337,71 @@ export const RepertoireDrill = () => {
             )}
           </div>
 
+          <div className="grid mb-4">
+            <div className="col-12 md:col-4">
+              <label htmlFor="drill-color" className="block mb-2 font-semibold">
+                Drill as Color:
+              </label>
+              <Dropdown
+                id="drill-color"
+                value={drillColor}
+                options={[
+                  { label: 'White', value: 'white' },
+                  { label: 'Black', value: 'black' }
+                ]}
+                onChange={(e) => {
+                  setDrillColor(e.value);
+                  localStorage.setItem(DRILL_COLOR_KEY, e.value);
+                }}
+                className="w-full"
+              />
+            </div>
+
+            <div className="col-12 md:col-4">
+              <label htmlFor="starting-move" className="block mb-2 font-semibold">
+                Starting Move Number:
+              </label>
+              <Dropdown
+                id="starting-move"
+                value={startingMove}
+                options={Array.from({ length: 30 }, (_, i) => ({
+                  label: `${i + 1}`,
+                  value: i + 1
+                }))}
+                onChange={(e) => {
+                  const newStart = e.value;
+                  setStartingMove(newStart);
+                  localStorage.setItem(STARTING_MOVE_KEY, newStart.toString());
+                  // Ensure ending move is always >= starting move
+                  if (endingMove < newStart) {
+                    setEndingMove(newStart);
+                    localStorage.setItem(ENDING_MOVE_KEY, newStart.toString());
+                  }
+                }}
+                className="w-full"
+              />
+            </div>
+
+            <div className="col-12 md:col-4">
+              <label htmlFor="ending-move" className="block mb-2 font-semibold">
+                Ending Move Number:
+              </label>
+              <Dropdown
+                id="ending-move"
+                value={endingMove}
+                options={Array.from({ length: 40 - startingMove + 1 }, (_, i) => ({
+                  label: `${startingMove + i}`,
+                  value: startingMove + i
+                }))}
+                onChange={(e) => {
+                  setEndingMove(e.value);
+                  localStorage.setItem(ENDING_MOVE_KEY, e.value.toString());
+                }}
+                className="w-full"
+              />
+            </div>
+          </div>
+
           {error && (
             <Message severity="error" text={error} className="mb-4" />
           )}
@@ -335,6 +444,7 @@ export const RepertoireDrill = () => {
             madeMoveRef={{ current: false }}
             moveCallback={moveHandler}
             size={`${boardSize}px`}
+            invert={drillColor === 'black'}
           />
 
           <div className="flex justify-content-center gap-2 mt-3">
@@ -362,6 +472,11 @@ export const RepertoireDrill = () => {
             Current Exercise index {currentExerciseIndex}
             Expecting move {exercises[currentExerciseIndex][currentMoveIndex]}
             Exercise count {exercises.length}
+
+
+            <div>Drilling as: <strong>{drillColor === 'white' ? 'White' : 'Black'}</strong></div>
+            <div>Move range: <strong>{startingMove} - {endingMove}</strong></div>
+            <div>Current position: Move {Math.floor(((startingMove - 1) * 2 + currentMoveIndex) / 2) + 1}</div>
           </div>
             <pre>{JSON.stringify(exercises,null,2)}</pre>
         </div>
