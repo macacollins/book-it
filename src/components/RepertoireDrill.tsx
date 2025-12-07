@@ -10,9 +10,11 @@ import { UploadedPGN } from '../database/types';
 import pgnParser, { ParsedPGN } from 'pgn-parser';
 import ChessBoard from './ChessBoard';
 import useWindowSize from '../hooks/useWindowSize';
-import { saveDrillCompletion, getLastDrillCompletion } from '../services/drillProgress';
+import { saveDrillCompletion, getLastDrillCompletion, getAllDrillHistories } from '../services/drillProgress';
 import { DrillCompletionData } from '../types/DrillProgress';
 import 'bootstrap-icons/font/bootstrap-icons.css';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 const SELECTED_REPERTOIRE_PGN_KEY = 'SELECTED_REPERTOIRE_PGN';
 const STARTING_MOVE_KEY = 'REPERTOIRE_DRILL_STARTING_MOVE';
 const ENDING_MOVE_KEY = 'REPERTOIRE_DRILL_ENDING_MOVE';
@@ -35,7 +37,8 @@ export const RepertoireDrill = () => {
   const [drillColor, setDrillColor] = useState<'white' | 'black'>('white');
   
   const [drillStarted, setDrillStarted] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false)
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [recentCompletions, setRecentCompletions] = useState<DrillCompletionData[]>([]);
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -140,6 +143,29 @@ export const RepertoireDrill = () => {
             setDrillColor(savedDrillColor);
           }
         }
+
+        // Load recent completions
+        const histories = getAllDrillHistories();
+        const allCompletions: DrillCompletionData[] = [];
+        histories.forEach(history => {
+          allCompletions.push(...history.completions);
+        });
+        // Sort by completion date, most recent first
+        allCompletions.sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
+        
+        // Deduplicate by filename, keeping only the most recent for each
+        const seenFilenames = new Set<string>();
+        const uniqueCompletions = allCompletions.filter(completion => {
+          if (seenFilenames.has(completion.filename)) {
+            return false;
+          }
+          seenFilenames.add(completion.filename);
+          return true;
+        });
+        
+        // Take top 5 unique repertoires
+        setRecentCompletions(uniqueCompletions.slice(0, 5));
+
       } catch (err) {
         console.error('Error loading repertoire PGNs:', err);
         setError('Failed to load repertoire from database');
@@ -434,8 +460,48 @@ export const RepertoireDrill = () => {
     }
   };
 
+  const handleStartFromCompletion = (completion: DrillCompletionData) => {
+    // Find the matching PGN
+    const matchingPGN = uploadedPGNs.find(pgn => pgn.filename === completion.filename);
+    if (matchingPGN) {
+      setSelectedPGN(matchingPGN);
+      setStartingMove(completion.startingMove);
+      setEndingMove(completion.endingMove);
+      setDrillColor(completion.drillColor);
+      localStorage.setItem(SELECTED_REPERTOIRE_PGN_KEY, matchingPGN.filename);
+      localStorage.setItem(STARTING_MOVE_KEY, completion.startingMove.toString());
+      localStorage.setItem(ENDING_MOVE_KEY, completion.endingMove.toString());
+      localStorage.setItem(DRILL_COLOR_KEY, completion.drillColor);
+      setDrillStarted(true);
+      setCurrentExerciseIndex(0);
+    }
+  };
+
+  const handleStartNextFromCompletion = (completion: DrillCompletionData) => {
+    // Find the matching PGN
+    const matchingPGN = uploadedPGNs.find(pgn => pgn.filename === completion.filename);
+    if (matchingPGN) {
+      const newStartingMove = completion.startingMove + 2;
+      const newEndingMove = completion.endingMove + 2;
+      
+      const cappedEndingMove = Math.min(newEndingMove, 40);
+      const cappedStartingMove = Math.min(newStartingMove, 38);
+      
+      setSelectedPGN(matchingPGN);
+      setStartingMove(cappedStartingMove);
+      setEndingMove(cappedEndingMove);
+      setDrillColor(completion.drillColor);
+      localStorage.setItem(SELECTED_REPERTOIRE_PGN_KEY, matchingPGN.filename);
+      localStorage.setItem(STARTING_MOVE_KEY, cappedStartingMove.toString());
+      localStorage.setItem(ENDING_MOVE_KEY, cappedEndingMove.toString());
+      localStorage.setItem(DRILL_COLOR_KEY, completion.drillColor);
+      setDrillStarted(true);
+      setCurrentExerciseIndex(0);
+    }
+  };
+
   return (
-    <div className="p-1 flex align-items-center justify-content-center">
+    <div className="p-1 flex flex-wrap align-items-center justify-content-center">
       <Toast ref={toast} />
       {!drillStarted && (
         <Card title="Repertoire Drill">
@@ -567,6 +633,59 @@ export const RepertoireDrill = () => {
         </Card>
       )}
 
+      {!drillStarted && recentCompletions.length > 0 && (
+        <Card title="Recent Drills" className="m-3">
+          <DataTable value={recentCompletions} size="small" stripedRows>
+            <Column 
+              field="filename" 
+              header="Repertoire" 
+              style={{ width: '35%' }}
+            />
+            <Column 
+              field="startingMove" 
+              header="Start Move" 
+              style={{ width: '12%' }}
+            />
+            <Column 
+              field="endingMove" 
+              header="End Move" 
+              style={{ width: '12%' }}
+            />
+            <Column 
+              field="drillColor" 
+              header="Color" 
+              body={(rowData: DrillCompletionData) => (
+                <span className="capitalize">{rowData.drillColor}</span>
+              )}
+              style={{ width: '12%' }}
+            />
+            <Column 
+              header="Actions" 
+              body={(rowData: DrillCompletionData) => (
+                <div className="flex gap-1">
+                  <Button
+                    label="Start"
+                    icon="bi bi-play-fill"
+                    onClick={() => handleStartFromCompletion(rowData)}
+                    size="small"
+                    className="p-button-success p-button-sm"
+                  />
+                  <Button
+                    label="Start Next"
+                    icon="bi bi-fast-forward-fill"
+                    onClick={() => handleStartNextFromCompletion(rowData)}
+                    size="small"
+                    disabled={rowData.endingMove >= 40}
+                    className="p-button-info p-button-sm"
+                  />
+                </div>
+              )}
+              style={{ width: '29%' }}
+            />
+          </DataTable>
+        </Card>
+      )}
+
       {drillStarted && selectedPGN && exercises.length === 0 && (
         <Card title="No Exercises Found">
           <Message 
@@ -653,7 +772,7 @@ export const RepertoireDrill = () => {
             <div>Move range: <strong>{startingMove} - {endingMove}</strong></div>
             <div>Current position: Move {Math.floor(((startingMove - 1) * 2 + currentMoveIndex) / 2) + 1}</div>
           </div>
-            <pre>{JSON.stringify(exercises,null,2)}</pre>
+            {/* <pre>{JSON.stringify(exercises,null,2)}</pre> */}
         </div>
       )}
     </div>
