@@ -141,7 +141,7 @@ export const RepertoireDrill = () => {
         });
 
 
-        const newExercises = exerciseList.filter(ex => ex.length > startingMove && ex.length % 2 === (drillColor === "white" ? 1 : 0));
+        const newExercises = exerciseList.filter(ex => ex.length > startingMove && ex.length <= endingMove&& ex.length % 2 === (drillColor === "white" ? 1 : 0));
         console.log("Setting exercises to ", newExercises);
         setExercises(newExercises);
 
