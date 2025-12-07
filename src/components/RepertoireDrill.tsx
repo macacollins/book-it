@@ -10,11 +10,15 @@ import { UploadedPGN } from '../database/types';
 import pgnParser, { ParsedPGN } from 'pgn-parser';
 import ChessBoard from './ChessBoard';
 import useWindowSize from '../hooks/useWindowSize';
-
+import { saveDrillCompletion, getLastDrillCompletion } from '../services/drillProgress';
+import { DrillCompletionData } from '../types/DrillProgress';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 const SELECTED_REPERTOIRE_PGN_KEY = 'SELECTED_REPERTOIRE_PGN';
 const STARTING_MOVE_KEY = 'REPERTOIRE_DRILL_STARTING_MOVE';
 const ENDING_MOVE_KEY = 'REPERTOIRE_DRILL_ENDING_MOVE';
 const DRILL_COLOR_KEY = 'REPERTOIRE_DRILL_COLOR';
+const DRILL_STARTED_KEY = 'REPERTOIRE_DRILL_STARTED';
+const CURRENT_EXERCISE_INDEX_KEY = 'REPERTOIRE_CURRENT_EXERCISE_INDEX';
 
 export const RepertoireDrill = () => {
   const [uploadedPGNs, setUploadedPGNs] = useState<UploadedPGN[]>([]);
@@ -26,9 +30,12 @@ export const RepertoireDrill = () => {
   const currentExerciseIndexRef = useRef<number>(0);
   const currentMoveIndexRef = useRef<number>(0);
   
-  const [startingMove, setStartingMove] = useState<number>(1);
-  const [endingMove, setEndingMove] = useState<number>(20);
+  const [startingMove, setStartingMove] = useState<number>(8);
+  const [endingMove, setEndingMove] = useState<number>(10);
   const [drillColor, setDrillColor] = useState<'white' | 'black'>('white');
+  
+  const [drillStarted, setDrillStarted] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false)
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,11 +55,48 @@ export const RepertoireDrill = () => {
     currentMoveIndexRef.current = currentMoveIndex;
   }, [currentMoveIndex]);
 
-  // Load all repertoire PGNs from database
+  // Persist currentExerciseIndex to database when it changes
+  useEffect(() => {
+    if (isInitialized) {
+      console.log("Was initialized setting to ", currentExerciseIndex);
+      localStorage.setItem(CURRENT_EXERCISE_INDEX_KEY, currentExerciseIndex.toString());
+    } else {
+      console.log("Not initialized, skipping setting current exercise index");
+    }
+  }, [currentExerciseIndex]);
+
+  // Persist drillStarted to localStorage when it changes
+  useEffect(() => {
+    if (isInitialized) {
+      console.log("Was initialized setting drill started to ", drillStarted);
+      localStorage.setItem(DRILL_STARTED_KEY, drillStarted.toString());
+    } else {
+      console.log("Not initialized, skipping setting drill started");
+    }
+  }, [drillStarted]);
+
+  // Load all repertoire PGNs from database and restore state
   useEffect(() => {
     const loadRepertoirePGNs = async () => {
       try {
         setLoading(true);
+        
+        // Load drill started state from localStorage
+        const savedDrillStarted = localStorage.getItem(DRILL_STARTED_KEY);
+        if (savedDrillStarted === 'true') {
+          setDrillStarted(true);
+        }
+        
+        // Load current exercise index from database
+        const savedExerciseIndex = localStorage.getItem(CURRENT_EXERCISE_INDEX_KEY);
+        if (savedExerciseIndex !== null && !isNaN(parseInt(savedExerciseIndex, 10))) {
+          setCurrentExerciseIndex(parseInt(savedExerciseIndex, 10));
+          currentExerciseIndexRef.current = parseInt(savedExerciseIndex, 10);
+          console.log("Set currentExerciseIndex to", parseInt(savedExerciseIndex, 10));
+        } else {
+          console.log("Did not load current exercise index from localStorage");
+        }
+        
         const repertoirePGNs = await UploadedPGNClient.getByType('repertoire');
         setUploadedPGNs(repertoirePGNs);
         
@@ -62,6 +106,38 @@ export const RepertoireDrill = () => {
           const matchingPGN = repertoirePGNs.find(pgn => pgn.filename === savedFilename);
           if (matchingPGN) {
             setSelectedPGN(matchingPGN);
+          
+            // Fall back to general saved settings if no completion history exists
+            const savedStartingMove = localStorage.getItem(STARTING_MOVE_KEY);
+            if (savedStartingMove) {
+              setStartingMove(parseInt(savedStartingMove, 10));
+            }
+            
+            const savedEndingMove = localStorage.getItem(ENDING_MOVE_KEY);
+            if (savedEndingMove) {
+              setEndingMove(parseInt(savedEndingMove, 10));
+            }
+            
+            const savedDrillColor = localStorage.getItem(DRILL_COLOR_KEY);
+            if (savedDrillColor === 'white' || savedDrillColor === 'black') {
+              setDrillColor(savedDrillColor);
+            }
+          }
+        } else {
+          // No PGN selected, restore general drill settings
+          const savedStartingMove = localStorage.getItem(STARTING_MOVE_KEY);
+          if (savedStartingMove) {
+            setStartingMove(parseInt(savedStartingMove, 10));
+          }
+          
+          const savedEndingMove = localStorage.getItem(ENDING_MOVE_KEY);
+          if (savedEndingMove) {
+            setEndingMove(parseInt(savedEndingMove, 10));
+          }
+          
+          const savedDrillColor = localStorage.getItem(DRILL_COLOR_KEY);
+          if (savedDrillColor === 'white' || savedDrillColor === 'black') {
+            setDrillColor(savedDrillColor);
           }
         }
       } catch (err) {
@@ -69,15 +145,19 @@ export const RepertoireDrill = () => {
         setError('Failed to load repertoire from database');
       } finally {
         setLoading(false);
+        setIsInitialized(true);
       }
     };
 
     loadRepertoirePGNs();
+
+
   }, []);
 
-  // Parse PGN and create exercises when selection changes
+  // Parse PGN and create exercises when drill starts
   useEffect(() => {
-    if (selectedPGN) {
+    console.log("Drill started changed to", selectedPGN?.filename, "isInitialized:", drillStarted);
+    if (selectedPGN && drillStarted) {
       try {
         const parsed = pgnParser.parse(selectedPGN.content);
         console.log("Got parsed", parsed);
@@ -146,11 +226,11 @@ export const RepertoireDrill = () => {
         setExercises(newExercises);
 
         if (drillColor === 'white') {
-          setCurrentExerciseIndex(0);
+          // setCurrentExerciseIndex(0);
           setCurrentMoveIndex(0);
           setError(null);
         } else {
-          setCurrentExerciseIndex(0);
+          // setCurrentExerciseIndex(0);
 
           setTimeout(() => {
             const opponentMove = newExercises[0][0];
@@ -175,12 +255,12 @@ export const RepertoireDrill = () => {
     } else {
 
       console.log("Clearing exercises");
-      setParsedPGNs([]);
-      setExercises([]);
-      setCurrentExerciseIndex(0);
-      setCurrentMoveIndex(0);
+      // setParsedPGNs([]);
+      // setExercises([]);
+      // setCurrentExerciseIndex(0);
+      // setCurrentMoveIndex(0);
     }
-  }, [selectedPGN]);
+  }, [selectedPGN, drillStarted]);
 
   if (loading) {
     return (
@@ -268,6 +348,30 @@ export const RepertoireDrill = () => {
               }, 300);
             }
           }, 2000);
+
+
+
+        } else {
+          // Last exercise completed
+          toast.current?.show({
+            severity: 'info',
+            summary: 'All Done',
+            detail: 'You have completed all exercises in this repertoire!',
+            life: 4000
+          });
+
+          // Save completion stats using the drillProgress service
+          if (selectedPGN?.filename) {
+            const completionData: DrillCompletionData = {
+              filename: selectedPGN.filename,
+              startingMove: startingMove,
+              endingMove: endingMove,
+              drillColor: drillColor,
+              completedAt: new Date().toISOString(),
+              exerciseCount: exercises.length
+            };
+            saveDrillCompletion(completionData);
+          }
         }
       } else {
         // More moves to go - increment and make opponent's move if it's black's turn
@@ -302,10 +406,38 @@ export const RepertoireDrill = () => {
     }
   };
 
+  const handleStartDrill = () => {
+    if (selectedPGN) {
+      setDrillStarted(true);
+      setCurrentExerciseIndex(0);
+    }
+  };
+
+  const handleStartNextRange = () => {
+    if (selectedPGN) {
+      const newStartingMove = startingMove + 2;
+      const newEndingMove = endingMove + 2;
+      
+      // Cap at 40 for ending move
+      const cappedEndingMove = Math.min(newEndingMove, 40);
+      const cappedStartingMove = Math.min(newStartingMove, 38); // Ensure at least 2 move range
+      
+      setStartingMove(cappedStartingMove);
+      setEndingMove(cappedEndingMove);
+      localStorage.setItem(STARTING_MOVE_KEY, cappedStartingMove.toString());
+      localStorage.setItem(ENDING_MOVE_KEY, cappedEndingMove.toString());
+
+      console.log("Setting new move range to", cappedStartingMove, "-", cappedEndingMove);
+      
+      setDrillStarted(true);
+      setCurrentExerciseIndex(0);
+    }
+  };
+
   return (
     <div className="p-1 flex align-items-center justify-content-center">
       <Toast ref={toast} />
-      {!selectedPGN && (
+      {!drillStarted && (
         <Card title="Repertoire Drill">
           <div className="mb-4">
             <label htmlFor="pgn-select" className="block mb-2 font-semibold">
@@ -320,6 +452,14 @@ export const RepertoireDrill = () => {
                 setSelectedPGN(newPGN);
                 if (newPGN) {
                   localStorage.setItem(SELECTED_REPERTOIRE_PGN_KEY, newPGN.filename);
+                  
+                  // Load drill settings for this PGN
+                  const lastCompletion = getLastDrillCompletion(newPGN.filename);
+                  if (lastCompletion) {
+                    setStartingMove(lastCompletion.startingMove);
+                    setEndingMove(lastCompletion.endingMove);
+                    setDrillColor(lastCompletion.drillColor);
+                  }
                 } else {
                   localStorage.removeItem(SELECTED_REPERTOIRE_PGN_KEY);
                 }
@@ -406,29 +546,64 @@ export const RepertoireDrill = () => {
             <Message severity="error" text={error} className="mb-4" />
           )}
 
-          {selectedPGN && exercises.length === 0 && !error && (
-            <Message 
-              severity="warn" 
-              text="No valid exercises found in the selected PGN file." 
-              className="mt-4"
+          <div className="flex justify-content-center gap-2 mt-4">
+            <Button
+              label="Start Drill"
+              icon="bi bi-play-fill"
+              onClick={handleStartDrill}
+              disabled={!selectedPGN}
+              size="large"
+              className="p-button-success"
             />
-          )}
+            <Button
+              label="Start Next"
+              icon="bi bi-fast-forward-fill"
+              onClick={handleStartNextRange}
+              disabled={!selectedPGN || endingMove >= 40}
+              size="large"
+              className="p-button-info"
+            />
+          </div>
         </Card>
       )}
 
-      {selectedPGN && exercises.length > 0 && (
+      {drillStarted && selectedPGN && exercises.length === 0 && (
+        <Card title="No Exercises Found">
+          <Message 
+            severity="warn" 
+            text={`No exercises found for the selected criteria (moves ${startingMove}-${endingMove}, drilling as ${drillColor}). Try adjusting your settings.`}
+            className="mb-4"
+          />
+          <div className="flex justify-content-center">
+            <Button
+              label="Back to Settings"
+              icon="bi bi-arrow-left"
+              onClick={async () => {
+                setDrillStarted(false);
+                setCurrentExerciseIndex(0);
+                localStorage.setItem(CURRENT_EXERCISE_INDEX_KEY, '0');
+              }}
+              className="p-button-secondary"
+            />
+          </div>
+        </Card>
+      )}
+
+      {drillStarted && selectedPGN && exercises.length > 0 && (
         <div>
           <div className="flex justify-content-between align-items-center mb-3">
             <h3 className="m-0">{selectedPGN.filename}</h3>
             <Button
               label="Choose Another"
-              icon="pi pi-book"
-              onClick={() => {
+              icon="bi bi-book"
+              onClick={async () => {
+                setDrillStarted(false);
                 setSelectedPGN(null);
                 setExercises([]);
                 setCurrentExerciseIndex(0);
                 setCurrentMoveIndex(0);
                 localStorage.removeItem(SELECTED_REPERTOIRE_PGN_KEY);
+                localStorage.setItem(CURRENT_EXERCISE_INDEX_KEY, '0');
               }}
               className="p-button-secondary p-button-sm"
             />
@@ -450,7 +625,7 @@ export const RepertoireDrill = () => {
           <div className="flex justify-content-center gap-2 mt-3">
             <Button
               label="Previous"
-              icon="pi pi-chevron-left"
+              icon="bi bi-chevron-left"
               onClick={handlePrevious}
               disabled={currentExerciseIndex === 0}
             />
@@ -459,7 +634,7 @@ export const RepertoireDrill = () => {
             </span>
             <Button
               label="Next"
-              icon="pi pi-chevron-right"
+              icon="bi bi-chevron-right"
               iconPos="right"
               onClick={handleNext}
               disabled={currentExerciseIndex >= exercises.length - 1}
@@ -470,8 +645,8 @@ export const RepertoireDrill = () => {
             Move {Math.floor(currentMoveIndex / 2) + 1}
             Current move index {currentMoveIndex}
             Current Exercise index {currentExerciseIndex}
-            Expecting move {exercises[currentExerciseIndex][currentMoveIndex]}
-            Exercise count {exercises.length}
+            Expecting move {exercises?.length > 0 && exercises[currentExerciseIndex] && exercises[currentExerciseIndex][currentMoveIndex] ? exercises[currentExerciseIndex][currentMoveIndex] : 'N/A'}
+            Exercise count {exercises?.length || 0}
 
 
             <div>Drilling as: <strong>{drillColor === 'white' ? 'White' : 'Black'}</strong></div>
