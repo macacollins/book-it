@@ -113,7 +113,7 @@ export default () => {
   const [chessComUsername, setChessComUsername] = useState<string>('');
   const [lichessUsername, setLichessUsername] = useState<string>('');
   const [importing, setImporting] = useState<boolean>(false);
-  const [uploadPGNType, setUploadPGNType] = useState<PGNType>('games');
+  const [uploadPGNType, setUploadPGNType] = useState<PGNType | null>(null);
   const [uploading, setUploading] = useState<boolean>(false);
 
   const toast = React.useRef<Toast>(null);
@@ -428,6 +428,12 @@ export default () => {
     const file = event.files[0];
     if (!file) return;
 
+    if (!uploadPGNType) {
+      showError('Please select a PGN type before uploading');
+      event.options.clear();
+      return;
+    }
+
     setUploading(true);
     try {
       const fileContent = await readFileContent(file);
@@ -436,7 +442,7 @@ export default () => {
         id: `upload-${Date.now()}`,
         filename: file.name,
         content: fileContent,
-        type: uploadPGNType,
+        type: uploadPGNType as PGNType, // Safe to assert since we check above
       };
 
       await UploadedPGNClient.insert(uploadedPGN);
@@ -682,91 +688,58 @@ export default () => {
 
         {/* Uploaded PGNs */}
         <AccordionTab header={`Uploaded PGNs (${state.uploadedPGNs.length})`}>
-          <Panel header="Add New PGN Upload" toggleable collapsed>
-            <div className="grid p-fluid">
-              <div className="col-12 md:col-6">
-                <label htmlFor="pgn-id">ID</label>
-                <InputText 
-                  id="pgn-id"
-                  value={newUploadedPGN.id || ''} 
-                  onChange={(e) => setNewUploadedPGN({...newUploadedPGN, id: e.target.value})}
-                  placeholder="Leave empty for auto-generation"
-                />
+          
+          <div className="grid p-fluid">
+            <div className="col-12 md:col-6 gap-3 flex flex-column">
+              <div>
+                  The file format is pgn and needs to parse as a 'pgn-parser' compatible PGN.
+                  
+                  <b>&nbsp;Importantly,</b> you will need to perform this step before using the PGNs in drills, repertoires, or analyses.
               </div>
-              <div className="col-12 md:col-6">
-                <label htmlFor="pgn-filename">Filename</label>
-                <InputText 
-                  id="pgn-filename"
-                  value={newUploadedPGN.filename || ''} 
-                  onChange={(e) => setNewUploadedPGN({...newUploadedPGN, filename: e.target.value})}
-                />
-              </div>
-              <div className="col-12 md:col-6">
-                <label htmlFor="pgn-type">Type</label>
-                <Dropdown 
-                  id="pgn-type"
-                  value={newUploadedPGN.type} 
-                  options={pgnTypeOptions}
-                  onChange={(e) => setNewUploadedPGN({...newUploadedPGN, type: e.value})}
-                />
-              </div>
-              <div className="col-12">
-                <label htmlFor="pgn-content">Content</label>
-                <InputTextarea 
-                  id="pgn-content"
-                  value={newUploadedPGN.content || ''} 
-                  onChange={(e) => setNewUploadedPGN({...newUploadedPGN, content: e.target.value})}
-                  rows={3}
-                />
-              </div>
-              <div className="col-12">
-                <Button label="Add PGN" icon="pi pi-plus" onClick={createUploadedPGN} />
-              </div>
-            </div>
-          </Panel>
-
-          <Panel header="Upload PGN File" toggleable collapsed className="mt-3">
-            <div className="grid p-fluid">
-              <div className="col-12 md:col-6">
-                <label htmlFor="upload-pgn-type">PGN Type</label>
+              <div>
+                <label htmlFor="upload-pgn-type">PGN Type *</label>
                 <Dropdown 
                   id="upload-pgn-type"
                   value={uploadPGNType} 
                   options={pgnTypeOptions}
                   onChange={(e) => setUploadPGNType(e.value)}
+                  placeholder="Select PGN Type"
                 />
-                <small className="p-text-secondary">
-                  Select the type of PGN content before uploading
-                </small>
               </div>
-              <div className="col-12">
-                <label>Select PGN File</label>
-                <FileUpload
-                  mode="basic"
-                  name="pgnFile"
-                  // accept=".pgn,.txt"
-                  maxFileSize={10000000} // 10MB limit
-                  onUpload={handleFileUpload}
-                  onSelect={handleFileUpload}
-                  auto={true}
-                  chooseLabel="Choose PGN File"
-                  className="mt-2"
-                  disabled={uploading}
-                />
-                <small className="p-text-secondary">
-                  Accepted formats: .pgn, .txt (Max size: 10MB)
+                Select the type of PGN content before uploading.
+                It will upload immediately.
+              <small className="p-text-secondary">
+              </small>
+            </div>
+            <div className="col-12">
+              <label>Select PGN File</label>
+              <FileUpload
+                mode="basic"
+                name="pgnFile"
+                // accept=".pgn,.txt"
+                maxFileSize={10000000} // 10MB limit
+                onUpload={handleFileUpload}
+                onSelect={handleFileUpload}
+                auto={true}
+                chooseLabel="Choose PGN File"
+                className="mt-2"
+                disabled={uploading || !uploadPGNType}
+              />
+              {!uploadPGNType && (
+                <small className="p-error block mt-2">
+                  Please select a PGN type before uploading
                 </small>
-              </div>
-              {uploading && (
-                <div className="col-12">
-                  <Message 
-                    severity="info" 
-                    text="Uploading file... Please wait." 
-                  />
-                </div>
               )}
             </div>
-          </Panel>
+            {uploading && (
+              <div className="col-12">
+                <Message 
+                  severity="info" 
+                  text="Uploading file... Please wait." 
+                />
+              </div>
+            )}
+          </div>
           
           <DataTable value={state.uploadedPGNs} paginator rows={10} className="mt-3">
             <Column field="id" header="ID" />
