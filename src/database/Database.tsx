@@ -14,6 +14,7 @@ import { Message } from 'primereact/message';
 import { Toast } from 'primereact/toast';
 import { FileUpload } from 'primereact/fileupload';
 import { confirmDialog } from 'primereact/confirmdialog';
+import { Dialog } from 'primereact/dialog';
 import { 
   SavedGameClient, 
   UploadedPGNClient, 
@@ -110,11 +111,22 @@ export default () => {
     notes: createMoveTree()
   });
 
-  const [chessComUsername, setChessComUsername] = useState<string>('');
-  const [lichessUsername, setLichessUsername] = useState<string>('');
+  const [chessComUsername, setChessComUsername] = useState<string>(
+    () => localStorage.getItem('chessComUsername') || ''
+  );
+  const [lichessUsername, setLichessUsername] = useState<string>(
+    () => localStorage.getItem('lichessUsername') || ''
+  );
+  const [activeAccordionTabs, setActiveAccordionTabs] = useState<number[]>(
+    () => {
+      const saved = localStorage.getItem('databaseAccordionTabs');
+      return saved ? JSON.parse(saved) : [0];
+    }
+  );
   const [importing, setImporting] = useState<boolean>(false);
   const [uploadPGNType, setUploadPGNType] = useState<PGNType | null>(null);
   const [uploading, setUploading] = useState<boolean>(false);
+  const [showPGNModal, setShowPGNModal] = useState<boolean>(false);
 
   const toast = React.useRef<Toast>(null);
 
@@ -173,6 +185,25 @@ export default () => {
     loadData();
   }, []);
 
+  // Persist chess.com username to localStorage
+  useEffect(() => {
+    if (chessComUsername) {
+      localStorage.setItem('chessComUsername', chessComUsername);
+    }
+  }, [chessComUsername]);
+
+  // Persist lichess username to localStorage
+  useEffect(() => {
+    if (lichessUsername) {
+      localStorage.setItem('lichessUsername', lichessUsername);
+    }
+  }, [lichessUsername]);
+
+  // Persist accordion tab state to localStorage
+  useEffect(() => {
+    localStorage.setItem('databaseAccordionTabs', JSON.stringify(activeAccordionTabs));
+  }, [activeAccordionTabs]);
+
   const showSuccess = (message: string) => {
     toast.current?.show({ severity: 'success', summary: 'Success', detail: message });
   };
@@ -203,6 +234,7 @@ export default () => {
       await SavedGameClient.insert(game);
       showSuccess('Game saved successfully');
       setNewSavedGame({ id: '', timestamp: Date.now(), pgn: '', source: 'manual' });
+      setShowPGNModal(false);
       loadData();
     } catch (error) {
       showError('Failed to save game');
@@ -575,10 +607,29 @@ export default () => {
       <h1>Database Management</h1>
       <p className="mb-4">Manage all database tables and records.</p>
 
-      <Accordion multiple>
+      <Accordion 
+        multiple 
+        activeIndex={activeAccordionTabs}
+        onTabChange={(e) => setActiveAccordionTabs(e.index as number[])}
+      >
         {/* Saved Games */}
         <AccordionTab header={`Saved Games (${state.savedGames.length})`}>
-          <Panel header="Add New Saved Game" toggleable collapsed>
+          <div className="mb-3">
+            <Button 
+              label="Paste PGN from Clipboard..." 
+              icon="pi pi-clipboard" 
+              onClick={() => setShowPGNModal(true)}
+              className="p-button-outlined"
+            />
+          </div>
+
+          <Dialog
+            header="Add New Saved Game"
+            visible={showPGNModal}
+            style={{ width: '50vw' }}
+            onHide={() => setShowPGNModal(false)}
+            modal
+          >
             <div className="grid p-fluid">
               <div className="col-12 md:col-6">
                 <label htmlFor="savedgame-id">ID</label>
@@ -604,16 +655,16 @@ export default () => {
                   id="savedgame-pgn"
                   value={newSavedGame.pgn || ''} 
                   onChange={(e) => setNewSavedGame({...newSavedGame, pgn: e.target.value})}
-                  rows={3}
+                  rows={10}
+                  autoFocus
                 />
               </div>
               <div className="col-12">
                 <Button label="Add Game" icon="pi pi-plus" onClick={createSavedGame} />
               </div>
             </div>
-          </Panel>
+          </Dialog>
 
-          <Panel header="Import Games from Chess Sites" toggleable collapsed className="mt-3">
             <div className="grid p-fluid">
               <div className="col-12 md:col-6">
                 <label htmlFor="chesscom-username">Chess.com Username</label>
@@ -668,7 +719,6 @@ export default () => {
                 </div>
               )}
             </div>
-          </Panel>
           
           <DataTable 
             value={state.savedGames} 
@@ -706,10 +756,6 @@ export default () => {
                   placeholder="Select PGN Type"
                 />
               </div>
-                Select the type of PGN content before uploading.
-                It will upload immediately.
-              <small className="p-text-secondary">
-              </small>
             </div>
             <div className="col-12">
               <label>Select PGN File</label>
