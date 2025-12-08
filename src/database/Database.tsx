@@ -127,6 +127,7 @@ export default () => {
   const [uploadPGNType, setUploadPGNType] = useState<PGNType | null>(null);
   const [uploading, setUploading] = useState<boolean>(false);
   const [showPGNModal, setShowPGNModal] = useState<boolean>(false);
+  const [showUploadPGNModal, setShowUploadPGNModal] = useState<boolean>(false);
 
   const toast = React.useRef<Toast>(null);
 
@@ -481,8 +482,10 @@ export default () => {
       showSuccess(`Successfully uploaded ${file.name}`);
       loadData();
       
-      // Clear the file upload component
+      // Clear the file upload component and close modal
       event.options.clear();
+      setShowUploadPGNModal(false);
+      setUploadPGNType(null);
     } catch (error) {
       console.error('Error uploading file:', error);
       showError('Failed to upload file');
@@ -738,55 +741,75 @@ export default () => {
 
         {/* Uploaded PGNs */}
         <AccordionTab header={`Uploaded PGNs (${state.uploadedPGNs.length})`}>
-          
-          <div className="grid p-fluid">
-            <div className="col-12 md:col-6 gap-3 flex flex-column">
-              <div>
-                  The file format is pgn and needs to parse as a 'pgn-parser' compatible PGN.
-                  
-                  <b>&nbsp;Importantly,</b> you will need to perform this step before using the PGNs in drills, repertoires, or analyses.
+          <div className="mb-3">
+            <Button 
+              label="Upload PGN..." 
+              icon="pi pi-upload" 
+              onClick={() => setShowUploadPGNModal(true)}
+              className="p-button-outlined"
+            />
+          </div>
+
+          <Dialog
+            header="Upload PGN File"
+            visible={showUploadPGNModal}
+            style={{ width: '50vw' }}
+            onHide={() => {
+              setShowUploadPGNModal(false);
+              setUploadPGNType(null);
+            }}
+            modal
+          >
+            <div className="grid p-fluid">
+              <div className="col-12 md:col-6 gap-3 flex flex-column">
+                <div>
+                    The file format is pgn and needs to parse as a 'pgn-parser' compatible PGN.
+                    
+                    <b>&nbsp;Importantly,</b> you will need to perform this step before using the PGNs in drills, repertoires, or analyses.
+                </div>
+                <div>
+                  <label htmlFor="upload-pgn-type">PGN Type *</label>
+                  <Dropdown 
+                    id="upload-pgn-type"
+                    value={uploadPGNType} 
+                    options={pgnTypeOptions}
+                    onChange={(e) => setUploadPGNType(e.value)}
+                    placeholder="Select PGN Type"
+                  />
+                </div>
               </div>
-              <div>
-                <label htmlFor="upload-pgn-type">PGN Type *</label>
-                <Dropdown 
-                  id="upload-pgn-type"
-                  value={uploadPGNType} 
-                  options={pgnTypeOptions}
-                  onChange={(e) => setUploadPGNType(e.value)}
-                  placeholder="Select PGN Type"
+              <div className="col-12">
+                <label>Select PGN File</label>
+                <FileUpload
+                  mode="basic"
+                  name="pgnFile"
+                  // accept=".pgn,.txt"
+                  maxFileSize={10000000} // 10MB limit
+                  onUpload={handleFileUpload}
+                  onSelect={handleFileUpload}
+                  auto={true}
+                  chooseLabel="Choose PGN File"
+                  className="mt-2"
+                  disabled={uploading || !uploadPGNType}
                 />
+                {!uploadPGNType && (
+                  <small className="p-error block mt-2">
+                    Please select a PGN type before uploading
+                  </small>
+                )}
               </div>
-            </div>
-            <div className="col-12">
-              <label>Select PGN File</label>
-              <FileUpload
-                mode="basic"
-                name="pgnFile"
-                // accept=".pgn,.txt"
-                maxFileSize={10000000} // 10MB limit
-                onUpload={handleFileUpload}
-                onSelect={handleFileUpload}
-                auto={true}
-                chooseLabel="Choose PGN File"
-                className="mt-2"
-                disabled={uploading || !uploadPGNType}
-              />
-              {!uploadPGNType && (
-                <small className="p-error block mt-2">
-                  Please select a PGN type before uploading
-                </small>
+              {uploading && (
+                <div className="col-12">
+                  <Message 
+                    severity="info" 
+                    text="Uploading file... Please wait." 
+                  />
+                </div>
               )}
             </div>
-            {uploading && (
-              <div className="col-12">
-                <Message 
-                  severity="info" 
-                  text="Uploading file... Please wait." 
-                />
-              </div>
-            )}
-          </div>
+          </Dialog>
           
+        <h2>Uploaded PGNs</h2>
           <DataTable value={state.uploadedPGNs} paginator rows={10} className="mt-3">
             <Column field="id" header="ID" />
             <Column field="filename" header="Filename" />
