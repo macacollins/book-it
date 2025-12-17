@@ -38,6 +38,7 @@ import { fetchChessComGames } from '../integrations/chess-com-client';
 import { LichessClient } from '../integrations/lichess-client';
 import Game from '../types/Game';
 import { calculateMoveTree } from '../integrations/calculateMoveTree';
+import { PGNUpload } from './PGNUpload';
 
 interface DatabasePageState {
   savedGames: SavedGame[];
@@ -124,8 +125,6 @@ export default () => {
     }
   );
   const [importing, setImporting] = useState<boolean>(false);
-  const [uploadPGNType, setUploadPGNType] = useState<PGNType | null>(null);
-  const [uploading, setUploading] = useState<boolean>(false);
   const [showPGNModal, setShowPGNModal] = useState<boolean>(false);
   const [showUploadPGNModal, setShowUploadPGNModal] = useState<boolean>(false);
 
@@ -135,12 +134,6 @@ export default () => {
     { label: 'Chess.com', value: 'chess.com' },
     { label: 'Lichess', value: 'lichess.org' },
     { label: 'Manual', value: 'manual' }
-  ];
-
-  const pgnTypeOptions = [
-    { label: 'Tactics', value: 'tactics' },
-    { label: 'Repertoire', value: 'repertoire' },
-    { label: 'Games', value: 'games' }
   ];
 
   const loadData = async () => {
@@ -456,58 +449,6 @@ export default () => {
     return arr.length > 0 ? `[${arr.length} items]` : '[]';
   };
 
-  // File upload functions
-  const handleFileUpload = async (event: any) => {
-    const file = event.files[0];
-    if (!file) return;
-
-    if (!uploadPGNType) {
-      showError('Please select a PGN type before uploading');
-      event.options.clear();
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const fileContent = await readFileContent(file);
-      
-      const uploadedPGN: UploadedPGN = {
-        id: `upload-${Date.now()}`,
-        filename: file.name,
-        content: fileContent,
-        type: uploadPGNType as PGNType, // Safe to assert since we check above
-      };
-
-      await UploadedPGNClient.insert(uploadedPGN);
-      showSuccess(`Successfully uploaded ${file.name}`);
-      loadData();
-      
-      // Clear the file upload component and close modal
-      event.options.clear();
-      setShowUploadPGNModal(false);
-      setUploadPGNType(null);
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      showError('Failed to upload file');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const readFileContent = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const content = e.target?.result as string;
-        resolve(content);
-      };
-      reader.onerror = () => {
-        reject(new Error('Failed to read file'));
-      };
-      reader.readAsText(file);
-    });
-  };
-
   // Game import functions
   const syncChessComGames = async () => {
     if (!chessComUsername.trim()) {
@@ -750,64 +691,13 @@ export default () => {
             />
           </div>
 
-          <Dialog
-            header="Upload PGN File"
+          <PGNUpload
             visible={showUploadPGNModal}
-            style={{ width: '50vw' }}
-            onHide={() => {
-              setShowUploadPGNModal(false);
-              setUploadPGNType(null);
-            }}
-            modal
-          >
-            <div className="grid p-fluid">
-              <div className="col-12 md:col-6 gap-3 flex flex-column">
-                <div>
-                    The file format is pgn and needs to parse as a 'pgn-parser' compatible PGN.
-                    
-                    <b>&nbsp;Importantly,</b> you will need to perform this step before using the PGNs in drills, repertoires, or analyses.
-                </div>
-                <div>
-                  <label htmlFor="upload-pgn-type">PGN Type *</label>
-                  <Dropdown 
-                    id="upload-pgn-type"
-                    value={uploadPGNType} 
-                    options={pgnTypeOptions}
-                    onChange={(e) => setUploadPGNType(e.value)}
-                    placeholder="Select PGN Type"
-                  />
-                </div>
-              </div>
-              <div className="col-12">
-                <label>Select PGN File</label>
-                <FileUpload
-                  mode="basic"
-                  name="pgnFile"
-                  // accept=".pgn,.txt"
-                  maxFileSize={10000000} // 10MB limit
-                  onUpload={handleFileUpload}
-                  onSelect={handleFileUpload}
-                  auto={true}
-                  chooseLabel="Choose PGN File"
-                  className="mt-2"
-                  disabled={uploading || !uploadPGNType}
-                />
-                {!uploadPGNType && (
-                  <small className="p-error block mt-2">
-                    Please select a PGN type before uploading
-                  </small>
-                )}
-              </div>
-              {uploading && (
-                <div className="col-12">
-                  <Message 
-                    severity="info" 
-                    text="Uploading file... Please wait." 
-                  />
-                </div>
-              )}
-            </div>
-          </Dialog>
+            onHide={() => setShowUploadPGNModal(false)}
+            onSuccess={showSuccess}
+            onError={showError}
+            onUploadComplete={loadData}
+          />
           
         <h2>Uploaded PGNs</h2>
           <DataTable value={state.uploadedPGNs} paginator rows={10} className="mt-3">
