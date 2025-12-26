@@ -449,6 +449,24 @@ export default () => {
     return arr.length > 0 ? `[${arr.length} items]` : '[]';
   };
 
+  const renderFenWithCopy = (data: QueuedPosition) => {
+    return (
+      <div className="flex align-items-center gap-2">
+        <span className="flex-1" style={{ wordBreak: 'break-all' }}>{data.fen}</span>
+        <Button
+          icon="bi bi-copy"
+          className="p-button-rounded p-button-text p-button-sm"
+          onClick={() => {
+            navigator.clipboard.writeText(data.fen);
+            showSuccess('FEN copied to clipboard');
+          }}
+          tooltip="Copy FEN to clipboard"
+          tooltipOptions={{ position: 'top' }}
+        />
+      </div>
+    );
+  };
+
   // Game import functions
   const syncChessComGames = async () => {
     if (!chessComUsername.trim()) {
@@ -836,17 +854,8 @@ export default () => {
 
         {/* Queued Positions */}
         <AccordionTab header={`Queued Positions (${state.queuedPositions.length})`}>
-          <Panel header="Add New Queued Position" toggleable collapsed>
+          <Panel header="Add New Queued Position">
             <div className="grid p-fluid">
-              <div className="col-12 md:col-6">
-                <label htmlFor="qpos-id">ID</label>
-                <InputText 
-                  id="qpos-id"
-                  value={newQueuedPosition.id || ''} 
-                  onChange={(e) => setNewQueuedPosition({...newQueuedPosition, id: e.target.value})}
-                  placeholder="Leave empty for auto-generation"
-                />
-              </div>
               <div className="col-12">
                 <label htmlFor="qpos-fen">FEN</label>
                 <InputText 
@@ -872,7 +881,7 @@ export default () => {
           
           <DataTable value={state.queuedPositions} paginator rows={10} className="mt-3">
             <Column field="id" header="ID" />
-            <Column field="fen" header="FEN" body={(data) => data.fen.substring(0, 30) + '...'} />
+            <Column field="fen" header="FEN" body={renderFenWithCopy} />
             <Column field="notes" header="Notes" body={(data) => data.notes.substring(0, 30) + (data.notes.length > 30 ? '...' : '')} />
             <Column field="timestamp" header="Timestamp" body={(data) => formatTimestamp(data.timestamp)} />
             <Column body={(data) => renderDeleteButton(data, deleteQueuedPosition)} style={{width: '4rem'}} />

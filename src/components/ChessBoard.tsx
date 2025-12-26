@@ -3,6 +3,7 @@ import { ReactElement, useEffect, useState } from "react";
 
 import { Chess, Move } from "chess.js";
 import useWindowSize from "../hooks/useWindowSize";
+import { PromotionDialog } from "./PromotionDialog";
 
 export interface ChessBoardProps {
   name: string;
@@ -40,8 +41,56 @@ const ChessBoard = ({
   size = "512px",
 }: ChessBoardProps) => {
   const width = useWindowSize()[0];
+  const [showPromotionDialog, setShowPromotionDialog] = useState(false);
+  const [pendingMove, setPendingMove] = useState<{ source: string; target: string } | null>(null);
 
   const finalID = name + game_url.replace(/[^a-zA-Z0-9]/g, "");
+
+  // Handle promotion piece selection
+  const handlePromotionSelect = (piece: 'q' | 'r' | 'b' | 'n') => {
+    if (!pendingMove) return;
+
+    const { source, target } = pendingMove;
+    const oldFEN = gameRef.current.fen();
+    const testChess = new Chess(oldFEN);
+
+    try {
+      // Try the move with the selected promotion piece
+      const move = testChess.move({
+        from: source,
+        to: target,
+        promotion: piece
+      });
+
+      if (!moveCallback(move)) {
+        gameRef.current = new Chess(oldFEN);
+        chessboardRef.current?.position(oldFEN);
+      } else {
+        gameRef.current.move({
+          from: source,
+          to: target,
+          promotion: piece
+        });
+        chessboardRef.current?.position(gameRef.current.fen());
+      }
+    } catch (e) {
+      console.log("Invalid promotion move", e);
+      chessboardRef.current?.position(oldFEN);
+    }
+
+    setShowPromotionDialog(false);
+    setPendingMove(null);
+  };
+
+  // Handle promotion cancellation
+  const handlePromotionCancel = () => {
+    if (pendingMove && gameRef.current && chessboardRef.current) {
+      // Snap back to the original position
+      chessboardRef.current.position(gameRef.current.fen());
+    }
+    setShowPromotionDialog(false);
+    setPendingMove(null);
+  };
 
   // Initialize the board after the component mounts to the DOM
   useEffect(() => {
@@ -79,10 +128,30 @@ const ChessBoard = ({
         chessboardRef.current?.position(gameRef.current.fen());
       }
 
+      // Helper function to check if a move is a pawn promotion
+      function isPromotion(source: string, target: string): boolean {
+        const piece = gameRef.current.get(source);
+        if (!piece || piece.type !== 'p') {
+          return false;
+        }
+        
+        // Check if target is on the 8th rank (white) or 1st rank (black)
+        const targetRank = target[1];
+        return (piece.color === 'w' && targetRank === '8') || 
+               (piece.color === 'b' && targetRank === '1');
+      }
+
       function onDrop(source: any, target: any) {
         console.log("onDrop called", gameRef.current);
 
         try {
+          // Check if this move requires promotion
+          if (isPromotion(source, target)) {
+            // Store the pending move and show promotion dialog
+            setPendingMove({ source, target });
+            setShowPromotionDialog(true);
+            return; // Don't snapback yet, wait for promotion choice
+          }
 
           const oldFEN = gameRef.current.fen();
           const testChess = new Chess(oldFEN);
@@ -91,10 +160,9 @@ const ChessBoard = ({
           const move = testChess.move({
             from: source,
             to: target,
-            // promotion: 'q' // NOTE: always promote to a queen for example simplicity
           });
 
-          console.log("About to call move callback");
+          // console.log("About to call move callback");
 
           if (!moveCallback(move)) {
             gameRef.current = new Chess(oldFEN);
@@ -104,7 +172,6 @@ const ChessBoard = ({
           gameRef.current.move({
             from: source,
             to: target,
-            // promotion: 'q' // NOTE: always promote to a queen for example simplicity
           });
 
           console.log("After move", gameRef.current)
@@ -264,6 +331,11 @@ const ChessBoard = ({
     <div className="side-by-side">
       {drawings}
       <div id={finalID} style={style}></div>
+      <PromotionDialog
+        visible={showPromotionDialog}
+        onSelect={handlePromotionSelect}
+        onCancel={handlePromotionCancel}
+      />
     </div>
   );
 };

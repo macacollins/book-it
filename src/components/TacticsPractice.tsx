@@ -337,9 +337,9 @@ export const TacticsPractice = () => {
                 </label>
               </div>
             </div>
-            {getExpectedMove(puzzleMoveIndexRef.current)}
+            {/* {getExpectedMove(puzzleMoveIndexRef.current)}
             Puzzle Index: {currentPuzzleIndex}
-            Puzzle move index: {puzzleMoveIndexRef.current}
+            Puzzle move index: {puzzleMoveIndexRef.current} */}
 
           </div>
         )}
