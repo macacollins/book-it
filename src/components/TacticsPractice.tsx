@@ -5,6 +5,7 @@ import { ProgressSpinner } from 'primereact/progressspinner';
 import { Message } from 'primereact/message';
 import { Toast } from 'primereact/toast';
 import { Checkbox } from 'primereact/checkbox';
+import { InputText } from 'primereact/inputtext';
 import { UploadedPGNClient } from '../database/UploadedPGNClient';
 import { TacticsProgressClient } from '../database/TacticsProgressClient';
 import { UploadedPGN, TacticsProgress } from '../database/types';
@@ -31,6 +32,7 @@ export const TacticsPractice = () => {
   };
   const autoNextRef = useRef<boolean>(getInitialAutoNext());
   const [autoNextDisplay, setAutoNextDisplay] = useState(autoNextRef.current);
+  const [jumpExerciseInput, setJumpExerciseInput] = useState<string>('');
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -158,6 +160,25 @@ export const TacticsPractice = () => {
     }
   };
 
+  const handleJumpToExercise = () => {
+    if (parsedPGNs.length === 0) return;
+
+    const parsedValue = parseInt(jumpExerciseInput, 10);
+    if (Number.isNaN(parsedValue)) {
+      toast.current?.show({
+        severity: 'warn',
+        summary: 'Invalid number',
+        detail: 'Enter a valid exercise number',
+        life: 2000
+      });
+      return;
+    }
+
+    const clampedIndex = Math.min(parsedPGNs.length - 1, Math.max(0, parsedValue - 1));
+    setCurrentPuzzleIndex(clampedIndex);
+    puzzleMoveIndexRef.current = 0;
+  };
+
   const getCurrentMoveIndex = () => {
     return puzzleMoveIndexRef.current;
   }
@@ -246,6 +267,10 @@ export const TacticsPractice = () => {
   return (
     <div className="p-1 flex align-items-center justify-content-center">
       <Toast ref={toast} />
+      <style>{`.side-by-side { 
+      margin-right: 0px !important; 
+}
+      `}</style>
       {!selectedPGN && <Card title="Tactics Practice">
         <div className="mb-4">
           <label htmlFor="pgn-select" className="block mb-2 font-semibold">
@@ -291,7 +316,7 @@ export const TacticsPractice = () => {
       </Card>}
 
       {selectedPGN && parsedPGNs.length > 0 && (
-          <div>
+          <div className="flex flex-column gap-1">
             <ChessBoard
               name="tactics-practice"
               game_url={selectedPGN.id}
@@ -304,24 +329,30 @@ export const TacticsPractice = () => {
               size={`${boardSize}px`}
             />
 
-            <div className="flex justify-content-center gap-2 mt-3">
+            <div className="flex justify-content-center gap-2">
               <Button
-                label="Previous"
-                icon="pi pi-chevron-left"
+                aria-label="Previous"
+                icon="bi bi-chevron-left"
                 onClick={handlePrevious}
                 disabled={currentPuzzleIndex === 0}
               />
               <span className="flex align-items-center px-3">
-                Puzzle {currentPuzzleIndex + 1} of {parsedPGNs.length}
+                {currentPuzzleIndex + 1} of {parsedPGNs.length}
               </span>
               <Button
-                label="Next"
-                icon="pi pi-chevron-right"
+                aria-label="Next"
+                icon="bi bi-chevron-right"
                 iconPos="right"
                 onClick={handleNext}
                 disabled={currentPuzzleIndex >= parsedPGNs.length - 1}
               />
-              <div className="flex align-items-center gap-2 ml-3">
+              
+            </div>
+            {/* {getExpectedMove(puzzleMoveIndexRef.current)}
+            Puzzle Index: {currentPuzzleIndex}
+            Puzzle move index: {puzzleMoveIndexRef.current} */}
+
+            <div className="flex align-items-center gap-2 ml-5">
                 <Checkbox
                   inputId="auto-next"
                   checked={autoNextDisplay}
@@ -336,12 +367,24 @@ export const TacticsPractice = () => {
                   Auto Next
                 </label>
               </div>
+            <div className="flex align-items-center gap-2 ml-3">
+              <label htmlFor="exercise-jump" className="font-semibold">Exercise #</label>
+              <InputText
+                id="exercise-jump"
+                value={jumpExerciseInput}
+                onChange={(e) => setJumpExerciseInput(e.target.value)}
+                placeholder="e.g. 12"
+                className="w-6rem"
+              />
+              <Button
+                label="Go"
+                icon="pi pi-arrow-right"
+                onClick={handleJumpToExercise}
+                disabled={parsedPGNs.length === 0}
+              />
             </div>
-            {/* {getExpectedMove(puzzleMoveIndexRef.current)}
-            Puzzle Index: {currentPuzzleIndex}
-            Puzzle move index: {puzzleMoveIndexRef.current} */}
-
           </div>
+          
         )}
     </div>
   );
