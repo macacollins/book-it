@@ -96,3 +96,22 @@ At this point, the application does not handle repertoire changes very well. If 
 ### 4. Import Games
 
 Next, you need to navigate to the Games tab. Then click Reset Games to load games for your username from chess.com.
+
+# Structure
+
+Repertoire
+- drill
+- expand
+- create
+- annotate
+
+Games
+- Import
+- Annotate
+- Repertoire Check
+
+Positions
+- List
+- Generate
+
+Settings
