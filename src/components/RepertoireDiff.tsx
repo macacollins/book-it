@@ -8,6 +8,7 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Dropdown } from 'primereact/dropdown';
 import { TinyFENDisplay } from '../pages/TinyFENDisplay';
+import { GameRefresher } from './GameRefresher';
 
 interface GameDivergence {
   gameId: string;
@@ -18,14 +19,27 @@ interface GameDivergence {
   player: string;
 }
 
+const REPERTOIRE_DIFF_SELECTED_KEY = 'repertoireDiffSelected';
+
 export const RepertoireDiff = () => {
   const [repertoires, setRepertoires] = useState<UploadedPGN[]>([]);
-  const [selectedRepertoire, setSelectedRepertoire] = useState<string | null>(null);
+  const [selectedRepertoire, setSelectedRepertoire] = useState<string | null>(
+    () => localStorage.getItem(REPERTOIRE_DIFF_SELECTED_KEY)
+  );
   const [games, setGames] = useState<SavedGame[]>([]);
   const [divergences, setDivergences] = useState<GameDivergence[]>([]);
   const [loading, setLoading] = useState(false);
 
   const { repertoire, loading: repertoireLoading } = useSlimRepertoire(selectedRepertoire);
+
+  // Persist selected repertoire to localStorage
+  useEffect(() => {
+    if (selectedRepertoire) {
+      localStorage.setItem(REPERTOIRE_DIFF_SELECTED_KEY, selectedRepertoire);
+    } else {
+      localStorage.removeItem(REPERTOIRE_DIFF_SELECTED_KEY);
+    }
+  }, [selectedRepertoire]);
 
   // Load repertoires on mount
   useEffect(() => {
@@ -36,14 +50,16 @@ export const RepertoireDiff = () => {
     loadRepertoires();
   }, []);
 
+  // Load games function (extracted for reuse)
+  const loadGames = async () => {
+    const allGames = await SavedGameClient.getAll();
+    // Get last 50 games by timestamp (most recent first)
+    const sortedGames = allGames.sort((a, b) => b.timestamp - a.timestamp).slice(0, 50);
+    setGames(sortedGames);
+  };
+
   // Load games on mount
   useEffect(() => {
-    const loadGames = async () => {
-      const allGames = await SavedGameClient.getAll();
-      // Get last 50 games by timestamp (most recent first)
-      const sortedGames = allGames.sort((a, b) => b.timestamp - a.timestamp).slice(0, 50);
-      setGames(sortedGames);
-    };
     loadGames();
   }, []);
 
@@ -134,7 +150,10 @@ export const RepertoireDiff = () => {
 
   return (
     <div className="p-4">
-      <h1>Repertoire Diff Analysis</h1>
+      <div className="flex align-items-center gap-2 mb-3">
+        <h1 className="m-0">Repertoire Diff Analysis</h1>
+        <GameRefresher onGamesRefreshed={loadGames} />
+      </div>
       
       <div className="mb-4">
         <label htmlFor="repertoire-select" className="font-semibold block mb-2">

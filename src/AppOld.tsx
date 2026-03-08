@@ -374,7 +374,6 @@ function App({
             <Route path="/book-it/tv" element={<TV />} />
             <Route path="/book-it/home" element={<HomePage />} />
             <Route path="/book-it/repertoire-tv" element={repertoireTV()} />
-            <Route path="/book-it/notes" element={<Notes />} />
             <Route path="/book-it/annotations/:id" element={<Annotations />} />
             <Route path="/book-it/add-channel" element={channelForm} />
             <Route

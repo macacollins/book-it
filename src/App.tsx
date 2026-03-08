@@ -8,6 +8,7 @@ import RepertoireDrillPage from './pages/RepertoireDrillPage';
 import { SavedGameClient } from './database/SavedGameClient';
 import { Menubar } from 'primereact/menubar';
 import './App.css';
+import Notes from './components/Notes';
 
 function App() {
   const [hasGames, setHasGames] = useState<boolean | null>(null);
@@ -26,18 +27,18 @@ function App() {
       icon: 'pi pi-database',
       command: () => { window.location.hash = '#/database'; }
     },
+    // {
+    //   label: 'Game Annotator',
+    //   icon: 'pi pi-pencil',
+    //   command: () => { window.location.hash = '#/annotator'; }
+    // },
     {
-      label: 'Game Annotator',
-      icon: 'pi pi-pencil',
-      command: () => { window.location.hash = '#/annotator'; }
-    },
-    {
-      label: 'Repertoire Diff',
+      label: 'Game Analysis',
       icon: 'pi pi-chart-line',
       command: () => { window.location.hash = '#/diff'; }
     },
     {
-      label: 'Tactics Practice',
+      label: 'Tactics',
       icon: 'pi pi-bolt',
       command: () => { window.location.hash = '#/tactics'; }
     },
@@ -66,10 +67,11 @@ function App() {
           <Routes>
             <Route path="/" element={<Navigate to={defaultRoute} replace />} />
             <Route path="/database" element={<DatabasePage />} />
-            <Route path="/annotator" element={<GameAnnotatorPage />} />
+            {/* <Route path="/annotator" element={<GameAnnotatorPage />} /> */}
             <Route path="/diff" element={<RepertoireDiffPage />} />
             <Route path="/tactics" element={<TacticsPracticePage />} />
             <Route path="/repertoire-drill" element={<RepertoireDrillPage />} />
+            <Route path="/notes" element={<Notes />} />
           </Routes>
         </div>
       </div>

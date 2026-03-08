@@ -34,11 +34,11 @@ import {
   PGNType
 } from './index';
 import { MoveTree, createMoveTree } from '../types/MoveTree';
-import { fetchChessComGames } from '../integrations/chess-com-client';
-import { LichessClient } from '../integrations/lichess-client';
 import Game from '../types/Game';
 import { calculateMoveTree } from '../integrations/calculateMoveTree';
 import { PGNUpload } from './PGNUpload';
+import { syncChessComGames } from './syncChessComGames';
+import { syncLichessGames } from './syncLichessGames';
 
 interface DatabasePageState {
   savedGames: SavedGame[];
@@ -468,95 +468,26 @@ export default () => {
   };
 
   // Game import functions
-  const syncChessComGames = async () => {
-    if (!chessComUsername.trim()) {
-      showError('Please enter a Chess.com username');
-      return;
-    }
-
-    setImporting(true);
-    try {
-      const games = await fetchChessComGames(chessComUsername.trim());
-      
-      let importCount = 0;
-      for (const game of games) {
-        const savedGame: SavedGame = {
-          id: `chesscom-${game.url.split('/').pop() || Date.now()}`,
-          timestamp: game.end_time * 1000, // Convert to milliseconds
-          pgn: game.pgn,
-          source: 'chess.com'
-        };
-        
-        // Check if game already exists
-        const exists = await SavedGameClient.exists(savedGame.id);
-        if (!exists) {
-          await SavedGameClient.insert(savedGame);
-          importCount++;
-        }
-      }
-      
-      showSuccess(`Successfully imported ${importCount} new games from Chess.com`);
-      loadData();
-    } catch (error) {
-      console.error('Error importing Chess.com games:', error);
-      showError('Failed to import games from Chess.com');
-    } finally {
-      setImporting(false);
-    }
+  const handleSyncChessComGames = () => {
+    syncChessComGames({
+      username: chessComUsername,
+      onStart: () => setImporting(true),
+      onComplete: () => setImporting(false),
+      onSuccess: showSuccess,
+      onError: showError,
+      onDataChanged: loadData
+    });
   };
 
-  const syncLichessGames = async () => {
-    if (!lichessUsername.trim()) {
-      showError('Please enter a Lichess username');
-      return;
-    }
-
-    setImporting(true);
-    try {
-      const lichessClient = new LichessClient();
-      
-      // Get last 3 months of games with PGN data
-      const since = Date.now() - (3 * 30 * 24 * 60 * 60 * 1000); // 3 months ago
-      const gamesResponse = await lichessClient.apiGamesUser(lichessUsername.trim(), {
-        since,
-        max: 200, // Lichess API limit
-        moves: true,
-        pgnInJson: true,
-        finished: true
-      });
-
-      // Note: Lichess returns NDJSON, so we need to handle it properly
-      // For now, we'll handle it as a single game object, but in practice
-      // you might need to parse NDJSON format
-      const games = Array.isArray(gamesResponse) ? gamesResponse : [gamesResponse];
-      
-      let importCount = 0;
-      for (const game of games) {
-        if (game && game.id && game.pgn) {
-          const savedGame: SavedGame = {
-            id: `lichess-${game.id}`,
-            timestamp: game.createdAt,
-            pgn: game.pgn,
-            source: 'lichess.org'
-          };
-          
-          // Check if game already exists
-          const exists = await SavedGameClient.exists(savedGame.id);
-          if (!exists) {
-            await SavedGameClient.insert(savedGame);
-            importCount++;
-          }
-        }
-      }
-      
-      showSuccess(`Successfully imported ${importCount} new games from Lichess`);
-      loadData();
-    } catch (error) {
-      console.error('Error importing Lichess games:', error);
-      showError('Failed to import games from Lichess');
-    } finally {
-      setImporting(false);
-    }
+  const handleSyncLichessGames = () => {
+    syncLichessGames({
+      username: lichessUsername,
+      onStart: () => setImporting(true),
+      onComplete: () => setImporting(false),
+      onSuccess: showSuccess,
+      onError: showError,
+      onDataChanged: loadData
+    });
   };
 
   if (state.loading) {
@@ -641,7 +572,7 @@ export default () => {
                   <Button 
                     label="Sync" 
                     icon="pi pi-sync" 
-                    onClick={syncChessComGames}
+                    onClick={handleSyncChessComGames}
                     disabled={importing || !chessComUsername.trim()}
                     loading={importing}
                   />
@@ -663,7 +594,7 @@ export default () => {
                   <Button 
                     label="Sync" 
                     icon="pi pi-sync" 
-                    onClick={syncLichessGames}
+                    onClick={handleSyncLichessGames}
                     disabled={importing || !lichessUsername.trim()}
                     loading={importing}
                   />

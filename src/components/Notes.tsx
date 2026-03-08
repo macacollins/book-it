@@ -93,12 +93,13 @@ export default function Notes() {
     return filtered
       .map((note) => {
         const rawNotes = note.notes.replaceAll("\n", "<br>");
+        const inlineSvg = createSVGboard(note.fen, [], shouldInvert).replaceAll("\n", "");
 
-        return `Move and Reason<br><img src="${shortenLine(note.fen)}.svg"/><br>The move is {{c1::${note.move}}} because {{c1::${rawNotes}}}`;
+        return `Move and Reason${inlineSvg}The move is {{c1::${note.move}}} because {{c1::${rawNotes}}}`;
       })
       .join("\n");
   }
-
+  
   return (
     <>
       <h2>Notes</h2>
@@ -404,7 +405,7 @@ function createSVGboard(
     <pattern id="k" width="45" height="45">
     <g fill="none" fill-rule="evenodd" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path stroke-linejoin="miter" d="M22.5 11.6V6"/><path fill="#000" stroke-linecap="butt" stroke-linejoin="miter" d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5"/><path fill="#000" d="M11.5 37a22.3 22.3 0 0 0 21 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-3.5-7.5-13-10.5-16-4-3 6 5 10 5 10V37z"/><path stroke-linejoin="miter" d="M20 8h5"/><path stroke="#ececec" d="M32 29.5s8.5-4 6-9.7C34.1 14 25 18 22.5 24.6v2.1-2.1C20 18 9.9 14 7 19.9c-2.5 5.6 4.8 9 4.8 9"/><path stroke="#ececec" d="M11.5 30c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0"/></g>    </pattern>
   </defs>
-  <rect x="0" y="0" width="360" height="360" fill="url(#bg)"></rect>`;
+  <rect x="0" y="0" width="360" height="360" fill="url(#bg)"/>`;
 
   // Add highlights
   if (highlightedSquares) {
@@ -447,7 +448,7 @@ function createSVGboard(
       case "q":
       case "k":
       case "p": {
-        svg += `<rect className="b" x="${displayCol * 45}" y="${displayRow * 45}" width="45" height="45" fill="url(#${fen[i]})"></rect>`;
+        svg += `<rect className="b" x="${displayCol * 45}" y="${displayRow * 45}" width="45" height="45" fill="url(#${fen[i]})"/>`;
         col++;
         if (col > 7) {
           col = 0;
@@ -461,7 +462,7 @@ function createSVGboard(
       case "Q":
       case "K":
       case "P": {
-        svg += `<rect x="${displayCol * 45}" y="${displayRow * 45}" width="45" height="45" fill="url(#${fen[i]})"></rect>`;
+        svg += `<rect x="${displayCol * 45}" y="${displayRow * 45}" width="45" height="45" fill="url(#${fen[i]})"/>`;
 
         col++;
         if (col > 7) {
