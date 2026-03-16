@@ -16,8 +16,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 const SELECTED_REPERTOIRE_PGN_KEY = 'SELECTED_REPERTOIRE_PGN';
-const STARTING_MOVE_KEY = 'REPERTOIRE_DRILL_STARTING_MOVE';
-const ENDING_MOVE_KEY = 'REPERTOIRE_DRILL_ENDING_MOVE';
+const MOVE_DEPTH_KEY = 'REPERTOIRE_DRILL_MOVE_DEPTH';
 const DRILL_COLOR_KEY = 'REPERTOIRE_DRILL_COLOR';
 const DRILL_STARTED_KEY = 'REPERTOIRE_DRILL_STARTED';
 const CURRENT_EXERCISE_INDEX_KEY = 'REPERTOIRE_CURRENT_EXERCISE_INDEX';
@@ -32,8 +31,8 @@ export const RepertoireDrill = () => {
   const currentExerciseIndexRef = useRef<number>(0);
   const currentMoveIndexRef = useRef<number>(0);
   
-  const [startingMove, setStartingMove] = useState<number>(8);
-  const [endingMove, setEndingMove] = useState<number>(10);
+  const [startingMove, setStartingMove] = useState<number>(18);
+  const [endingMove, setEndingMove] = useState<number>(20);
   const [drillColor, setDrillColor] = useState<'white' | 'black'>('white');
   
   const [drillStarted, setDrillStarted] = useState(false);
@@ -111,14 +110,11 @@ export const RepertoireDrill = () => {
             setSelectedPGN(matchingPGN);
           
             // Fall back to general saved settings if no completion history exists
-            const savedStartingMove = localStorage.getItem(STARTING_MOVE_KEY);
-            if (savedStartingMove) {
-              setStartingMove(parseInt(savedStartingMove, 10));
-            }
-            
-            const savedEndingMove = localStorage.getItem(ENDING_MOVE_KEY);
-            if (savedEndingMove) {
-              setEndingMove(parseInt(savedEndingMove, 10));
+            const savedMoveDepth = localStorage.getItem(MOVE_DEPTH_KEY);
+            if (savedMoveDepth) {
+              const moveDepth = parseInt(savedMoveDepth, 10);
+              setEndingMove(moveDepth * 2);
+              setStartingMove(moveDepth * 2 - 2);
             }
             
             const savedDrillColor = localStorage.getItem(DRILL_COLOR_KEY);
@@ -128,14 +124,11 @@ export const RepertoireDrill = () => {
           }
         } else {
           // No PGN selected, restore general drill settings
-          const savedStartingMove = localStorage.getItem(STARTING_MOVE_KEY);
-          if (savedStartingMove) {
-            setStartingMove(parseInt(savedStartingMove, 10));
-          }
-          
-          const savedEndingMove = localStorage.getItem(ENDING_MOVE_KEY);
-          if (savedEndingMove) {
-            setEndingMove(parseInt(savedEndingMove, 10));
+          const savedMoveDepth = localStorage.getItem(MOVE_DEPTH_KEY);
+          if (savedMoveDepth) {
+            const moveDepth = parseInt(savedMoveDepth, 10);
+            setEndingMove(moveDepth * 2);
+            setStartingMove(moveDepth * 2 - 2);
           }
           
           const savedDrillColor = localStorage.getItem(DRILL_COLOR_KEY);
@@ -441,19 +434,17 @@ export const RepertoireDrill = () => {
 
   const handleStartNextRange = () => {
     if (selectedPGN) {
-      const newStartingMove = startingMove + 2;
-      const newEndingMove = endingMove + 2;
+      const currentMoveDepth = endingMove / 2;
+      const newMoveDepth = Math.min(currentMoveDepth + 1, 20); // Cap at depth 20
       
-      // Cap at 40 for ending move
-      const cappedEndingMove = Math.min(newEndingMove, 40);
-      const cappedStartingMove = Math.min(newStartingMove, 38); // Ensure at least 2 move range
+      const newEndingMove = newMoveDepth * 2;
+      const newStartingMove = newEndingMove - 2;
       
-      setStartingMove(cappedStartingMove);
-      setEndingMove(cappedEndingMove);
-      localStorage.setItem(STARTING_MOVE_KEY, cappedStartingMove.toString());
-      localStorage.setItem(ENDING_MOVE_KEY, cappedEndingMove.toString());
+      setStartingMove(newStartingMove);
+      setEndingMove(newEndingMove);
+      localStorage.setItem(MOVE_DEPTH_KEY, newMoveDepth.toString());
 
-      console.log("Setting new move range to", cappedStartingMove, "-", cappedEndingMove);
+      console.log("Setting new move depth to", newMoveDepth);
       
       setDrillStarted(true);
       setCurrentExerciseIndex(0);
@@ -469,8 +460,7 @@ export const RepertoireDrill = () => {
       setEndingMove(completion.endingMove);
       setDrillColor(completion.drillColor);
       localStorage.setItem(SELECTED_REPERTOIRE_PGN_KEY, matchingPGN.filename);
-      localStorage.setItem(STARTING_MOVE_KEY, completion.startingMove.toString());
-      localStorage.setItem(ENDING_MOVE_KEY, completion.endingMove.toString());
+      localStorage.setItem(MOVE_DEPTH_KEY, (completion.endingMove / 2).toString());
       localStorage.setItem(DRILL_COLOR_KEY, completion.drillColor);
       setDrillStarted(true);
       setCurrentExerciseIndex(0);
@@ -481,19 +471,18 @@ export const RepertoireDrill = () => {
     // Find the matching PGN
     const matchingPGN = uploadedPGNs.find(pgn => pgn.filename === completion.filename);
     if (matchingPGN) {
-      const newStartingMove = completion.startingMove + 2;
-      const newEndingMove = completion.endingMove + 2;
+      const currentMoveDepth = completion.endingMove / 2;
+      const newMoveDepth = Math.min(currentMoveDepth + 1, 20); // Cap at depth 20
       
-      const cappedEndingMove = Math.min(newEndingMove, 40);
-      const cappedStartingMove = Math.min(newStartingMove, 38);
+      const newEndingMove = newMoveDepth * 2;
+      const newStartingMove = newEndingMove - 2;
       
       setSelectedPGN(matchingPGN);
-      setStartingMove(cappedStartingMove);
-      setEndingMove(cappedEndingMove);
+      setStartingMove(newStartingMove);
+      setEndingMove(newEndingMove);
       setDrillColor(completion.drillColor);
       localStorage.setItem(SELECTED_REPERTOIRE_PGN_KEY, matchingPGN.filename);
-      localStorage.setItem(STARTING_MOVE_KEY, cappedStartingMove.toString());
-      localStorage.setItem(ENDING_MOVE_KEY, cappedEndingMove.toString());
+      localStorage.setItem(MOVE_DEPTH_KEY, newMoveDepth.toString());
       localStorage.setItem(DRILL_COLOR_KEY, completion.drillColor);
       setDrillStarted(true);
       setCurrentExerciseIndex(0);
@@ -503,6 +492,55 @@ export const RepertoireDrill = () => {
   return (
     <div className="p-1 flex flex-wrap align-items-center justify-content-center">
       <Toast ref={toast} />
+      
+      {!drillStarted && recentCompletions.length > 0 && (
+        <Card title="Recent Drills" className="m-3">
+          <DataTable value={recentCompletions} size="small" stripedRows>
+            <Column 
+              field="filename" 
+              header="Repertoire" 
+              style={{ width: '30%' }}
+            />
+            <Column 
+              header="Move Depth" 
+              body={(rowData: DrillCompletionData) => rowData.endingMove / 2}
+              style={{ width: '15%' }}
+            />
+            <Column 
+              field="drillColor" 
+              header="Color" 
+              body={(rowData: DrillCompletionData) => (
+                <span className="capitalize">{rowData.drillColor}</span>
+              )}
+              style={{ width: '12%' }}
+            />
+            <Column 
+              header="Actions" 
+              body={(rowData: DrillCompletionData) => (
+                <div className="flex gap-1">
+                  <Button
+                    label="Start"
+                    icon="bi bi-play-fill"
+                    onClick={() => handleStartFromCompletion(rowData)}
+                    size="small"
+                    className="p-button-success p-button-sm"
+                  />
+                  <Button
+                    label="Start Next"
+                    icon="bi bi-fast-forward-fill"
+                    onClick={() => handleStartNextFromCompletion(rowData)}
+                    size="small"
+                    disabled={rowData.endingMove / 2 >= 20}
+                    className="p-button-info p-button-sm"
+                  />
+                </div>
+              )}
+              style={{ width: '40%' }}
+            />
+          </DataTable>
+        </Card>
+      )}
+
       {!drillStarted && (
         <Card title="Repertoire Drill">
           <div className="mb-4">
@@ -544,7 +582,7 @@ export const RepertoireDrill = () => {
           </div>
 
           <div className="grid mb-4">
-            <div className="col-12 md:col-4">
+            <div className="col-12 md:col-6">
               <label htmlFor="drill-color" className="block mb-2 font-semibold">
                 Drill as Color:
               </label>
@@ -563,45 +601,24 @@ export const RepertoireDrill = () => {
               />
             </div>
 
-            <div className="col-12 md:col-4">
-              <label htmlFor="starting-move" className="block mb-2 font-semibold">
-                Starting Move Number:
+            <div className="col-12 md:col-6">
+              <label htmlFor="move-depth" className="block mb-2 font-semibold">
+                Move Depth:
               </label>
               <Dropdown
-                id="starting-move"
-                value={startingMove}
-                options={Array.from({ length: 30 }, (_, i) => ({
+                id="move-depth"
+                value={endingMove / 2}
+                options={Array.from({ length: 20 }, (_, i) => ({
                   label: `${i + 1}`,
                   value: i + 1
                 }))}
                 onChange={(e) => {
-                  const newStart = e.value;
-                  setStartingMove(newStart);
-                  localStorage.setItem(STARTING_MOVE_KEY, newStart.toString());
-                  // Ensure ending move is always >= starting move
-                  if (endingMove < newStart) {
-                    setEndingMove(newStart);
-                    localStorage.setItem(ENDING_MOVE_KEY, newStart.toString());
-                  }
-                }}
-                className="w-full"
-              />
-            </div>
-
-            <div className="col-12 md:col-4">
-              <label htmlFor="ending-move" className="block mb-2 font-semibold">
-                Ending Move Number:
-              </label>
-              <Dropdown
-                id="ending-move"
-                value={endingMove}
-                options={Array.from({ length: 40 - startingMove + 1 }, (_, i) => ({
-                  label: `${startingMove + i}`,
-                  value: startingMove + i
-                }))}
-                onChange={(e) => {
-                  setEndingMove(e.value);
-                  localStorage.setItem(ENDING_MOVE_KEY, e.value.toString());
+                  const moveDepth = e.value;
+                  const newEndingMove = moveDepth * 2;
+                  const newStartingMove = newEndingMove - 2;
+                  setEndingMove(newEndingMove);
+                  setStartingMove(newStartingMove);
+                  localStorage.setItem(MOVE_DEPTH_KEY, moveDepth.toString());
                 }}
                 className="w-full"
               />
@@ -625,64 +642,11 @@ export const RepertoireDrill = () => {
               label="Start Next"
               icon="bi bi-fast-forward-fill"
               onClick={handleStartNextRange}
-              disabled={!selectedPGN || endingMove >= 40}
+              disabled={!selectedPGN || endingMove / 2 >= 20}
               size="large"
               className="p-button-info"
             />
           </div>
-        </Card>
-      )}
-
-      {!drillStarted && recentCompletions.length > 0 && (
-        <Card title="Recent Drills" className="m-3">
-          <DataTable value={recentCompletions} size="small" stripedRows>
-            <Column 
-              field="filename" 
-              header="Repertoire" 
-              style={{ width: '35%' }}
-            />
-            <Column 
-              field="startingMove" 
-              header="Start Move" 
-              style={{ width: '12%' }}
-            />
-            <Column 
-              field="endingMove" 
-              header="End Move" 
-              style={{ width: '12%' }}
-            />
-            <Column 
-              field="drillColor" 
-              header="Color" 
-              body={(rowData: DrillCompletionData) => (
-                <span className="capitalize">{rowData.drillColor}</span>
-              )}
-              style={{ width: '12%' }}
-            />
-            <Column 
-              header="Actions" 
-              body={(rowData: DrillCompletionData) => (
-                <div className="flex gap-1">
-                  <Button
-                    label="Start"
-                    icon="bi bi-play-fill"
-                    onClick={() => handleStartFromCompletion(rowData)}
-                    size="small"
-                    className="p-button-success p-button-sm"
-                  />
-                  <Button
-                    label="Start Next"
-                    icon="bi bi-fast-forward-fill"
-                    onClick={() => handleStartNextFromCompletion(rowData)}
-                    size="small"
-                    disabled={rowData.endingMove >= 40}
-                    className="p-button-info p-button-sm"
-                  />
-                </div>
-              )}
-              style={{ width: '29%' }}
-            />
-          </DataTable>
         </Card>
       )}
 

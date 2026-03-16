@@ -3,7 +3,6 @@ import { Dropdown } from 'primereact/dropdown';
 import { Card } from 'primereact/card';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Message } from 'primereact/message';
-import { Toast } from 'primereact/toast';
 import { Checkbox } from 'primereact/checkbox';
 import { InputText } from 'primereact/inputtext';
 import { UploadedPGNClient } from '../database/UploadedPGNClient';
@@ -38,9 +37,10 @@ export const TacticsPractice = () => {
   const [error, setError] = useState<string | null>(null);
   const chessboardRef = useRef<any>(null);
   const gameRef = useRef<any>(null);
-  const toast = useRef<Toast>(null);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error' | 'warn' | null, message: string }>({ type: null, message: '' });
   const [width, height] = useWindowSize();
-  const boardSize = Math.min(width, height) - 20;
+  const isWideLayout = width >= height + 218;
+  const boardSize = isWideLayout ? height - 20 : Math.min(width, height) - 20;
 
   // Load all tactics PGNs from database
   useEffect(() => {
@@ -165,12 +165,7 @@ export const TacticsPractice = () => {
 
     const parsedValue = parseInt(jumpExerciseInput, 10);
     if (Number.isNaN(parsedValue)) {
-      toast.current?.show({
-        severity: 'warn',
-        summary: 'Invalid number',
-        detail: 'Enter a valid exercise number',
-        life: 2000
-      });
+      setFeedback({ type: 'warn', message: 'Enter a valid exercise number' });
       return;
     }
 
@@ -200,12 +195,7 @@ export const TacticsPractice = () => {
 
         // Check if this was the last move
         if (puzzleMoveIndexRef.current >= totalMoves - 1) {
-          toast.current?.show({
-            severity: 'success',
-            summary: 'Success',
-            detail: 'You did it!',
-            life: 1000
-          });
+          setFeedback({ type: 'success', message: 'You did it!' });
           puzzleMoveIndexRef.current = 0;
           console.log("Puzzle completed. Resetting move index to 0.");
           
@@ -254,19 +244,93 @@ export const TacticsPractice = () => {
         return true;
       } else {
         // Incorrect move
-        toast.current?.show({
-          severity: 'error',
-          summary: 'Incorrect',
-          detail: "That's not it.",
-          life: 3000
-        });
+        setFeedback({ type: 'error', message: "That's not it." });
         return false;
       }
     }
 
+  const FeedbackDisplay = () => {
+    if (!feedback.type) return <div style={{ height: '24px' }} />;
+    
+    const iconClass = feedback.type === 'success' 
+      ? 'pi pi-check-circle' 
+      : feedback.type === 'error' 
+        ? 'pi pi-times-circle' 
+        : 'pi pi-exclamation-triangle';
+    
+    const colorClass = feedback.type === 'success' 
+      ? 'text-green-500' 
+      : feedback.type === 'error' 
+        ? 'text-red-500' 
+        : 'text-yellow-500';
+    
+    return (
+      <div className={`flex align-items-center gap-2 ${colorClass}`} style={{ height: '24px' }}>
+        <i className={iconClass}></i>
+        <span>{feedback.message}</span>
+      </div>
+    );
+  };
+
+  const ControlsPanel = () => (
+    <>
+      <div className="flex justify-content-center gap-2">
+        <Button
+          aria-label="Previous"
+          icon="bi bi-chevron-left"
+          onClick={handlePrevious}
+          disabled={currentPuzzleIndex === 0}
+        />
+        <span className="flex align-items-center px-3">
+          {currentPuzzleIndex + 1} of {parsedPGNs.length}
+        </span>
+        <Button
+          aria-label="Next"
+          icon="bi bi-chevron-right"
+          iconPos="right"
+          onClick={handleNext}
+          disabled={currentPuzzleIndex >= parsedPGNs.length - 1}
+        />
+      </div>
+
+      <FeedbackDisplay />
+
+      <div className="flex align-items-center gap-2">
+        <Checkbox
+          inputId="auto-next"
+          checked={autoNextDisplay}
+          onChange={(e) => {
+            const newValue = e.checked || false;
+            autoNextRef.current = newValue;
+            setAutoNextDisplay(newValue);
+            localStorage.setItem(AUTO_NEXT_KEY, JSON.stringify(newValue));
+          }}
+        />
+        <label htmlFor="auto-next" className="cursor-pointer">
+          Auto Next
+        </label>
+      </div>
+      <div className="flex align-items-center gap-2">
+        <label htmlFor="exercise-jump" className="font-semibold">Exercise #</label>
+        <InputText
+          id="exercise-jump"
+          value={jumpExerciseInput}
+          onChange={(e) => setJumpExerciseInput(e.target.value)}
+          placeholder="e.g. 12"
+          className="w-6rem"
+        />
+        <Button
+          label="Go"
+          icon="pi pi-arrow-right"
+          onClick={handleJumpToExercise}
+          disabled={parsedPGNs.length === 0}
+        />
+      </div>
+    </>
+  );
+
   return (
     <div className="p-1 flex align-items-center justify-content-center">
-      <Toast ref={toast} />
       <style>{`.side-by-side { 
       margin-right: 0px !important; 
 }
@@ -316,6 +380,24 @@ export const TacticsPractice = () => {
       </Card>}
 
       {selectedPGN && parsedPGNs.length > 0 && (
+        isWideLayout ? (
+          <div className="flex align-items-center gap-4">
+            <ChessBoard
+              name="tactics-practice"
+              game_url={selectedPGN.id}
+              fen={currentFEN}
+              draggable={true}
+              chessboardRef={chessboardRef}
+              gameRef={gameRef}
+              madeMoveRef={{ current: false }}
+              moveCallback={moveHandler}
+              size={`${boardSize}px`}
+            />
+            <div className="flex flex-column gap-2">
+              <ControlsPanel />
+            </div>
+          </div>
+        ) : (
           <div className="flex flex-column gap-1">
             <ChessBoard
               name="tactics-practice"
@@ -328,64 +410,10 @@ export const TacticsPractice = () => {
               moveCallback={moveHandler}
               size={`${boardSize}px`}
             />
-
-            <div className="flex justify-content-center gap-2">
-              <Button
-                aria-label="Previous"
-                icon="bi bi-chevron-left"
-                onClick={handlePrevious}
-                disabled={currentPuzzleIndex === 0}
-              />
-              <span className="flex align-items-center px-3">
-                {currentPuzzleIndex + 1} of {parsedPGNs.length}
-              </span>
-              <Button
-                aria-label="Next"
-                icon="bi bi-chevron-right"
-                iconPos="right"
-                onClick={handleNext}
-                disabled={currentPuzzleIndex >= parsedPGNs.length - 1}
-              />
-              
-            </div>
-            {/* {getExpectedMove(puzzleMoveIndexRef.current)}
-            Puzzle Index: {currentPuzzleIndex}
-            Puzzle move index: {puzzleMoveIndexRef.current} */}
-
-            <div className="flex align-items-center gap-2 ml-5">
-                <Checkbox
-                  inputId="auto-next"
-                  checked={autoNextDisplay}
-                  onChange={(e) => {
-                    const newValue = e.checked || false;
-                    autoNextRef.current = newValue;
-                    setAutoNextDisplay(newValue);
-                    localStorage.setItem(AUTO_NEXT_KEY, JSON.stringify(newValue));
-                  }}
-                />
-                <label htmlFor="auto-next" className="cursor-pointer">
-                  Auto Next
-                </label>
-              </div>
-            <div className="flex align-items-center gap-2 ml-3">
-              <label htmlFor="exercise-jump" className="font-semibold">Exercise #</label>
-              <InputText
-                id="exercise-jump"
-                value={jumpExerciseInput}
-                onChange={(e) => setJumpExerciseInput(e.target.value)}
-                placeholder="e.g. 12"
-                className="w-6rem"
-              />
-              <Button
-                label="Go"
-                icon="pi pi-arrow-right"
-                onClick={handleJumpToExercise}
-                disabled={parsedPGNs.length === 0}
-              />
-            </div>
+            <ControlsPanel />
           </div>
-          
-        )}
+        )
+      )}
     </div>
   );
 };
