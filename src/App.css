@@ -561,3 +561,12 @@ function createSVGboard(fen, highlightedSquares, shouldInvert){
   background-color: rgb(140, 162, 173) !important;
   color: rgb(220, 227, 232) !important;
 }
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

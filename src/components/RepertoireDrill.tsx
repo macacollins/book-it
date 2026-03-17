@@ -3,7 +3,6 @@ import { Dropdown } from 'primereact/dropdown';
 import { Card } from 'primereact/card';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Message } from 'primereact/message';
-import { Toast } from 'primereact/toast';
 import { Button } from 'primereact/button';
 import { UploadedPGNClient } from '../database/UploadedPGNClient';
 import { UploadedPGN } from '../database/types';
@@ -44,9 +43,10 @@ export const RepertoireDrill = () => {
   
   const chessboardRef = useRef<any>(null);
   const gameRef = useRef<any>(null);
-  const toast = useRef<Toast>(null);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error' | 'info' | null, message: string }>({ type: null, message: '' });
   const [width, height] = useWindowSize();
-  const boardSize = Math.min(width, height) - 20;
+  const isWideLayout = width >= height + 250;
+  const boardSize = isWideLayout ? height - 20 : Math.min(width, height) - 20;
 
   // Sync state to refs for chessboard lifecycle
   useEffect(() => {
@@ -339,12 +339,7 @@ export const RepertoireDrill = () => {
 
       // Check if this was the last move
       if (currentMoveIndexRef.current >= totalMoves - 1) {
-        toast.current?.show({
-          severity: 'success',
-          summary: 'Success',
-          detail: 'Exercise completed!',
-          life: 2000
-        });
+        setFeedback({ type: 'success', message: 'Exercise completed!' });
         setCurrentMoveIndex(0);
 
         // Auto-advance to next exercise
@@ -372,12 +367,7 @@ export const RepertoireDrill = () => {
 
         } else {
           // Last exercise completed
-          toast.current?.show({
-            severity: 'info',
-            summary: 'All Done',
-            detail: 'You have completed all exercises in this repertoire!',
-            life: 4000
-          });
+          setFeedback({ type: 'info', message: 'You have completed all exercises in this repertoire!' });
 
           // Save completion stats using the drillProgress service
           if (selectedPGN?.filename) {
@@ -415,12 +405,7 @@ export const RepertoireDrill = () => {
       return true;
     } else {
       // Incorrect move
-      toast.current?.show({
-        severity: 'error',
-        summary: 'Incorrect',
-        detail: "That's not the right move. Try again!",
-        life: 3000
-      });
+      setFeedback({ type: 'error', message: "That's not the right move. Try again!" });
       return false;
     }
   };
@@ -489,9 +474,63 @@ export const RepertoireDrill = () => {
     }
   };
 
+  const FeedbackDisplay = () => {
+    if (!feedback.type) return <div style={{ height: '24px' }} />;
+    
+    const iconClass = feedback.type === 'success' 
+      ? 'bi bi-check-circle-fill' 
+      : feedback.type === 'error' 
+        ? 'bi bi-x-circle-fill' 
+        : 'bi bi-info-circle-fill';
+    
+    const colorClass = feedback.type === 'success' 
+      ? 'text-green-500' 
+      : feedback.type === 'error' 
+        ? 'text-red-500' 
+        : 'text-blue-500';
+    
+    return (
+      <div className={`flex align-items-center gap-2 ${colorClass}`} style={{ height: '24px' }}>
+        <i className={iconClass}></i>
+        <span>{feedback.message}</span>
+      </div>
+    );
+  };
+
+  const ControlsPanel = () => (
+    <>
+      <div className="flex justify-content-center gap-2">
+        <Button
+          label={isWideLayout ? "Previous" : undefined}
+          aria-label="Previous"
+          icon="bi bi-chevron-left"
+          onClick={handlePrevious}
+          disabled={currentExerciseIndex === 0}
+        />
+        <span className="flex align-items-center px-3">
+          Exercise {currentExerciseIndex + 1} of {exercises.length}
+        </span>
+        <Button
+          label={isWideLayout ? "Next" : undefined}
+          aria-label="Next"
+          icon="bi bi-chevron-right"
+          iconPos="right"
+          onClick={handleNext}
+          disabled={currentExerciseIndex >= exercises.length - 1}
+        />
+      </div>
+
+      <FeedbackDisplay />
+
+      <div className="text-center mt-2">
+        <div>Drilling as: <strong>{drillColor === 'white' ? 'White' : 'Black'}</strong></div>
+        <div>Move depth: <strong>{endingMove / 2}</strong></div>
+      </div>
+    </>
+  );
+
   return (
     <div className="p-1 flex flex-wrap align-items-center justify-content-center">
-      <Toast ref={toast} />
       
       {!drillStarted && recentCompletions.length > 0 && (
         <Card title="Recent Drills" className="m-3">
@@ -673,71 +712,81 @@ export const RepertoireDrill = () => {
       )}
 
       {drillStarted && selectedPGN && exercises.length > 0 && (
-        <div>
-          <div className="flex justify-content-between align-items-center mb-3">
-            <h3 className="m-0">{selectedPGN.filename}</h3>
-            <Button
-              label="Choose Another"
-              icon="bi bi-book"
-              onClick={async () => {
-                setDrillStarted(false);
-                setSelectedPGN(null);
-                setExercises([]);
-                setCurrentExerciseIndex(0);
-                setCurrentMoveIndex(0);
-                localStorage.removeItem(SELECTED_REPERTOIRE_PGN_KEY);
-                localStorage.setItem(CURRENT_EXERCISE_INDEX_KEY, '0');
-              }}
-              className="p-button-secondary p-button-sm"
-            />
+        isWideLayout ? (
+          <div className="flex align-items-center gap-4">
+            <div>
+              <ChessBoard
+                name="repertoire-drill"
+                game_url={selectedPGN.id}
+                fen={currentFEN}
+                draggable={true}
+                chessboardRef={chessboardRef}
+                gameRef={gameRef}
+                madeMoveRef={{ current: false }}
+                moveCallback={moveHandler}
+                size={`${boardSize}px`}
+                invert={drillColor === 'black'}
+              />
+            </div>
+            <div className="flex flex-column gap-2">
+              <div className="flex justify-content-between align-items-center mb-3">
+                <h3 className="m-0">{selectedPGN.filename}</h3>
+              </div>
+              
+              <ControlsPanel />
+              
+              <Button
+                label="Choose Another"
+                icon="bi bi-book"
+                onClick={async () => {
+                  setDrillStarted(false);
+                  setSelectedPGN(null);
+                  setExercises([]);
+                  setCurrentExerciseIndex(0);
+                  setCurrentMoveIndex(0);
+                  localStorage.removeItem(SELECTED_REPERTOIRE_PGN_KEY);
+                  localStorage.setItem(CURRENT_EXERCISE_INDEX_KEY, '0');
+                }}
+                className="p-button-secondary p-button-sm mt-3"
+              />
+            </div>
           </div>
+        ) : (
+          <div className="flex flex-column gap-1">
+            <div className="flex justify-content-between align-items-center mb-3">
+              <h3 className="m-0">{selectedPGN.filename}</h3>
+              <Button
+                label="Choose Another"
+                icon="bi bi-book"
+                onClick={async () => {
+                  setDrillStarted(false);
+                  setSelectedPGN(null);
+                  setExercises([]);
+                  setCurrentExerciseIndex(0);
+                  setCurrentMoveIndex(0);
+                  localStorage.removeItem(SELECTED_REPERTOIRE_PGN_KEY);
+                  localStorage.setItem(CURRENT_EXERCISE_INDEX_KEY, '0');
+                }}
+                className="p-button-secondary p-button-sm"
+              />
+            </div>
 
-          <ChessBoard
-            name="repertoire-drill"
-            game_url={selectedPGN.id}
-            fen={currentFEN}
-            draggable={true}
-            chessboardRef={chessboardRef}
-            gameRef={gameRef}
-            madeMoveRef={{ current: false }}
-            moveCallback={moveHandler}
-            size={`${boardSize}px`}
-            invert={drillColor === 'black'}
-          />
-
-          <div className="flex justify-content-center gap-2 mt-3">
-            <Button
-              label="Previous"
-              icon="bi bi-chevron-left"
-              onClick={handlePrevious}
-              disabled={currentExerciseIndex === 0}
+            <ChessBoard
+              name="repertoire-drill"
+              game_url={selectedPGN.id}
+              fen={currentFEN}
+              draggable={true}
+              chessboardRef={chessboardRef}
+              gameRef={gameRef}
+              madeMoveRef={{ current: false }}
+              moveCallback={moveHandler}
+              size={`${boardSize}px`}
+              invert={drillColor === 'black'}
             />
-            <span className="flex align-items-center px-3">
-              Exercise {currentExerciseIndex + 1} of {exercises.length}
-            </span>
-            <Button
-              label="Next"
-              icon="bi bi-chevron-right"
-              iconPos="right"
-              onClick={handleNext}
-              disabled={currentExerciseIndex >= exercises.length - 1}
-            />
-          </div>
-          
-          <div className="text-center mt-2">
-            Move {Math.floor(currentMoveIndex / 2) + 1}
-            Current move index {currentMoveIndex}
-            Current Exercise index {currentExerciseIndex}
-            Expecting move {exercises?.length > 0 && exercises[currentExerciseIndex] && exercises[currentExerciseIndex][currentMoveIndex] ? exercises[currentExerciseIndex][currentMoveIndex] : 'N/A'}
-            Exercise count {exercises?.length || 0}
 
-
-            <div>Drilling as: <strong>{drillColor === 'white' ? 'White' : 'Black'}</strong></div>
-            <div>Move range: <strong>{startingMove} - {endingMove}</strong></div>
-            <div>Current position: Move {Math.floor(((startingMove - 1) * 2 + currentMoveIndex) / 2) + 1}</div>
+            <ControlsPanel />
           </div>
-            {/* <pre>{JSON.stringify(exercises,null,2)}</pre> */}
-        </div>
+        )
       )}
     </div>
   );
