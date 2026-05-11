@@ -1,9 +1,9 @@
-import React, { useState, useRef } from 'react';
-import { Chess, Move } from 'chess.js';
-import { InputText } from 'primereact/inputtext';
-import { Button } from 'primereact/button';
-import { Message } from 'primereact/message';
-import ChessBoard from './ChessBoard';
+import React, { useState, useRef } from "react";
+import { Chess, Move } from "chess.js";
+import { InputText } from "primereact/inputtext";
+import { Button } from "primereact/button";
+import { Message } from "primereact/message";
+import ChessBoard from "./ChessBoard";
 
 export interface FENChooserProps {
   initialFEN?: string;
@@ -12,17 +12,16 @@ export interface FENChooserProps {
 
 const FENChooser: React.FC<FENChooserProps> = ({
   initialFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-  onFENChange
+  onFENChange,
 }) => {
   const [currentFEN, setCurrentFEN] = useState<string>(initialFEN);
   const [inputFEN, setInputFEN] = useState<string>(initialFEN);
   const [error, setError] = useState<string>("");
-  
+
   const chessboardRef = useRef<any>(null);
   const gameRef = useRef<Chess>(new Chess());
 
   const handleMoveCallback = (move: Move) => {
-
     //gameRef.current.move(move.san)
 
     // Update the FEN after a move is made
@@ -30,7 +29,7 @@ const FENChooser: React.FC<FENChooserProps> = ({
     setCurrentFEN(newFEN);
     setInputFEN(newFEN);
     setError("");
-    
+
     if (onFENChange) {
       onFENChange(newFEN);
     }
@@ -40,19 +39,19 @@ const FENChooser: React.FC<FENChooserProps> = ({
     try {
       // Validate the FEN by creating a new Chess instance
       const testChess = new Chess(inputFEN);
-      
+
       // If we get here, the FEN is valid
       setCurrentFEN(inputFEN);
       setError("");
-      
+
       // Update the game reference
       gameRef.current = new Chess(inputFEN);
-      
+
       // Update the chessboard position
       if (chessboardRef.current) {
         chessboardRef.current.position(inputFEN);
       }
-      
+
       if (onFENChange) {
         onFENChange(inputFEN);
       }
@@ -67,25 +66,26 @@ const FENChooser: React.FC<FENChooserProps> = ({
   };
 
   const resetToStartingPosition = () => {
-    const startingFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    const startingFEN =
+      "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     setCurrentFEN(startingFEN);
     setInputFEN(startingFEN);
     setError("");
-    
+
     gameRef.current = new Chess();
-    
+
     if (chessboardRef.current) {
       chessboardRef.current.position(startingFEN);
     }
-    
+
     if (onFENChange) {
       onFENChange(startingFEN);
     }
   };
 
   return (
-    <div className="fen-chooser" style={{ padding: '1rem' }}>      
-      <div style={{ marginBottom: '1rem' }}>
+    <div className="fen-chooser" style={{ padding: "1rem" }}>
+      <div style={{ marginBottom: "1rem" }}>
         <ChessBoard
           name="fen-chooser"
           game_url="fen-editor"
@@ -99,9 +99,16 @@ const FENChooser: React.FC<FENChooserProps> = ({
         />
       </div>
 
-      <div className="fen-input-section" style={{ maxWidth: '600px' }}>
-        <div style={{ marginBottom: '0.5rem' }}>
-          <label htmlFor="fen-input" style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold' }}>
+      <div className="fen-input-section" style={{ maxWidth: "600px" }}>
+        <div style={{ marginBottom: "0.5rem" }}>
+          <label
+            htmlFor="fen-input"
+            style={{
+              display: "block",
+              marginBottom: "0.25rem",
+              fontWeight: "bold",
+            }}
+          >
             FEN Position:
           </label>
           <InputText
@@ -109,19 +116,19 @@ const FENChooser: React.FC<FENChooserProps> = ({
             value={inputFEN}
             onChange={handleFENInputChange}
             placeholder="Enter FEN notation"
-            style={{ width: '100%', fontFamily: 'monospace' }}
+            style={{ width: "100%", fontFamily: "monospace" }}
           />
         </div>
 
         {error && (
-          <Message 
-            severity="error" 
-            text={error} 
-            style={{ marginBottom: '0.5rem', display: 'block' }} 
+          <Message
+            severity="error"
+            text={error}
+            style={{ marginBottom: "0.5rem", display: "block" }}
           />
         )}
 
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
           <Button
             label="Load FEN"
             onClick={handleLoadFEN}

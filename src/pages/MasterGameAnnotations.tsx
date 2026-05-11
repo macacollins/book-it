@@ -21,7 +21,11 @@ const makeKey = (master: string, id: string) =>
 const HORIZONTAL_CONTROLS_KEY = "ANNOTATIONS_HORIZONTAL_CONTROLS";
 const BOARD_SIZE_KEY = "ANNOTATIONS_BOARD_SIZE";
 
-function saveAnalysis(master: string, id: string, notes: Record<string, string>) {
+function saveAnalysis(
+  master: string,
+  id: string,
+  notes: Record<string, string>,
+) {
   const key = makeKey(master, id);
 
   localStorage.setItem(key, JSON.stringify(notes));
@@ -80,14 +84,18 @@ export default function MasterGameAnnotations() {
   const nextMove = () => {
     if (currentPosition < (fens?.length || -1) - 1) {
       setCurrentPosition(currentPosition + 1);
-      setCurrentTextBoxValue(notes[fens ? fens[currentPosition + 1] : ""] || "");
+      setCurrentTextBoxValue(
+        notes[fens ? fens[currentPosition + 1] : ""] || "",
+      );
     }
   };
 
   const lastMove = () => {
     if (currentPosition > 0) {
       setCurrentPosition(currentPosition - 1);
-      setCurrentTextBoxValue(notes[fens ? fens[currentPosition - 1] : ""] || "");
+      setCurrentTextBoxValue(
+        notes[fens ? fens[currentPosition - 1] : ""] || "",
+      );
     }
   };
 
@@ -236,6 +244,11 @@ export default function MasterGameAnnotations() {
     );
   });
 
-  return parsedPGN ? (boards ? boards[currentPosition] : id ? id : "No ID found.") : "No PGN found.";
+  return parsedPGN
+    ? boards
+      ? boards[currentPosition]
+      : id
+        ? id
+        : "No ID found."
+    : "No PGN found.";
 }
-  

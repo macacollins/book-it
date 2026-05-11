@@ -18,8 +18,7 @@ import { getItemDexie, setItemDexie } from "../storage";
 import { Button } from "primereact/button";
 import { useNavigate, useParams } from "react-router";
 
-const masters = {
-};
+const masters = {};
 
 export default function MastersTable() {
   const navigate = useNavigate();

@@ -11,14 +11,14 @@ export interface GameNotes {
  */
 export function getGameAnnotations(lichessId: string): GameNotes {
   const key = `game-annotations-${lichessId}`;
-  
+
   try {
     const storedValue = localStorage.getItem(key);
-    
+
     if (!storedValue) {
       return {};
     }
-    
+
     const notes: GameNotes = JSON.parse(storedValue);
     return notes;
   } catch (error) {
@@ -46,7 +46,7 @@ export function getNotesWordCount(lichessId: string): number {
  */
 export function saveGameAnnotations(lichessId: string, notes: GameNotes): void {
   const key = `game-annotations-${lichessId}`;
-  
+
   try {
     const serializedNotes = JSON.stringify(notes);
     localStorage.setItem(key, serializedNotes);

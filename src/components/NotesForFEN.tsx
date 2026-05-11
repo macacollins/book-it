@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { InputTextarea } from 'primereact/inputtextarea';
-import { getNotesForFEN, saveNotesForFEN } from '../services/NotesService';
+import React, { useState, useEffect, useRef } from "react";
+import { InputTextarea } from "primereact/inputtextarea";
+import { getNotesForFEN, saveNotesForFEN } from "../services/NotesService";
 
 interface NotesForFENProps {
   fen: string;
@@ -18,18 +18,18 @@ interface NotesForFENProps {
  */
 export default function NotesForFEN({
   fen,
-  repertoire = '',
-  move = '',
-  originalLocation = 'NotesForFEN Component',
-  placeholder = 'Enter notes for this position...',
+  repertoire = "",
+  move = "",
+  originalLocation = "NotesForFEN Component",
+  placeholder = "Enter notes for this position...",
   rows = 5,
-  className = 'col-12',
+  className = "col-12",
 }: NotesForFENProps) {
-  const [notes, setNotes] = useState<string>('');
+  const [notes, setNotes] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastSavedNotesRef = useRef<string>('');
+  const lastSavedNotesRef = useRef<string>("");
 
   // Load notes when FEN changes
   useEffect(() => {
@@ -42,7 +42,7 @@ export default function NotesForFEN({
         setNotes(fetchedNotes);
         lastSavedNotesRef.current = fetchedNotes;
       } catch (error) {
-        console.error('Failed to load notes:', error);
+        console.error("Failed to load notes:", error);
       } finally {
         setIsLoading(false);
       }
@@ -79,10 +79,10 @@ export default function NotesForFEN({
           if (success) {
             lastSavedNotesRef.current = newNotes;
           } else {
-            console.error('Failed to save notes');
+            console.error("Failed to save notes");
           }
         } catch (error) {
-          console.error('Error saving notes:', error);
+          console.error("Error saving notes:", error);
         } finally {
           setIsSaving(false);
         }
@@ -117,12 +117,8 @@ export default function NotesForFEN({
         disabled={isLoading}
         className="w-full"
       />
-      {isLoading && (
-        <small className="text-muted">Loading notes...</small>
-      )}
-      {isSaving && (
-        <small className="text-muted">Saving notes...</small>
-      )}
+      {isLoading && <small className="text-muted">Loading notes...</small>}
+      {isSaving && <small className="text-muted">Saving notes...</small>}
       {!isLoading && !isSaving && notes !== lastSavedNotesRef.current && (
         <small className="text-muted">Unsaved changes...</small>
       )}

@@ -40,7 +40,7 @@ import Repertoire from "./types/Repertoire";
 import Game from "./types/Game";
 import Viewer from "./pages/Viewer";
 import Book from "./pages/Book";
-import {HomePage} from "./pages/HomePage";
+import { HomePage } from "./pages/HomePage";
 import TV from "./pages/TV";
 import TVPicker from "./pages/TVPicker";
 import MissedMovesTV from "./pages/MissedMovesTV";

@@ -93,13 +93,16 @@ export default function Notes() {
     return filtered
       .map((note) => {
         const rawNotes = note.notes.replaceAll("\n", "<br>");
-        const inlineSvg = createSVGboard(note.fen, [], shouldInvert).replaceAll("\n", "");
+        const inlineSvg = createSVGboard(note.fen, [], shouldInvert).replaceAll(
+          "\n",
+          "",
+        );
 
         return `Move and Reason${inlineSvg}The move is {{c1::${note.move}}} because {{c1::${rawNotes}}}`;
       })
       .join("\n");
   }
-  
+
   return (
     <>
       <h2>Notes</h2>

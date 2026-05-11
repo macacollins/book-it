@@ -1,22 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { TinyFENDisplay } from "./TinyFENDisplay";
-import { LichessClient, OpeningExplorerMasters, OpeningExplorerMastersGame } from "../integrations/lichess-client";
+import {
+  LichessClient,
+  OpeningExplorerMasters,
+  OpeningExplorerMastersGame,
+} from "../integrations/lichess-client";
 
 export function HomePage() {
-  const [fen, setFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+  const [fen, setFen] = useState(
+    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+  );
   const [loading, setLoading] = useState(false);
-  const [mastersData, setMastersData] = useState<OpeningExplorerMasters | null>(null);
+  const [mastersData, setMastersData] = useState<OpeningExplorerMasters | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
 
   const lichessClient = new LichessClient();
 
   const handleImport = async () => {
     if (!fen.trim()) {
-      setError('Please enter a valid FEN');
+      setError("Please enter a valid FEN");
       return;
     }
 
@@ -27,11 +35,14 @@ export function HomePage() {
       const result = await lichessClient.openingExplorerMaster({
         fen: fen.trim(),
         moves: 20,
-        topGames: 15
+        topGames: 15,
       });
       setMastersData(result);
     } catch (err) {
-      setError('Failed to fetch masters games: ' + (err instanceof Error ? err.message : 'Unknown error'));
+      setError(
+        "Failed to fetch masters games: " +
+          (err instanceof Error ? err.message : "Unknown error"),
+      );
     } finally {
       setLoading(false);
     }
@@ -42,20 +53,27 @@ export function HomePage() {
   };
 
   const formatResult = (game: OpeningExplorerMastersGame) => {
-    const result = game.winner === 'white' ? '1-0' : game.winner === 'black' ? '0-1' : '1/2-1/2';
+    const result =
+      game.winner === "white"
+        ? "1-0"
+        : game.winner === "black"
+          ? "0-1"
+          : "1/2-1/2";
     return result;
   };
 
   const formatYear = (game: OpeningExplorerMastersGame) => {
-    return game.year || 'Unknown';
+    return game.year || "Unknown";
   };
 
   return (
     <div className="p-4">
       <h1>Chess Position Explorer</h1>
-      
+
       <div className="flex flex-column gap-3 mb-4">
-        <label htmlFor="fen-input" className="font-semibold">FEN</label>
+        <label htmlFor="fen-input" className="font-semibold">
+          FEN
+        </label>
         <InputText
           id="fen-input"
           value={fen}
@@ -63,7 +81,7 @@ export function HomePage() {
           placeholder="Enter FEN notation..."
           className="w-full"
         />
-        
+
         <Button
           label="Import"
           onClick={handleImport}
@@ -88,13 +106,17 @@ export function HomePage() {
 
       {mastersData && (
         <div>
-          <h3>Masters Games ({mastersData.topGames?.length || 0} games found)</h3>
-          
+          <h3>
+            Masters Games ({mastersData.topGames?.length || 0} games found)
+          </h3>
+
           {mastersData.opening && (
             <div className="mb-3">
-              <strong>Opening:</strong> {mastersData.opening.name || 'Unknown'}
+              <strong>Opening:</strong> {mastersData.opening.name || "Unknown"}
               {mastersData.opening.eco && (
-                <span className="ml-2 text-sm text-gray-600">({mastersData.opening.eco})</span>
+                <span className="ml-2 text-sm text-gray-600">
+                  ({mastersData.opening.eco})
+                </span>
               )}
             </div>
           )}
@@ -111,25 +133,21 @@ export function HomePage() {
                 field="players"
                 header="Players"
                 body={(game) => formatPlayerName(game)}
-                style={{ width: '40%' }}
+                style={{ width: "40%" }}
               />
               <Column
                 field="result"
                 header="Result"
                 body={(game) => formatResult(game)}
-                style={{ width: '15%' }}
+                style={{ width: "15%" }}
               />
               <Column
                 field="year"
                 header="Year"
                 body={(game) => formatYear(game)}
-                style={{ width: '15%' }}
+                style={{ width: "15%" }}
               />
-              <Column
-                field="id"
-                header="Game ID"
-                style={{ width: '30%' }}
-              />
+              <Column field="id" header="Game ID" style={{ width: "30%" }} />
             </DataTable>
           )}
 
@@ -160,4 +178,3 @@ export function HomePage() {
     </div>
   );
 }
-

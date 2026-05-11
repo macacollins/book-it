@@ -1,5 +1,5 @@
-import { QueuedGame } from './types';
-import { db } from './db';
+import { QueuedGame } from "./types";
+import { db } from "./db";
 
 export class QueuedGameClient {
   /**
@@ -25,7 +25,7 @@ export class QueuedGameClient {
    * @returns Promise resolving to array of queued games for the game ID
    */
   static async getByGameID(gameID: string): Promise<QueuedGame[]> {
-    return await db.queuedGames.where('gameID').equals(gameID).toArray();
+    return await db.queuedGames.where("gameID").equals(gameID).toArray();
   }
 
   /**
@@ -34,9 +34,12 @@ export class QueuedGameClient {
    * @param toTimestamp End timestamp (inclusive)
    * @returns Promise resolving to array of games within the range
    */
-  static async getByTimestampRange(fromTimestamp: number, toTimestamp: number): Promise<QueuedGame[]> {
+  static async getByTimestampRange(
+    fromTimestamp: number,
+    toTimestamp: number,
+  ): Promise<QueuedGame[]> {
     return await db.queuedGames
-      .where('timestamp')
+      .where("timestamp")
       .between(fromTimestamp, toTimestamp, true, true)
       .toArray();
   }
@@ -48,7 +51,7 @@ export class QueuedGameClient {
    */
   static async getRecent(limit: number = 50): Promise<QueuedGame[]> {
     return await db.queuedGames
-      .orderBy('timestamp')
+      .orderBy("timestamp")
       .reverse()
       .limit(limit)
       .toArray();
@@ -60,10 +63,7 @@ export class QueuedGameClient {
    * @returns Promise resolving to array of oldest queued games
    */
   static async getOldest(limit: number = 50): Promise<QueuedGame[]> {
-    return await db.queuedGames
-      .orderBy('timestamp')
-      .limit(limit)
-      .toArray();
+    return await db.queuedGames.orderBy("timestamp").limit(limit).toArray();
   }
 
   /**
@@ -72,12 +72,13 @@ export class QueuedGameClient {
    */
   static async getWithNotes(): Promise<QueuedGame[]> {
     return await db.queuedGames
-      .filter(game => {
+      .filter((game) => {
         // Check if the MoveTree has any content
-        const hasContent = game.notes && 
-          (game.notes.nodes.length > 0 || 
-           Boolean(game.notes.name && game.notes.name.trim() !== '') ||
-           Object.keys(game.notes.headers || {}).length > 0);
+        const hasContent =
+          game.notes &&
+          (game.notes.nodes.length > 0 ||
+            Boolean(game.notes.name && game.notes.name.trim() !== "") ||
+            Object.keys(game.notes.headers || {}).length > 0);
         return Boolean(hasContent);
       })
       .toArray();
@@ -89,11 +90,12 @@ export class QueuedGameClient {
    */
   static async getWithoutNotes(): Promise<QueuedGame[]> {
     return await db.queuedGames
-      .filter(game => {
-        const hasContent = game.notes && 
-          (game.notes.nodes.length > 0 || 
-           Boolean(game.notes.name && game.notes.name.trim() !== '') ||
-           Object.keys(game.notes.headers || {}).length > 0);
+      .filter((game) => {
+        const hasContent =
+          game.notes &&
+          (game.notes.nodes.length > 0 ||
+            Boolean(game.notes.name && game.notes.name.trim() !== "") ||
+            Object.keys(game.notes.headers || {}).length > 0);
         return !hasContent;
       })
       .toArray();
@@ -116,7 +118,7 @@ export class QueuedGameClient {
    */
   static async insertMany(games: QueuedGame[]): Promise<string[]> {
     await db.queuedGames.bulkAdd(games);
-    return games.map(game => game.id);
+    return games.map((game) => game.id);
   }
 
   /**
@@ -125,7 +127,10 @@ export class QueuedGameClient {
    * @param notes New move tree notes
    * @returns Promise resolving to number of updated records (0 or 1)
    */
-  static async updateNotes(id: string, notes: QueuedGame['notes']): Promise<number> {
+  static async updateNotes(
+    id: string,
+    notes: QueuedGame["notes"],
+  ): Promise<number> {
     return await db.queuedGames.update(id, { notes });
   }
 
@@ -135,7 +140,10 @@ export class QueuedGameClient {
    * @param updates Partial game object with fields to update
    * @returns Promise resolving to number of updated records (0 or 1)
    */
-  static async update(id: string, updates: Partial<Omit<QueuedGame, 'id'>>): Promise<number> {
+  static async update(
+    id: string,
+    updates: Partial<Omit<QueuedGame, "id">>,
+  ): Promise<number> {
     return await db.queuedGames.update(id, updates);
   }
 
@@ -146,12 +154,15 @@ export class QueuedGameClient {
    * @returns Promise resolving to the game ID
    */
   static async upsertByGameID(game: QueuedGame): Promise<string> {
-    const existing = await db.queuedGames.where('gameID').equals(game.gameID).first();
-    
+    const existing = await db.queuedGames
+      .where("gameID")
+      .equals(game.gameID)
+      .first();
+
     if (existing) {
       await db.queuedGames.update(existing.id, {
         notes: game.notes,
-        timestamp: game.timestamp
+        timestamp: game.timestamp,
       });
       return existing.id;
     } else {
@@ -166,21 +177,21 @@ export class QueuedGameClient {
    * @param additionalNotes Additional move tree to merge
    * @returns Promise resolving to number of updated records (0 or 1)
    */
-  static async mergeNotes(id: string, additionalNotes: QueuedGame['notes']): Promise<number> {
+  static async mergeNotes(
+    id: string,
+    additionalNotes: QueuedGame["notes"],
+  ): Promise<number> {
     const existing = await db.queuedGames.get(id);
     if (!existing) return 0;
 
     // Merge the move trees - combine nodes and headers
     const mergedNotes = {
-      name: additionalNotes.name || existing.notes?.name || '',
+      name: additionalNotes.name || existing.notes?.name || "",
       headers: {
         ...existing.notes?.headers,
-        ...additionalNotes.headers
+        ...additionalNotes.headers,
       },
-      nodes: [
-        ...(existing.notes?.nodes || []),
-        ...additionalNotes.nodes
-      ]
+      nodes: [...(existing.notes?.nodes || []), ...additionalNotes.nodes],
     };
 
     return await db.queuedGames.update(id, { notes: mergedNotes });
@@ -210,8 +221,8 @@ export class QueuedGameClient {
    * @returns Promise resolving to number of deleted records
    */
   static async deleteByGameID(gameID: string): Promise<number> {
-    const games = await db.queuedGames.where('gameID').equals(gameID).toArray();
-    await db.queuedGames.where('gameID').equals(gameID).delete();
+    const games = await db.queuedGames.where("gameID").equals(gameID).toArray();
+    await db.queuedGames.where("gameID").equals(gameID).delete();
     return games.length;
   }
 
@@ -221,8 +232,11 @@ export class QueuedGameClient {
    * @returns Promise resolving to number of deleted records
    */
   static async deleteOlderThan(timestamp: number): Promise<number> {
-    const games = await db.queuedGames.where('timestamp').below(timestamp).toArray();
-    await db.queuedGames.where('timestamp').below(timestamp).delete();
+    const games = await db.queuedGames
+      .where("timestamp")
+      .below(timestamp)
+      .toArray();
+    await db.queuedGames.where("timestamp").below(timestamp).delete();
     return games.length;
   }
 
@@ -232,16 +246,17 @@ export class QueuedGameClient {
    */
   static async deleteWithoutNotes(): Promise<number> {
     const games = await db.queuedGames
-      .filter(game => {
-        const hasContent = game.notes && 
-          (game.notes.nodes.length > 0 || 
-           Boolean(game.notes.name && game.notes.name.trim() !== '') ||
-           Object.keys(game.notes.headers || {}).length > 0);
+      .filter((game) => {
+        const hasContent =
+          game.notes &&
+          (game.notes.nodes.length > 0 ||
+            Boolean(game.notes.name && game.notes.name.trim() !== "") ||
+            Object.keys(game.notes.headers || {}).length > 0);
         return !hasContent;
       })
       .toArray();
-    
-    const ids = games.map(g => g.id);
+
+    const ids = games.map((g) => g.id);
     await db.queuedGames.bulkDelete(ids);
     return games.length;
   }
@@ -252,7 +267,7 @@ export class QueuedGameClient {
    * @returns Promise resolving to boolean indicating existence
    */
   static async exists(id: string): Promise<boolean> {
-    const count = await db.queuedGames.where('id').equals(id).count();
+    const count = await db.queuedGames.where("id").equals(id).count();
     return count > 0;
   }
 
@@ -262,7 +277,7 @@ export class QueuedGameClient {
    * @returns Promise resolving to boolean indicating existence
    */
   static async existsByGameID(gameID: string): Promise<boolean> {
-    const count = await db.queuedGames.where('gameID').equals(gameID).count();
+    const count = await db.queuedGames.where("gameID").equals(gameID).count();
     return count > 0;
   }
 
@@ -280,11 +295,12 @@ export class QueuedGameClient {
    */
   static async countWithNotes(): Promise<number> {
     return await db.queuedGames
-      .filter(game => {
-        const hasContent = game.notes && 
-          (game.notes.nodes.length > 0 || 
-           Boolean(game.notes.name && game.notes.name.trim() !== '') ||
-           Object.keys(game.notes.headers || {}).length > 0);
+      .filter((game) => {
+        const hasContent =
+          game.notes &&
+          (game.notes.nodes.length > 0 ||
+            Boolean(game.notes.name && game.notes.name.trim() !== "") ||
+            Object.keys(game.notes.headers || {}).length > 0);
         return Boolean(hasContent);
       })
       .count();
@@ -296,11 +312,12 @@ export class QueuedGameClient {
    */
   static async countWithoutNotes(): Promise<number> {
     return await db.queuedGames
-      .filter(game => {
-        const hasContent = game.notes && 
-          (game.notes.nodes.length > 0 || 
-           Boolean(game.notes.name && game.notes.name.trim() !== '') ||
-           Object.keys(game.notes.headers || {}).length > 0);
+      .filter((game) => {
+        const hasContent =
+          game.notes &&
+          (game.notes.nodes.length > 0 ||
+            Boolean(game.notes.name && game.notes.name.trim() !== "") ||
+            Object.keys(game.notes.headers || {}).length > 0);
         return !hasContent;
       })
       .count();

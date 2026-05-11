@@ -20,16 +20,16 @@ export interface NotesResponse {
 export async function getNotesForFEN(fen: string): Promise<string> {
   try {
     const response = await fetch(`http://localhost:3001/notes?fen=${fen}`);
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const data: NotesResponse = await response.json();
-    return data.notes || '';
+    return data.notes || "";
   } catch (error) {
-    console.error('Error fetching notes for FEN:', error);
-    return '';
+    console.error("Error fetching notes for FEN:", error);
+    return "";
   }
 }
 
@@ -38,22 +38,22 @@ export async function getNotesForFEN(fen: string): Promise<string> {
  */
 export async function saveNotesForFEN(noteData: NoteData): Promise<boolean> {
   try {
-    const response = await fetch('http://localhost:3001/notes', {
-      method: 'POST',
+    const response = await fetch("http://localhost:3001/notes", {
+      method: "POST",
       headers: {
-        'Accept': '*',
-        'Content-Type': 'application/json',
+        Accept: "*",
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(noteData),
     });
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     return true;
   } catch (error) {
-    console.error('Error saving notes for FEN:', error);
+    console.error("Error saving notes for FEN:", error);
     return false;
   }
 }

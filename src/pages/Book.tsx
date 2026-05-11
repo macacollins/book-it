@@ -214,7 +214,7 @@ function ConfigPage({
           draggable={false}
           arrows={[]}
           madeMoveRef={{ current: true }}
-          moveCallback={(move) => {}}
+          moveCallback={(move) => false}
           gameRef={gameRef}
           chessboardRef={chessboardRef}
         ></ChessBoard>
@@ -267,7 +267,7 @@ function ConfigPage({
         draggable={false}
         arrows={[]}
         madeMoveRef={{ current: true }}
-        moveCallback={(move) => {}}
+        moveCallback={(move) => false}
       ></ChessBoard>
     );
 

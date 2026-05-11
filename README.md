@@ -100,17 +100,20 @@ Next, you need to navigate to the Games tab. Then click Reset Games to load game
 # Structure
 
 Repertoire
+
 - drill
 - expand
 - create
 - annotate
 
 Games
+
 - Import
 - Annotate
 - Repertoire Check
 
 Positions
+
 - List
 - Generate
 

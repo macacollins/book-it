@@ -1,24 +1,30 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Dropdown } from 'primereact/dropdown';
-import { Card } from 'primereact/card';
-import { ProgressSpinner } from 'primereact/progressspinner';
-import { Message } from 'primereact/message';
-import { Button } from 'primereact/button';
-import { UploadedPGNClient } from '../database/UploadedPGNClient';
-import { UploadedPGN } from '../database/types';
-import pgnParser, { ParsedPGN } from 'pgn-parser';
-import ChessBoard from './ChessBoard';
-import useWindowSize from '../hooks/useWindowSize';
-import { saveDrillCompletion, getLastDrillCompletion, getAllDrillHistories } from '../services/drillProgress';
-import { DrillCompletionData } from '../types/DrillProgress';
-import 'bootstrap-icons/font/bootstrap-icons.css';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-const SELECTED_REPERTOIRE_PGN_KEY = 'SELECTED_REPERTOIRE_PGN';
-const MOVE_DEPTH_KEY = 'REPERTOIRE_DRILL_MOVE_DEPTH';
-const DRILL_COLOR_KEY = 'REPERTOIRE_DRILL_COLOR';
-const DRILL_STARTED_KEY = 'REPERTOIRE_DRILL_STARTED';
-const CURRENT_EXERCISE_INDEX_KEY = 'REPERTOIRE_CURRENT_EXERCISE_INDEX';
+import React, { useState, useEffect, useRef } from "react";
+import { Dropdown } from "primereact/dropdown";
+import { Card } from "primereact/card";
+import { ProgressSpinner } from "primereact/progressspinner";
+import { Message } from "primereact/message";
+import { Button } from "primereact/button";
+import { UploadedPGNClient } from "../database/UploadedPGNClient";
+import { UploadedPGN } from "../database/types";
+import { GradualRepertoireClient } from "../database/GradualRepertoireClient";
+import { gradualRepertoireToSavedPGN } from "../pgn/gradualRepertoireToSavedPGN";
+import pgnParser, { ParsedPGN } from "pgn-parser";
+import ChessBoard from "./ChessBoard";
+import useWindowSize from "../hooks/useWindowSize";
+import {
+  saveDrillCompletion,
+  getLastDrillCompletion,
+  getAllDrillHistories,
+} from "../services/drillProgress";
+import { DrillCompletionData } from "../types/DrillProgress";
+import "bootstrap-icons/font/bootstrap-icons.css";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+const SELECTED_REPERTOIRE_PGN_KEY = "SELECTED_REPERTOIRE_PGN";
+const MOVE_DEPTH_KEY = "REPERTOIRE_DRILL_MOVE_DEPTH";
+const DRILL_COLOR_KEY = "REPERTOIRE_DRILL_COLOR";
+const DRILL_STARTED_KEY = "REPERTOIRE_DRILL_STARTED";
+const CURRENT_EXERCISE_INDEX_KEY = "REPERTOIRE_CURRENT_EXERCISE_INDEX";
 
 export const RepertoireDrill = () => {
   const [uploadedPGNs, setUploadedPGNs] = useState<UploadedPGN[]>([]);
@@ -29,21 +35,26 @@ export const RepertoireDrill = () => {
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
   const currentExerciseIndexRef = useRef<number>(0);
   const currentMoveIndexRef = useRef<number>(0);
-  
+
   const [startingMove, setStartingMove] = useState<number>(18);
   const [endingMove, setEndingMove] = useState<number>(20);
-  const [drillColor, setDrillColor] = useState<'white' | 'black'>('white');
-  
+  const [drillColor, setDrillColor] = useState<"white" | "black">("white");
+
   const [drillStarted, setDrillStarted] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [recentCompletions, setRecentCompletions] = useState<DrillCompletionData[]>([]);
-  
+  const [recentCompletions, setRecentCompletions] = useState<
+    DrillCompletionData[]
+  >([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const chessboardRef = useRef<any>(null);
   const gameRef = useRef<any>(null);
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error' | 'info' | null, message: string }>({ type: null, message: '' });
+  const [feedback, setFeedback] = useState<{
+    type: "success" | "error" | "info" | null;
+    message: string;
+  }>({ type: null, message: "" });
   const [width, height] = useWindowSize();
   const isWideLayout = width >= height + 250;
   const boardSize = isWideLayout ? height - 20 : Math.min(width, height) - 20;
@@ -61,7 +72,10 @@ export const RepertoireDrill = () => {
   useEffect(() => {
     if (isInitialized) {
       console.log("Was initialized setting to ", currentExerciseIndex);
-      localStorage.setItem(CURRENT_EXERCISE_INDEX_KEY, currentExerciseIndex.toString());
+      localStorage.setItem(
+        CURRENT_EXERCISE_INDEX_KEY,
+        currentExerciseIndex.toString(),
+      );
     } else {
       console.log("Not initialized, skipping setting current exercise index");
     }
@@ -82,33 +96,46 @@ export const RepertoireDrill = () => {
     const loadRepertoirePGNs = async () => {
       try {
         setLoading(true);
-        
+
         // Load drill started state from localStorage
         const savedDrillStarted = localStorage.getItem(DRILL_STARTED_KEY);
-        if (savedDrillStarted === 'true') {
+        if (savedDrillStarted === "true") {
           setDrillStarted(true);
         }
-        
+
         // Load current exercise index from database
-        const savedExerciseIndex = localStorage.getItem(CURRENT_EXERCISE_INDEX_KEY);
-        if (savedExerciseIndex !== null && !isNaN(parseInt(savedExerciseIndex, 10))) {
+        const savedExerciseIndex = localStorage.getItem(
+          CURRENT_EXERCISE_INDEX_KEY,
+        );
+        if (
+          savedExerciseIndex !== null &&
+          !isNaN(parseInt(savedExerciseIndex, 10))
+        ) {
           setCurrentExerciseIndex(parseInt(savedExerciseIndex, 10));
           currentExerciseIndexRef.current = parseInt(savedExerciseIndex, 10);
-          console.log("Set currentExerciseIndex to", parseInt(savedExerciseIndex, 10));
+          console.log(
+            "Set currentExerciseIndex to",
+            parseInt(savedExerciseIndex, 10),
+          );
         } else {
           console.log("Did not load current exercise index from localStorage");
         }
-        
-        const repertoirePGNs = await UploadedPGNClient.getByType('repertoire');
-        setUploadedPGNs(repertoirePGNs);
-        
+
+        const repertoirePGNs = await UploadedPGNClient.getByType("repertoire");
+        const gradualRepertoires = await GradualRepertoireClient.getAll();
+        const gradualPGNs = gradualRepertoires.map(gradualRepertoireToSavedPGN);
+        setUploadedPGNs([...repertoirePGNs, ...gradualPGNs]);
+
         // Restore previously selected PGN if available
+        const allPGNs = [...repertoirePGNs, ...gradualPGNs];
         const savedFilename = localStorage.getItem(SELECTED_REPERTOIRE_PGN_KEY);
-        if (savedFilename && repertoirePGNs.length > 0) {
-          const matchingPGN = repertoirePGNs.find(pgn => pgn.filename === savedFilename);
+        if (savedFilename && allPGNs.length > 0) {
+          const matchingPGN = allPGNs.find(
+            (pgn) => pgn.filename === savedFilename,
+          );
           if (matchingPGN) {
             setSelectedPGN(matchingPGN);
-          
+
             // Fall back to general saved settings if no completion history exists
             const savedMoveDepth = localStorage.getItem(MOVE_DEPTH_KEY);
             if (savedMoveDepth) {
@@ -116,9 +143,9 @@ export const RepertoireDrill = () => {
               setEndingMove(moveDepth * 2);
               setStartingMove(moveDepth * 2 - 2);
             }
-            
+
             const savedDrillColor = localStorage.getItem(DRILL_COLOR_KEY);
-            if (savedDrillColor === 'white' || savedDrillColor === 'black') {
+            if (savedDrillColor === "white" || savedDrillColor === "black") {
               setDrillColor(savedDrillColor);
             }
           }
@@ -130,9 +157,9 @@ export const RepertoireDrill = () => {
             setEndingMove(moveDepth * 2);
             setStartingMove(moveDepth * 2 - 2);
           }
-          
+
           const savedDrillColor = localStorage.getItem(DRILL_COLOR_KEY);
-          if (savedDrillColor === 'white' || savedDrillColor === 'black') {
+          if (savedDrillColor === "white" || savedDrillColor === "black") {
             setDrillColor(savedDrillColor);
           }
         }
@@ -140,28 +167,31 @@ export const RepertoireDrill = () => {
         // Load recent completions
         const histories = getAllDrillHistories();
         const allCompletions: DrillCompletionData[] = [];
-        histories.forEach(history => {
+        histories.forEach((history) => {
           allCompletions.push(...history.completions);
         });
         // Sort by completion date, most recent first
-        allCompletions.sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
-        
+        allCompletions.sort(
+          (a, b) =>
+            new Date(b.completedAt).getTime() -
+            new Date(a.completedAt).getTime(),
+        );
+
         // Deduplicate by filename, keeping only the most recent for each
         const seenFilenames = new Set<string>();
-        const uniqueCompletions = allCompletions.filter(completion => {
+        const uniqueCompletions = allCompletions.filter((completion) => {
           if (seenFilenames.has(completion.filename)) {
             return false;
           }
           seenFilenames.add(completion.filename);
           return true;
         });
-        
+
         // Take top 5 unique repertoires
         setRecentCompletions(uniqueCompletions.slice(0, 5));
-
       } catch (err) {
-        console.error('Error loading repertoire PGNs:', err);
-        setError('Failed to load repertoire from database');
+        console.error("Error loading repertoire PGNs:", err);
+        setError("Failed to load repertoire from database");
       } finally {
         setLoading(false);
         setIsInitialized(true);
@@ -169,68 +199,80 @@ export const RepertoireDrill = () => {
     };
 
     loadRepertoirePGNs();
-
-
   }, []);
 
   // Parse PGN and create exercises when drill starts
   useEffect(() => {
-    console.log("Drill started changed to", selectedPGN?.filename, "isInitialized:", drillStarted);
+    console.log(
+      "Drill started changed to",
+      selectedPGN?.filename,
+      "isInitialized:",
+      drillStarted,
+    );
     if (selectedPGN && drillStarted) {
       try {
         const parsed = pgnParser.parse(selectedPGN.content);
         console.log("Got parsed", parsed);
         setParsedPGNs(parsed);
-        
+
         // Create exercises from parsed PGNs
         const exerciseSet = new Set<string>();
         const exerciseList: string[][] = [];
-        
+
         // Helper function to extract moves and expand RAVs recursively
-        const extractMoveLists = (moves: any[], parentMoves: string[] = []): string[][] => {
+        const extractMoveLists = (
+          moves: any[],
+          parentMoves: string[] = [],
+        ): string[][] => {
           const result: string[][] = [];
-          
+
           for (let i = 0; i < moves.length; i++) {
             const move = moves[i];
             if (move.move) {
               const currentPath = [...parentMoves, move.move];
-              
+
               // If we have at least some moves, add this variation
               if (currentPath.length > 0) {
                 result.push(currentPath.slice(0, 50)); // Limit to 50 moves
               }
-              
+
               // Recursively expand RAVs (alternative variations)
               if (move.ravs && move.ravs.length > 0) {
                 move.ravs.forEach((rav: any) => {
                   if (rav.moves && rav.moves.length > 0) {
                     // For each RAV, start from the parent position and add the variation
-                    const ravVariations = extractMoveLists(rav.moves, parentMoves);
+                    const ravVariations = extractMoveLists(
+                      rav.moves,
+                      parentMoves,
+                    );
                     result.push(...ravVariations);
                   }
                 });
               }
-              
+
               // Continue with the main line
               if (i < moves.length - 1) {
-                const continuations = extractMoveLists(moves.slice(i + 1), currentPath);
+                const continuations = extractMoveLists(
+                  moves.slice(i + 1),
+                  currentPath,
+                );
                 result.push(...continuations);
                 break; // We've processed the rest recursively
               }
             }
           }
-          
+
           return result;
         };
-        
+
         parsed.forEach((pgn) => {
           if (pgn.moves && pgn.moves.length > 0) {
             const variations = extractMoveLists(pgn.moves);
-            
+
             variations.forEach((movesArray) => {
               // Create unique key for deduplication
-              const key = movesArray.join('|');
-              
+              const key = movesArray.join("|");
+
               if (!exerciseSet.has(key)) {
                 exerciseSet.add(key);
                 exerciseList.push(movesArray);
@@ -239,12 +281,16 @@ export const RepertoireDrill = () => {
           }
         });
 
-
-        const newExercises = exerciseList.filter(ex => ex.length > startingMove && ex.length <= endingMove&& ex.length % 2 === (drillColor === "white" ? 1 : 0));
+        const newExercises = exerciseList.filter(
+          (ex) =>
+            ex.length > startingMove &&
+            ex.length <= endingMove &&
+            ex.length % 2 === (drillColor === "white" ? 1 : 0),
+        );
         console.log("Setting exercises to ", newExercises);
         setExercises(newExercises);
 
-        if (drillColor === 'white') {
+        if (drillColor === "white") {
           // setCurrentExerciseIndex(0);
           setCurrentMoveIndex(0);
           setError(null);
@@ -261,18 +307,16 @@ export const RepertoireDrill = () => {
               }
             }
           }, 300);
-          
+
           setError(null);
         }
-
       } catch (err) {
-        console.error('Error parsing PGN:', err);
-        setError('Failed to parse selected PGN file');
+        console.error("Error parsing PGN:", err);
+        setError("Failed to parse selected PGN file");
         setParsedPGNs([]);
         setExercises([]);
       }
     } else {
-
       console.log("Clearing exercises");
       // setParsedPGNs([]);
       // setExercises([]);
@@ -283,25 +327,29 @@ export const RepertoireDrill = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
+      <div
+        className="flex justify-content-center align-items-center"
+        style={{ minHeight: "400px" }}
+      >
         <ProgressSpinner />
       </div>
     );
   }
 
-  const pgnOptions = uploadedPGNs.map(pgn => ({
+  const pgnOptions = uploadedPGNs.map((pgn) => ({
     label: pgn.filename,
-    value: pgn
+    value: pgn,
   }));
 
-  const currentFEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+  const currentFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
   const handlePrevious = () => {
     if (currentExerciseIndex > 0) {
       setCurrentExerciseIndex(currentExerciseIndex - 1);
       setCurrentMoveIndex(0);
-            chessboardRef.current?.position('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
-
+      chessboardRef.current?.position(
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      );
     }
   };
 
@@ -310,19 +358,24 @@ export const RepertoireDrill = () => {
       setCurrentExerciseIndex(currentExerciseIndex + 1);
       setCurrentMoveIndex(0);
 
-      chessboardRef.current?.position('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+      chessboardRef.current?.position(
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      );
     }
   };
 
-  const moveHandler = (move: {san: string}) => {
-    console.log('Move made:', move);
+  const moveHandler = (move: { san: string }) => {
+    console.log("Move made:", move);
 
-    if (exercises.length === 0 || currentExerciseIndexRef.current >= exercises.length) {
+    if (
+      exercises.length === 0 ||
+      currentExerciseIndexRef.current >= exercises.length
+    ) {
       return false;
     }
 
     const currentExercise = exercises[currentExerciseIndexRef.current];
-    
+
     // Only check white's moves (even indices: 0, 2, 4...)
     if (currentMoveIndexRef.current % 2 === (drillColor === "white" ? 1 : 0)) {
       // This is black's move, automatically play it
@@ -330,8 +383,15 @@ export const RepertoireDrill = () => {
     }
 
     const expectedMove = currentExercise[currentMoveIndexRef.current];
-    
-    console.log("Was expecting", expectedMove, "got", move.san, "at move index", currentMoveIndexRef.current);
+
+    console.log(
+      "Was expecting",
+      expectedMove,
+      "got",
+      move.san,
+      "at move index",
+      currentMoveIndexRef.current,
+    );
 
     if (move.san === expectedMove) {
       // Correct move!
@@ -339,19 +399,22 @@ export const RepertoireDrill = () => {
 
       // Check if this was the last move
       if (currentMoveIndexRef.current >= totalMoves - 1) {
-        setFeedback({ type: 'success', message: 'Exercise completed!' });
+        setFeedback({ type: "success", message: "Exercise completed!" });
         setCurrentMoveIndex(0);
 
         // Auto-advance to next exercise
         if (currentExerciseIndexRef.current < exercises.length - 1) {
           setTimeout(() => {
             setCurrentExerciseIndex(currentExerciseIndexRef.current + 1);
-            chessboardRef.current?.position('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+            chessboardRef.current?.position(
+              "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+            );
             gameRef.current?.reset();
 
-            if (drillColor === 'black') {
+            if (drillColor === "black") {
               setTimeout(() => {
-                const opponentMove = exercises[currentExerciseIndexRef.current][0];
+                const opponentMove =
+                  exercises[currentExerciseIndexRef.current][0];
                 if (opponentMove && gameRef.current && chessboardRef.current) {
                   const moveResult = gameRef.current.move(opponentMove);
                   if (moveResult) {
@@ -362,12 +425,12 @@ export const RepertoireDrill = () => {
               }, 300);
             }
           }, 2000);
-
-
-
         } else {
           // Last exercise completed
-          setFeedback({ type: 'info', message: 'You have completed all exercises in this repertoire!' });
+          setFeedback({
+            type: "info",
+            message: "You have completed all exercises in this repertoire!",
+          });
 
           // Save completion stats using the drillProgress service
           if (selectedPGN?.filename) {
@@ -377,7 +440,7 @@ export const RepertoireDrill = () => {
               endingMove: endingMove,
               drillColor: drillColor,
               completedAt: new Date().toISOString(),
-              exerciseCount: exercises.length
+              exerciseCount: exercises.length,
             };
             saveDrillCompletion(completionData);
           }
@@ -386,9 +449,12 @@ export const RepertoireDrill = () => {
         // More moves to go - increment and make opponent's move if it's black's turn
         const newMoveIndex = currentMoveIndexRef.current + 1;
         setCurrentMoveIndex(newMoveIndex);
-        
+
         // If next move is black's move, play it automatically after a delay
-        if (newMoveIndex < totalMoves && newMoveIndex % 2 === (drillColor === "white" ? 1 : 0)) {
+        if (
+          newMoveIndex < totalMoves &&
+          newMoveIndex % 2 === (drillColor === "white" ? 1 : 0)
+        ) {
           setTimeout(() => {
             const opponentMove = currentExercise[newMoveIndex];
             if (opponentMove && gameRef.current && chessboardRef.current) {
@@ -401,11 +467,14 @@ export const RepertoireDrill = () => {
           }, 300);
         }
       }
-      
+
       return true;
     } else {
       // Incorrect move
-      setFeedback({ type: 'error', message: "That's not the right move. Try again!" });
+      setFeedback({
+        type: "error",
+        message: "That's not the right move. Try again!",
+      });
       return false;
     }
   };
@@ -421,16 +490,16 @@ export const RepertoireDrill = () => {
     if (selectedPGN) {
       const currentMoveDepth = endingMove / 2;
       const newMoveDepth = Math.min(currentMoveDepth + 1, 20); // Cap at depth 20
-      
+
       const newEndingMove = newMoveDepth * 2;
       const newStartingMove = newEndingMove - 2;
-      
+
       setStartingMove(newStartingMove);
       setEndingMove(newEndingMove);
       localStorage.setItem(MOVE_DEPTH_KEY, newMoveDepth.toString());
 
       console.log("Setting new move depth to", newMoveDepth);
-      
+
       setDrillStarted(true);
       setCurrentExerciseIndex(0);
     }
@@ -438,14 +507,19 @@ export const RepertoireDrill = () => {
 
   const handleStartFromCompletion = (completion: DrillCompletionData) => {
     // Find the matching PGN
-    const matchingPGN = uploadedPGNs.find(pgn => pgn.filename === completion.filename);
+    const matchingPGN = uploadedPGNs.find(
+      (pgn) => pgn.filename === completion.filename,
+    );
     if (matchingPGN) {
       setSelectedPGN(matchingPGN);
       setStartingMove(completion.startingMove);
       setEndingMove(completion.endingMove);
       setDrillColor(completion.drillColor);
       localStorage.setItem(SELECTED_REPERTOIRE_PGN_KEY, matchingPGN.filename);
-      localStorage.setItem(MOVE_DEPTH_KEY, (completion.endingMove / 2).toString());
+      localStorage.setItem(
+        MOVE_DEPTH_KEY,
+        (completion.endingMove / 2).toString(),
+      );
       localStorage.setItem(DRILL_COLOR_KEY, completion.drillColor);
       setDrillStarted(true);
       setCurrentExerciseIndex(0);
@@ -454,14 +528,16 @@ export const RepertoireDrill = () => {
 
   const handleStartNextFromCompletion = (completion: DrillCompletionData) => {
     // Find the matching PGN
-    const matchingPGN = uploadedPGNs.find(pgn => pgn.filename === completion.filename);
+    const matchingPGN = uploadedPGNs.find(
+      (pgn) => pgn.filename === completion.filename,
+    );
     if (matchingPGN) {
       const currentMoveDepth = completion.endingMove / 2;
       const newMoveDepth = Math.min(currentMoveDepth + 1, 20); // Cap at depth 20
-      
+
       const newEndingMove = newMoveDepth * 2;
       const newStartingMove = newEndingMove - 2;
-      
+
       setSelectedPGN(matchingPGN);
       setStartingMove(newStartingMove);
       setEndingMove(newEndingMove);
@@ -475,22 +551,27 @@ export const RepertoireDrill = () => {
   };
 
   const FeedbackDisplay = () => {
-    if (!feedback.type) return <div style={{ height: '24px' }} />;
-    
-    const iconClass = feedback.type === 'success' 
-      ? 'bi bi-check-circle-fill' 
-      : feedback.type === 'error' 
-        ? 'bi bi-x-circle-fill' 
-        : 'bi bi-info-circle-fill';
-    
-    const colorClass = feedback.type === 'success' 
-      ? 'text-green-500' 
-      : feedback.type === 'error' 
-        ? 'text-red-500' 
-        : 'text-blue-500';
-    
+    if (!feedback.type) return <div style={{ height: "24px" }} />;
+
+    const iconClass =
+      feedback.type === "success"
+        ? "bi bi-check-circle-fill"
+        : feedback.type === "error"
+          ? "bi bi-x-circle-fill"
+          : "bi bi-info-circle-fill";
+
+    const colorClass =
+      feedback.type === "success"
+        ? "text-green-500"
+        : feedback.type === "error"
+          ? "text-red-500"
+          : "text-blue-500";
+
     return (
-      <div className={`flex align-items-center gap-2 ${colorClass}`} style={{ height: '24px' }}>
+      <div
+        className={`flex align-items-center gap-2 ${colorClass}`}
+        style={{ height: "24px" }}
+      >
         <i className={iconClass}></i>
         <span>{feedback.message}</span>
       </div>
@@ -523,38 +604,42 @@ export const RepertoireDrill = () => {
       <FeedbackDisplay />
 
       <div className="text-center mt-2">
-        <div>Drilling as: <strong>{drillColor === 'white' ? 'White' : 'Black'}</strong></div>
-        <div>Move depth: <strong>{endingMove / 2}</strong></div>
+        <div>
+          Drilling as:{" "}
+          <strong>{drillColor === "white" ? "White" : "Black"}</strong>
+        </div>
+        <div>
+          Move depth: <strong>{endingMove / 2}</strong>
+        </div>
       </div>
     </>
   );
 
   return (
     <div className="p-1 flex flex-wrap align-items-center justify-content-center">
-      
       {!drillStarted && recentCompletions.length > 0 && (
         <Card title="Recent Drills" className="m-3">
           <DataTable value={recentCompletions} size="small" stripedRows>
-            <Column 
-              field="filename" 
-              header="Repertoire" 
-              style={{ width: '30%' }}
+            <Column
+              field="filename"
+              header="Repertoire"
+              style={{ width: "30%" }}
             />
-            <Column 
-              header="Move Depth" 
+            <Column
+              header="Move Depth"
               body={(rowData: DrillCompletionData) => rowData.endingMove / 2}
-              style={{ width: '15%' }}
+              style={{ width: "15%" }}
             />
-            <Column 
-              field="drillColor" 
-              header="Color" 
+            <Column
+              field="drillColor"
+              header="Color"
               body={(rowData: DrillCompletionData) => (
                 <span className="capitalize">{rowData.drillColor}</span>
               )}
-              style={{ width: '12%' }}
+              style={{ width: "12%" }}
             />
-            <Column 
-              header="Actions" 
+            <Column
+              header="Actions"
               body={(rowData: DrillCompletionData) => (
                 <div className="flex gap-1">
                   <Button
@@ -574,7 +659,7 @@ export const RepertoireDrill = () => {
                   />
                 </div>
               )}
-              style={{ width: '40%' }}
+              style={{ width: "40%" }}
             />
           </DataTable>
         </Card>
@@ -594,10 +679,15 @@ export const RepertoireDrill = () => {
                 const newPGN = e.value;
                 setSelectedPGN(newPGN);
                 if (newPGN) {
-                  localStorage.setItem(SELECTED_REPERTOIRE_PGN_KEY, newPGN.filename);
-                  
+                  localStorage.setItem(
+                    SELECTED_REPERTOIRE_PGN_KEY,
+                    newPGN.filename,
+                  );
+
                   // Load drill settings for this PGN
-                  const lastCompletion = getLastDrillCompletion(newPGN.filename);
+                  const lastCompletion = getLastDrillCompletion(
+                    newPGN.filename,
+                  );
                   if (lastCompletion) {
                     setStartingMove(lastCompletion.startingMove);
                     setEndingMove(lastCompletion.endingMove);
@@ -612,9 +702,9 @@ export const RepertoireDrill = () => {
               disabled={uploadedPGNs.length === 0}
             />
             {uploadedPGNs.length === 0 && (
-              <Message 
-                severity="info" 
-                text="No repertoire PGNs found. Upload a repertoire PGN file from the Database page." 
+              <Message
+                severity="info"
+                text="No repertoire PGNs found. Upload a repertoire PGN file from the Database page."
                 className="mt-2"
               />
             )}
@@ -629,8 +719,8 @@ export const RepertoireDrill = () => {
                 id="drill-color"
                 value={drillColor}
                 options={[
-                  { label: 'White', value: 'white' },
-                  { label: 'Black', value: 'black' }
+                  { label: "White", value: "white" },
+                  { label: "Black", value: "black" },
                 ]}
                 onChange={(e) => {
                   setDrillColor(e.value);
@@ -649,7 +739,7 @@ export const RepertoireDrill = () => {
                 value={endingMove / 2}
                 options={Array.from({ length: 20 }, (_, i) => ({
                   label: `${i + 1}`,
-                  value: i + 1
+                  value: i + 1,
                 }))}
                 onChange={(e) => {
                   const moveDepth = e.value;
@@ -664,9 +754,7 @@ export const RepertoireDrill = () => {
             </div>
           </div>
 
-          {error && (
-            <Message severity="error" text={error} className="mb-4" />
-          )}
+          {error && <Message severity="error" text={error} className="mb-4" />}
 
           <div className="flex justify-content-center gap-2 mt-4">
             <Button
@@ -691,8 +779,8 @@ export const RepertoireDrill = () => {
 
       {drillStarted && selectedPGN && exercises.length === 0 && (
         <Card title="No Exercises Found">
-          <Message 
-            severity="warn" 
+          <Message
+            severity="warn"
             text={`No exercises found for the selected criteria (moves ${startingMove}-${endingMove}, drilling as ${drillColor}). Try adjusting your settings.`}
             className="mb-4"
           />
@@ -703,7 +791,7 @@ export const RepertoireDrill = () => {
               onClick={async () => {
                 setDrillStarted(false);
                 setCurrentExerciseIndex(0);
-                localStorage.setItem(CURRENT_EXERCISE_INDEX_KEY, '0');
+                localStorage.setItem(CURRENT_EXERCISE_INDEX_KEY, "0");
               }}
               className="p-button-secondary"
             />
@@ -711,8 +799,10 @@ export const RepertoireDrill = () => {
         </Card>
       )}
 
-      {drillStarted && selectedPGN && exercises.length > 0 && (
-        isWideLayout ? (
+      {drillStarted &&
+        selectedPGN &&
+        exercises.length > 0 &&
+        (isWideLayout ? (
           <div className="flex align-items-center gap-4">
             <div>
               <ChessBoard
@@ -725,16 +815,16 @@ export const RepertoireDrill = () => {
                 madeMoveRef={{ current: false }}
                 moveCallback={moveHandler}
                 size={`${boardSize}px`}
-                invert={drillColor === 'black'}
+                invert={drillColor === "black"}
               />
             </div>
             <div className="flex flex-column gap-2">
               <div className="flex justify-content-between align-items-center mb-3">
                 <h3 className="m-0">{selectedPGN.filename}</h3>
               </div>
-              
+
               <ControlsPanel />
-              
+
               <Button
                 label="Choose Another"
                 icon="bi bi-book"
@@ -745,7 +835,7 @@ export const RepertoireDrill = () => {
                   setCurrentExerciseIndex(0);
                   setCurrentMoveIndex(0);
                   localStorage.removeItem(SELECTED_REPERTOIRE_PGN_KEY);
-                  localStorage.setItem(CURRENT_EXERCISE_INDEX_KEY, '0');
+                  localStorage.setItem(CURRENT_EXERCISE_INDEX_KEY, "0");
                 }}
                 className="p-button-secondary p-button-sm mt-3"
               />
@@ -765,7 +855,7 @@ export const RepertoireDrill = () => {
                   setCurrentExerciseIndex(0);
                   setCurrentMoveIndex(0);
                   localStorage.removeItem(SELECTED_REPERTOIRE_PGN_KEY);
-                  localStorage.setItem(CURRENT_EXERCISE_INDEX_KEY, '0');
+                  localStorage.setItem(CURRENT_EXERCISE_INDEX_KEY, "0");
                 }}
                 className="p-button-secondary p-button-sm"
               />
@@ -781,13 +871,12 @@ export const RepertoireDrill = () => {
               madeMoveRef={{ current: false }}
               moveCallback={moveHandler}
               size={`${boardSize}px`}
-              invert={drillColor === 'black'}
+              invert={drillColor === "black"}
             />
 
             <ControlsPanel />
           </div>
-        )
-      )}
+        ))}
     </div>
   );
 };

@@ -89,10 +89,11 @@ export default function Annotations() {
   }, [notes]);
 
   const chess = new Chess();
-  const fens = moves?.map((move: any) => {
-    chess.move(move);
-    return chess.fen();
-  }) || [];
+  const fens =
+    moves?.map((move: any) => {
+      chess.move(move);
+      return chess.fen();
+    }) || [];
 
   const [currentPosition, setCurrentPosition] = useState(1);
 

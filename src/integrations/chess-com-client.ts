@@ -19,7 +19,8 @@ function getYearAndMonthXMonthsAgo(X: number): { year: number; month: string } {
 
   currentMonth += 1;
 
-  const twoDigitMonth = currentMonth > 9 ? currentMonth.toString() : "0" + currentMonth;
+  const twoDigitMonth =
+    currentMonth > 9 ? currentMonth.toString() : "0" + currentMonth;
 
   return { year: currentYear, month: twoDigitMonth };
 }
@@ -39,24 +40,25 @@ export async function fetchChessComGames(playerName: string): Promise<Game[]> {
 
     try {
       const response = await fetch(
-        `https://api.chess.com/pub/player/${playerName}/games/${year}/${month}`
+        `https://api.chess.com/pub/player/${playerName}/games/${year}/${month}`,
       );
-      
+
       const data = await response.json();
       const thisMonthGames: Game[] = data.games || [];
-      
+
       // Reverse to get newest first for this month
       const newGames = thisMonthGames.reverse();
-      
+
       // Combine with existing games, removing duplicates
       const fullGameList = [...new Set([...finalGames, ...newGames])];
-      
+
       // Sort by end_time in descending order (newest first)
-      finalGames = fullGameList
-        .sort((a, b) => b.end_time - a.end_time);
-        
+      finalGames = fullGameList.sort((a, b) => b.end_time - a.end_time);
     } catch (err) {
-      console.log(`Error fetching games for ${year}/${month}:`, err instanceof Error ? err.message : err);
+      console.log(
+        `Error fetching games for ${year}/${month}:`,
+        err instanceof Error ? err.message : err,
+      );
     }
   }
 

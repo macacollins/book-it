@@ -42,12 +42,15 @@ const ChessBoard = ({
 }: ChessBoardProps) => {
   const width = useWindowSize()[0];
   const [showPromotionDialog, setShowPromotionDialog] = useState(false);
-  const [pendingMove, setPendingMove] = useState<{ source: string; target: string } | null>(null);
+  const [pendingMove, setPendingMove] = useState<{
+    source: string;
+    target: string;
+  } | null>(null);
 
   const finalID = name + game_url.replace(/[^a-zA-Z0-9]/g, "");
 
   // Handle promotion piece selection
-  const handlePromotionSelect = (piece: 'q' | 'r' | 'b' | 'n') => {
+  const handlePromotionSelect = (piece: "q" | "r" | "b" | "n") => {
     if (!pendingMove) return;
 
     const { source, target } = pendingMove;
@@ -59,7 +62,7 @@ const ChessBoard = ({
       const move = testChess.move({
         from: source,
         to: target,
-        promotion: piece
+        promotion: piece,
       });
 
       if (!moveCallback(move)) {
@@ -69,7 +72,7 @@ const ChessBoard = ({
         gameRef.current.move({
           from: source,
           to: target,
-          promotion: piece
+          promotion: piece,
         });
         chessboardRef.current?.position(gameRef.current.fen());
       }
@@ -110,7 +113,7 @@ const ChessBoard = ({
           console.log("already made move");
           return false;
         } else {
-          console.log("Game ref", gameRef.current)
+          console.log("Game ref", gameRef.current);
         }
 
         // only pick up pieces for the side to move
@@ -131,14 +134,16 @@ const ChessBoard = ({
       // Helper function to check if a move is a pawn promotion
       function isPromotion(source: string, target: string): boolean {
         const piece = gameRef.current.get(source);
-        if (!piece || piece.type !== 'p') {
+        if (!piece || piece.type !== "p") {
           return false;
         }
-        
+
         // Check if target is on the 8th rank (white) or 1st rank (black)
         const targetRank = target[1];
-        return (piece.color === 'w' && targetRank === '8') || 
-               (piece.color === 'b' && targetRank === '1');
+        return (
+          (piece.color === "w" && targetRank === "8") ||
+          (piece.color === "b" && targetRank === "1")
+        );
       }
 
       function onDrop(source: any, target: any) {
@@ -166,7 +171,7 @@ const ChessBoard = ({
 
           if (!moveCallback(move)) {
             gameRef.current = new Chess(oldFEN);
-            return 'snapback';
+            return "snapback";
           }
 
           gameRef.current.move({
@@ -174,9 +179,7 @@ const ChessBoard = ({
             to: target,
           });
 
-          console.log("After move", gameRef.current)
-
-          
+          console.log("After move", gameRef.current);
 
           return;
         } catch (e) {

@@ -1,5 +1,5 @@
-import { PositionNotes } from './types';
-import { db } from './db';
+import { PositionNotes } from "./types";
+import { db } from "./db";
 
 export class PositionNotesClient {
   /**
@@ -25,7 +25,7 @@ export class PositionNotesClient {
    * @returns Promise resolving to array of position notes from the specified source
    */
   static async getBySource(source: string): Promise<PositionNotes[]> {
-    return await db.positionNotes.where('source').equals(source).toArray();
+    return await db.positionNotes.where("source").equals(source).toArray();
   }
 
   /**
@@ -33,8 +33,10 @@ export class PositionNotesClient {
    * @param status The sync status to filter by
    * @returns Promise resolving to array of position notes with the specified status
    */
-  static async getByStatus(status: "synced" | "not-synced"): Promise<PositionNotes[]> {
-    return await db.positionNotes.where('status').equals(status).toArray();
+  static async getByStatus(
+    status: "synced" | "not-synced",
+  ): Promise<PositionNotes[]> {
+    return await db.positionNotes.where("status").equals(status).toArray();
   }
 
   /**
@@ -42,7 +44,10 @@ export class PositionNotesClient {
    * @returns Promise resolving to array of unsynced position notes
    */
   static async getUnsynced(): Promise<PositionNotes[]> {
-    return await db.positionNotes.where('status').equals('not-synced').toArray();
+    return await db.positionNotes
+      .where("status")
+      .equals("not-synced")
+      .toArray();
   }
 
   /**
@@ -52,7 +57,9 @@ export class PositionNotesClient {
    */
   static async searchByNotes(searchText: string): Promise<PositionNotes[]> {
     return await db.positionNotes
-      .filter(notes => notes.notes.toLowerCase().includes(searchText.toLowerCase()))
+      .filter((notes) =>
+        notes.notes.toLowerCase().includes(searchText.toLowerCase()),
+      )
       .toArray();
   }
 
@@ -73,7 +80,7 @@ export class PositionNotesClient {
    */
   static async insertMany(positionNotes: PositionNotes[]): Promise<string[]> {
     await db.positionNotes.bulkAdd(positionNotes);
-    return positionNotes.map(pn => pn.fen);
+    return positionNotes.map((pn) => pn.fen);
   }
 
   /**
@@ -82,7 +89,10 @@ export class PositionNotesClient {
    * @param updates Partial PositionNotes object with fields to update
    * @returns Promise resolving to number of updated records (0 or 1)
    */
-  static async update(fen: string, updates: Partial<Omit<PositionNotes, 'fen'>>): Promise<number> {
+  static async update(
+    fen: string,
+    updates: Partial<Omit<PositionNotes, "fen">>,
+  ): Promise<number> {
     return await db.positionNotes.update(fen, updates);
   }
 
@@ -93,7 +103,7 @@ export class PositionNotesClient {
    * @returns Promise resolving to number of updated records (0 or 1)
    */
   static async updateNotes(fen: string, notes: string): Promise<number> {
-    return await db.positionNotes.update(fen, { notes, status: 'not-synced' });
+    return await db.positionNotes.update(fen, { notes, status: "not-synced" });
   }
 
   /**
@@ -102,7 +112,10 @@ export class PositionNotesClient {
    * @param status The new sync status
    * @returns Promise resolving to number of updated records (0 or 1)
    */
-  static async updateStatus(fen: string, status: "synced" | "not-synced"): Promise<number> {
+  static async updateStatus(
+    fen: string,
+    status: "synced" | "not-synced",
+  ): Promise<number> {
     return await db.positionNotes.update(fen, { status });
   }
 
@@ -112,9 +125,9 @@ export class PositionNotesClient {
    * @returns Promise resolving to void
    */
   static async markAsSynced(fens: string[]): Promise<void> {
-    await db.transaction('rw', db.positionNotes, async () => {
+    await db.transaction("rw", db.positionNotes, async () => {
       for (const fen of fens) {
-        await db.positionNotes.update(fen, { status: 'synced' });
+        await db.positionNotes.update(fen, { status: "synced" });
       }
     });
   }
@@ -153,8 +166,11 @@ export class PositionNotesClient {
    * @returns Promise resolving to number of deleted records
    */
   static async deleteBySource(source: string): Promise<number> {
-    const notes = await db.positionNotes.where('source').equals(source).toArray();
-    await db.positionNotes.where('source').equals(source).delete();
+    const notes = await db.positionNotes
+      .where("source")
+      .equals(source)
+      .toArray();
+    await db.positionNotes.where("source").equals(source).delete();
     return notes.length;
   }
 
@@ -164,7 +180,7 @@ export class PositionNotesClient {
    * @returns Promise resolving to boolean indicating existence
    */
   static async exists(fen: string): Promise<boolean> {
-    const count = await db.positionNotes.where('fen').equals(fen).count();
+    const count = await db.positionNotes.where("fen").equals(fen).count();
     return count > 0;
   }
 
@@ -182,7 +198,7 @@ export class PositionNotesClient {
    * @returns Promise resolving to the count of position notes from the specified source
    */
   static async countBySource(source: string): Promise<number> {
-    return await db.positionNotes.where('source').equals(source).count();
+    return await db.positionNotes.where("source").equals(source).count();
   }
 
   /**
@@ -190,7 +206,7 @@ export class PositionNotesClient {
    * @returns Promise resolving to the count of unsynced position notes
    */
   static async countUnsynced(): Promise<number> {
-    return await db.positionNotes.where('status').equals('not-synced').count();
+    return await db.positionNotes.where("status").equals("not-synced").count();
   }
 
   /**

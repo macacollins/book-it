@@ -1,30 +1,30 @@
-import React from 'react';
-import { Dialog } from 'primereact/dialog';
-import { Button } from 'primereact/button';
+import React from "react";
+import { Dialog } from "primereact/dialog";
+import { Button } from "primereact/button";
 
 interface PromotionDialogProps {
   visible: boolean;
-  onSelect: (piece: 'q' | 'r' | 'b' | 'n') => void;
+  onSelect: (piece: "q" | "r" | "b" | "n") => void;
   onCancel: () => void;
 }
 
 export const PromotionDialog: React.FC<PromotionDialogProps> = ({
   visible,
   onSelect,
-  onCancel
+  onCancel,
 }) => {
   const pieces = [
-    { label: 'Queen', value: 'q' as const, icon: '♕' },
-    { label: 'Rook', value: 'r' as const, icon: '♖' },
-    { label: 'Bishop', value: 'b' as const, icon: '♗' },
-    { label: 'Knight', value: 'n' as const, icon: '♘' }
+    { label: "Queen", value: "q" as const, icon: "♕" },
+    { label: "Rook", value: "r" as const, icon: "♖" },
+    { label: "Bishop", value: "b" as const, icon: "♗" },
+    { label: "Knight", value: "n" as const, icon: "♘" },
   ];
 
   return (
     <Dialog
       header="Promote Pawn"
       visible={visible}
-      style={{ width: '350px' }}
+      style={{ width: "350px" }}
       onHide={onCancel}
       modal
       closable={false}
@@ -38,7 +38,7 @@ export const PromotionDialog: React.FC<PromotionDialogProps> = ({
                 label={`${piece.icon} ${piece.label}`}
                 onClick={() => onSelect(piece.value)}
                 className="w-full"
-                style={{ fontSize: '1.2rem' }}
+                style={{ fontSize: "1.2rem" }}
               />
             </div>
           ))}

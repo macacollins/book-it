@@ -1,29 +1,30 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Dropdown } from 'primereact/dropdown';
-import { Card } from 'primereact/card';
-import { ProgressSpinner } from 'primereact/progressspinner';
-import { Message } from 'primereact/message';
-import { Checkbox } from 'primereact/checkbox';
-import { InputText } from 'primereact/inputtext';
-import { UploadedPGNClient } from '../database/UploadedPGNClient';
-import { TacticsProgressClient } from '../database/TacticsProgressClient';
-import { UploadedPGN, TacticsProgress } from '../database/types';
-import pgnParser, { ParsedPGN } from 'pgn-parser';
-import ChessBoard from './ChessBoard';
-import useWindowSize from '../hooks/useWindowSize';
-import { Button } from 'primereact/button';
+import React, { useState, useEffect, useRef } from "react";
+import { Dropdown } from "primereact/dropdown";
+import { Card } from "primereact/card";
+import { ProgressSpinner } from "primereact/progressspinner";
+import { Message } from "primereact/message";
+import { Checkbox } from "primereact/checkbox";
+import { InputText } from "primereact/inputtext";
+import { UploadedPGNClient } from "../database/UploadedPGNClient";
+import { TacticsProgressClient } from "../database/TacticsProgressClient";
+import { UploadedPGN, TacticsProgress } from "../database/types";
+import pgnParser, { ParsedPGN } from "pgn-parser";
+import ChessBoard from "./ChessBoard";
+import useWindowSize from "../hooks/useWindowSize";
+import { Button } from "primereact/button";
 
-const SELECTED_TACTICS_PGN_KEY = 'SELECTED_TACTICS_PGN';
-const AUTO_NEXT_KEY = 'TACTICS_AUTO_NEXT';
+const SELECTED_TACTICS_PGN_KEY = "SELECTED_TACTICS_PGN";
+const AUTO_NEXT_KEY = "TACTICS_AUTO_NEXT";
 
 export const TacticsPractice = () => {
   const [uploadedPGNs, setUploadedPGNs] = useState<UploadedPGN[]>([]);
   const [selectedPGN, setSelectedPGN] = useState<UploadedPGN | null>(null);
   const [parsedPGNs, setParsedPGNs] = useState<ParsedPGN[]>([]);
   const [currentPuzzleIndex, setCurrentPuzzleIndex] = useState(500);
-  const [tacticsProgress, setTacticsProgress] = useState<TacticsProgress | null>(null);
+  const [tacticsProgress, setTacticsProgress] =
+    useState<TacticsProgress | null>(null);
   const puzzleMoveIndexRef = useRef<number>(0);
-  
+
   // Initialize autoNext from localStorage
   const getInitialAutoNext = () => {
     const saved = localStorage.getItem(AUTO_NEXT_KEY);
@@ -31,13 +32,16 @@ export const TacticsPractice = () => {
   };
   const autoNextRef = useRef<boolean>(getInitialAutoNext());
   const [autoNextDisplay, setAutoNextDisplay] = useState(autoNextRef.current);
-  const [jumpExerciseInput, setJumpExerciseInput] = useState<string>('');
-  
+  const [jumpExerciseInput, setJumpExerciseInput] = useState<string>("");
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const chessboardRef = useRef<any>(null);
   const gameRef = useRef<any>(null);
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error' | 'warn' | null, message: string }>({ type: null, message: '' });
+  const [feedback, setFeedback] = useState<{
+    type: "success" | "error" | "warn" | null;
+    message: string;
+  }>({ type: null, message: "" });
   const [width, height] = useWindowSize();
   const isWideLayout = width >= height + 218;
   const boardSize = isWideLayout ? height - 20 : Math.min(width, height) - 20;
@@ -47,20 +51,22 @@ export const TacticsPractice = () => {
     const loadTacticsPGNs = async () => {
       try {
         setLoading(true);
-        const tacticsPGNs = await UploadedPGNClient.getByType('tactics');
+        const tacticsPGNs = await UploadedPGNClient.getByType("tactics");
         setUploadedPGNs(tacticsPGNs);
-        
+
         // Restore previously selected PGN if available
         const savedFilename = localStorage.getItem(SELECTED_TACTICS_PGN_KEY);
         if (savedFilename && tacticsPGNs.length > 0) {
-          const matchingPGN = tacticsPGNs.find(pgn => pgn.filename === savedFilename);
+          const matchingPGN = tacticsPGNs.find(
+            (pgn) => pgn.filename === savedFilename,
+          );
           if (matchingPGN) {
             setSelectedPGN(matchingPGN);
           }
         }
       } catch (err) {
-        console.error('Error loading tactics PGNs:', err);
-        setError('Failed to load tactics from database');
+        console.error("Error loading tactics PGNs:", err);
+        setError("Failed to load tactics from database");
       } finally {
         setLoading(false);
       }
@@ -88,12 +94,12 @@ export const TacticsPractice = () => {
               id: selectedPGN.id,
               tacticsSolved: [],
               totalTactics: parsed.length,
-              lastSolvedTimestamp: Date.now()
+              lastSolvedTimestamp: Date.now(),
             };
             await TacticsProgressClient.insert(progress);
           }
           setTacticsProgress(progress);
-          
+
           // Set current puzzle index to one more than the highest solved index
           if (progress.tacticsSolved.length > 0) {
             const highestSolved = Math.max(...progress.tacticsSolved);
@@ -102,8 +108,8 @@ export const TacticsPractice = () => {
             setCurrentPuzzleIndex(0);
           }
         } catch (err) {
-          console.error('Error parsing PGN:', err);
-          setError('Failed to parse selected PGN file');
+          console.error("Error parsing PGN:", err);
+          setError("Failed to parse selected PGN file");
           setParsedPGNs([]);
           setTacticsProgress(null);
         }
@@ -120,23 +126,29 @@ export const TacticsPractice = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
+      <div
+        className="flex justify-content-center align-items-center"
+        style={{ minHeight: "400px" }}
+      >
         <ProgressSpinner />
       </div>
     );
   }
 
-  const pgnOptions = uploadedPGNs.map(pgn => ({
+  const pgnOptions = uploadedPGNs.map((pgn) => ({
     label: pgn.filename,
-    value: pgn
+    value: pgn,
   }));
 
-  const currentFEN = parsedPGNs.length > 0 && parsedPGNs[currentPuzzleIndex]?.headers 
-    ? parsedPGNs[currentPuzzleIndex].headers.find(h => h.name === 'FEN')?.value || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
-    : 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+  const currentFEN =
+    parsedPGNs.length > 0 && parsedPGNs[currentPuzzleIndex]?.headers
+      ? parsedPGNs[currentPuzzleIndex].headers.find((h) => h.name === "FEN")
+          ?.value || "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+      : "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
   const getExpectedMove = (index: number): string | null => {
-    if (parsedPGNs.length === 0 || currentPuzzleIndex >= parsedPGNs.length) return null;
+    if (parsedPGNs.length === 0 || currentPuzzleIndex >= parsedPGNs.length)
+      return null;
 
     const game = parsedPGNs[currentPuzzleIndex];
     if (index < 0 || index >= game.moves.length) {
@@ -144,7 +156,7 @@ export const TacticsPractice = () => {
     }
 
     return game.moves[index].move;
-  }
+  };
 
   const handlePrevious = () => {
     if (currentPuzzleIndex > 0) {
@@ -165,107 +177,126 @@ export const TacticsPractice = () => {
 
     const parsedValue = parseInt(jumpExerciseInput, 10);
     if (Number.isNaN(parsedValue)) {
-      setFeedback({ type: 'warn', message: 'Enter a valid exercise number' });
+      setFeedback({ type: "warn", message: "Enter a valid exercise number" });
       return;
     }
 
-    const clampedIndex = Math.min(parsedPGNs.length - 1, Math.max(0, parsedValue - 1));
+    const clampedIndex = Math.min(
+      parsedPGNs.length - 1,
+      Math.max(0, parsedValue - 1),
+    );
     setCurrentPuzzleIndex(clampedIndex);
     puzzleMoveIndexRef.current = 0;
   };
 
   const getCurrentMoveIndex = () => {
     return puzzleMoveIndexRef.current;
-  }
+  };
 
-  const moveHandler = (move: {san: string}) => {
-      console.log('Move made:', move);
+  const moveHandler = (move: { san: string }) => {
+    console.log("Move made:", move);
 
-      console.log("Current move index ref:", puzzleMoveIndexRef.current);
-      console.log("Current move index function:", getCurrentMoveIndex());
+    console.log("Current move index ref:", puzzleMoveIndexRef.current);
+    console.log("Current move index function:", getCurrentMoveIndex());
 
-      const expectedMove = getExpectedMove(puzzleMoveIndexRef.current);
-      
-      console.log("Was expecting", expectedMove, "got", move.san);
-        const currentPuzzle = parsedPGNs[currentPuzzleIndex];
-        const totalMoves = currentPuzzle.moves.length;
-        console.log("Puzzle move index:", puzzleMoveIndexRef.current, "Total moves:", totalMoves);
-      if (move.san === expectedMove) {
-        // Correct move!
+    const expectedMove = getExpectedMove(puzzleMoveIndexRef.current);
 
-        // Check if this was the last move
-        if (puzzleMoveIndexRef.current >= totalMoves - 1) {
-          setFeedback({ type: 'success', message: 'You did it!' });
-          puzzleMoveIndexRef.current = 0;
-          console.log("Puzzle completed. Resetting move index to 0.");
-          
-          // Update tactics progress
-          if (selectedPGN) {
-            TacticsProgressClient.updateTacticsSolved(selectedPGN.id, [currentPuzzleIndex])
-              .then(async () => {
-                // Refresh progress state
-                const updatedProgress = await TacticsProgressClient.getById(selectedPGN.id);
-                if (updatedProgress) {
-                  setTacticsProgress(updatedProgress);
-                }
-                console.log(`Progress updated: puzzle ${currentPuzzleIndex} marked as solved`);
-              })
-              .catch(err => {
-                console.error('Error updating tactics progress:', err);
-              });
-          }
-          
-          // Auto-advance to next puzzle if enabled
-          if (autoNextRef.current && currentPuzzleIndex < parsedPGNs.length - 1) {
-            setTimeout(() => {
-              setCurrentPuzzleIndex(currentPuzzleIndex + 1);
-            }, 1000);
-          }
-        } else {
-          // More moves to go - increment and make opponent's move
-          const newMoveIndex = puzzleMoveIndexRef.current + 1;
-          puzzleMoveIndexRef.current = newMoveIndex;
-          console.log("Incremented move index to " + newMoveIndex);
-          
-          // Wait 1 second, then make opponent's move
-          setTimeout(() => {
-            const opponentMove = getExpectedMove(newMoveIndex);
-            if (opponentMove && gameRef.current && chessboardRef.current) {
-              const moveResult = gameRef.current.move(opponentMove);
-              if (moveResult) {
-                chessboardRef.current.position(gameRef.current.fen());
-                puzzleMoveIndexRef.current = newMoveIndex + 1;
-                console.log("Setting move index to "  + (newMoveIndex + 1));
+    console.log("Was expecting", expectedMove, "got", move.san);
+    const currentPuzzle = parsedPGNs[currentPuzzleIndex];
+    const totalMoves = currentPuzzle.moves.length;
+    console.log(
+      "Puzzle move index:",
+      puzzleMoveIndexRef.current,
+      "Total moves:",
+      totalMoves,
+    );
+    if (move.san === expectedMove) {
+      // Correct move!
+
+      // Check if this was the last move
+      if (puzzleMoveIndexRef.current >= totalMoves - 1) {
+        setFeedback({ type: "success", message: "You did it!" });
+        puzzleMoveIndexRef.current = 0;
+        console.log("Puzzle completed. Resetting move index to 0.");
+
+        // Update tactics progress
+        if (selectedPGN) {
+          TacticsProgressClient.updateTacticsSolved(selectedPGN.id, [
+            currentPuzzleIndex,
+          ])
+            .then(async () => {
+              // Refresh progress state
+              const updatedProgress = await TacticsProgressClient.getById(
+                selectedPGN.id,
+              );
+              if (updatedProgress) {
+                setTacticsProgress(updatedProgress);
               }
-            }
-          }, 300);
+              console.log(
+                `Progress updated: puzzle ${currentPuzzleIndex} marked as solved`,
+              );
+            })
+            .catch((err) => {
+              console.error("Error updating tactics progress:", err);
+            });
         }
-        
-        return true;
+
+        // Auto-advance to next puzzle if enabled
+        if (autoNextRef.current && currentPuzzleIndex < parsedPGNs.length - 1) {
+          setTimeout(() => {
+            setCurrentPuzzleIndex(currentPuzzleIndex + 1);
+          }, 1000);
+        }
       } else {
-        // Incorrect move
-        setFeedback({ type: 'error', message: "That's not it." });
-        return false;
+        // More moves to go - increment and make opponent's move
+        const newMoveIndex = puzzleMoveIndexRef.current + 1;
+        puzzleMoveIndexRef.current = newMoveIndex;
+        console.log("Incremented move index to " + newMoveIndex);
+
+        // Wait 1 second, then make opponent's move
+        setTimeout(() => {
+          const opponentMove = getExpectedMove(newMoveIndex);
+          if (opponentMove && gameRef.current && chessboardRef.current) {
+            const moveResult = gameRef.current.move(opponentMove);
+            if (moveResult) {
+              chessboardRef.current.position(gameRef.current.fen());
+              puzzleMoveIndexRef.current = newMoveIndex + 1;
+              console.log("Setting move index to " + (newMoveIndex + 1));
+            }
+          }
+        }, 300);
       }
+
+      return true;
+    } else {
+      // Incorrect move
+      setFeedback({ type: "error", message: "That's not it." });
+      return false;
     }
+  };
 
   const FeedbackDisplay = () => {
-    if (!feedback.type) return <div style={{ height: '24px' }} />;
-    
-    const iconClass = feedback.type === 'success' 
-      ? 'pi pi-check-circle' 
-      : feedback.type === 'error' 
-        ? 'pi pi-times-circle' 
-        : 'pi pi-exclamation-triangle';
-    
-    const colorClass = feedback.type === 'success' 
-      ? 'text-green-500' 
-      : feedback.type === 'error' 
-        ? 'text-red-500' 
-        : 'text-yellow-500';
-    
+    if (!feedback.type) return <div style={{ height: "24px" }} />;
+
+    const iconClass =
+      feedback.type === "success"
+        ? "pi pi-check-circle"
+        : feedback.type === "error"
+          ? "pi pi-times-circle"
+          : "pi pi-exclamation-triangle";
+
+    const colorClass =
+      feedback.type === "success"
+        ? "text-green-500"
+        : feedback.type === "error"
+          ? "text-red-500"
+          : "text-yellow-500";
+
     return (
-      <div className={`flex align-items-center gap-2 ${colorClass}`} style={{ height: '24px' }}>
+      <div
+        className={`flex align-items-center gap-2 ${colorClass}`}
+        style={{ height: "24px" }}
+      >
         <i className={iconClass}></i>
         <span>{feedback.message}</span>
       </div>
@@ -311,7 +342,9 @@ export const TacticsPractice = () => {
         </label>
       </div>
       <div className="flex align-items-center gap-2">
-        <label htmlFor="exercise-jump" className="font-semibold">Exercise #</label>
+        <label htmlFor="exercise-jump" className="font-semibold">
+          Exercise #
+        </label>
         <InputText
           id="exercise-jump"
           value={jumpExerciseInput}
@@ -335,52 +368,56 @@ export const TacticsPractice = () => {
       margin-right: 0px !important; 
 }
       `}</style>
-      {!selectedPGN && <Card title="Tactics Practice">
-        <div className="mb-4">
-          <label htmlFor="pgn-select" className="block mb-2 font-semibold">
-            Select Tactics PGN:
-          </label>
-          <Dropdown
-            id="pgn-select"
-            value={selectedPGN}
-            options={pgnOptions}
-            onChange={(e) => {
-              const newPGN = e.value;
-              setSelectedPGN(newPGN);
-              if (newPGN) {
-                localStorage.setItem(SELECTED_TACTICS_PGN_KEY, newPGN.filename);
-              } else {
-                localStorage.removeItem(SELECTED_TACTICS_PGN_KEY);
-              }
-            }}
-            placeholder="Choose a tactics file..."
-            className="w-full"
-            disabled={uploadedPGNs.length === 0}
-          />
-          {uploadedPGNs.length === 0 && (
-            <Message 
-              severity="info" 
-              text="No tactics PGNs found. Upload a tactics PGN file from the Database page." 
-              className="mt-2"
+      {!selectedPGN && (
+        <Card title="Tactics Practice">
+          <div className="mb-4">
+            <label htmlFor="pgn-select" className="block mb-2 font-semibold">
+              Select Tactics PGN:
+            </label>
+            <Dropdown
+              id="pgn-select"
+              value={selectedPGN}
+              options={pgnOptions}
+              onChange={(e) => {
+                const newPGN = e.value;
+                setSelectedPGN(newPGN);
+                if (newPGN) {
+                  localStorage.setItem(
+                    SELECTED_TACTICS_PGN_KEY,
+                    newPGN.filename,
+                  );
+                } else {
+                  localStorage.removeItem(SELECTED_TACTICS_PGN_KEY);
+                }
+              }}
+              placeholder="Choose a tactics file..."
+              className="w-full"
+              disabled={uploadedPGNs.length === 0}
+            />
+            {uploadedPGNs.length === 0 && (
+              <Message
+                severity="info"
+                text="No tactics PGNs found. Upload a tactics PGN file from the Database page."
+                className="mt-2"
+              />
+            )}
+          </div>
+
+          {error && <Message severity="error" text={error} className="mb-4" />}
+
+          {selectedPGN && parsedPGNs.length === 0 && !error && (
+            <Message
+              severity="warn"
+              text="No valid puzzles found in the selected PGN file."
+              className="mt-4"
             />
           )}
-        </div>
+        </Card>
+      )}
 
-        {error && (
-          <Message severity="error" text={error} className="mb-4" />
-        )}
-
-        {selectedPGN && parsedPGNs.length === 0 && !error && (
-          <Message 
-            severity="warn" 
-            text="No valid puzzles found in the selected PGN file." 
-            className="mt-4"
-          />
-        )}
-      </Card>}
-
-      {selectedPGN && parsedPGNs.length > 0 && (
-        isWideLayout ? (
+      {selectedPGN &&
+        parsedPGNs.length > 0 &&
+        (isWideLayout ? (
           <div className="flex align-items-center gap-4">
             <ChessBoard
               name="tactics-practice"
@@ -412,8 +449,7 @@ export const TacticsPractice = () => {
             />
             <ControlsPanel />
           </div>
-        )
-      )}
+        ))}
     </div>
   );
 };

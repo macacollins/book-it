@@ -1,5 +1,5 @@
-import React from 'react';
-import { RepertoireDrill } from '../components/RepertoireDrill';
+import React from "react";
+import { RepertoireDrill } from "../components/RepertoireDrill";
 
 const RepertoireDrillPage = () => {
   return (

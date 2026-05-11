@@ -1,9 +1,17 @@
 // This function takes in a list of games in PGN format
 import { Chess } from "chess.js";
 import pgnParser, { ParsedPGN } from "pgn-parser";
-import { addMoveNode, addStartNode, findStartNode, MoveTree } from "../types/MoveTree";
+import {
+  addMoveNode,
+  addStartNode,
+  findStartNode,
+  MoveTree,
+} from "../types/MoveTree";
 
-export function calculateMoveTree(lines: string | string[], name: string): MoveTree {
+export function calculateMoveTree(
+  lines: string | string[],
+  name: string,
+): MoveTree {
   let parsed: ParsedPGN[] = [];
   // let allLines = new Chess();
   try {
@@ -21,13 +29,15 @@ export function calculateMoveTree(lines: string | string[], name: string): MoveT
     return {
       name: "Could not parse PGN",
       nodes: [],
-      headers: {
-      }
-    }
+      headers: {},
+    };
   }
 }
 
-export function calculateMoveTreeFromParsedPGN(parsed: ParsedPGN[], name: string): MoveTree {
+export function calculateMoveTreeFromParsedPGN(
+  parsed: ParsedPGN[],
+  name: string,
+): MoveTree {
   // { [fen]: [ line, line, line, line ] }
   // This object uses FEN strings, which is a string representation of a chess position, as keys
   // https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
@@ -36,10 +46,10 @@ export function calculateMoveTreeFromParsedPGN(parsed: ParsedPGN[], name: string
   let fenRepo: MoveTree = {
     name,
     nodes: [],
-    headers: {
-    }
+    headers: {},
   };
-  const startingFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+  const startingFEN =
+    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
   fenRepo = addStartNode(fenRepo, startingFEN);
 
@@ -70,12 +80,19 @@ export function calculateMoveTreeFromParsedPGN(parsed: ParsedPGN[], name: string
       const trimmedFEN = stepByStepHistory.fen();
 
       // Real format is [{"text":" The ambitious Sicilian Defense! Black is fighting for the center but from the side, without going for a symmetrical pawn structure. "}]
-      const notes = historyMove?.comments?.length ? 
-        (historyMove.comments as unknown as RealPGNComment[])
-          .map(a => a.text?.trim() || '').join("\n") 
+      const notes = historyMove?.comments?.length
+        ? (historyMove.comments as unknown as RealPGNComment[])
+            .map((a) => a.text?.trim() || "")
+            .join("\n")
         : "";
 
-      fenRepo = addMoveNode(fenRepo, lastFEN, historyMove.move, trimmedFEN, notes);
+      fenRepo = addMoveNode(
+        fenRepo,
+        lastFEN,
+        historyMove.move,
+        trimmedFEN,
+        notes,
+      );
 
       lastFEN = trimmedFEN;
     }

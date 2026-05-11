@@ -1,22 +1,22 @@
-import React, { useState } from 'react';
-import { InputText } from 'primereact/inputtext';
-import { Button } from 'primereact/button';
-import { ProgressSpinner } from 'primereact/progressspinner';
-import { Message } from 'primereact/message';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { Panel } from 'primereact/panel';
-import { Badge } from 'primereact/badge';
-import { Divider } from 'primereact/divider';
-import { LichessClient, GameJson } from '../integrations/lichess-client';
-import OpeningStatisticsTable from './OpeningStatisticsTable';
+import React, { useState } from "react";
+import { InputText } from "primereact/inputtext";
+import { Button } from "primereact/button";
+import { ProgressSpinner } from "primereact/progressspinner";
+import { Message } from "primereact/message";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import { Panel } from "primereact/panel";
+import { Badge } from "primereact/badge";
+import { Divider } from "primereact/divider";
+import { LichessClient, GameJson } from "../integrations/lichess-client";
+import OpeningStatisticsTable from "./OpeningStatisticsTable";
 
 interface GamesByUserProps {
   initialUsername?: string;
 }
 
 const GamesByUser: React.FC<GamesByUserProps> = ({ initialUsername }) => {
-  const [username, setUsername] = useState<string>(initialUsername || '');
+  const [username, setUsername] = useState<string>(initialUsername || "");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [games, setGames] = useState<GameJson[]>([]);
@@ -34,16 +34,16 @@ const GamesByUser: React.FC<GamesByUserProps> = ({ initialUsername }) => {
 
     try {
       // Calculate timestamp for 3 months ago
-      const threeMonthsAgo = Date.now() - (6 * 30 * 24 * 60 * 60 * 1000);
-      
+      const threeMonthsAgo = Date.now() - 6 * 30 * 24 * 60 * 60 * 1000;
+
       const gameData = await lichessClient.apiGamesUser(username.trim(), {
         since: threeMonthsAgo,
         max: 500, // Limit to 50 games for better performance
         moves: false, // Don't need moves for table display
         opening: true, // Include opening information
         tags: true, // Include PGN tags
-        sort: 'dateDesc', // Most recent first
-        pgnInJson: true
+        sort: "dateDesc", // Most recent first
+        pgnInJson: true,
       });
 
       // The API returns a single GameJson but it might be an array in practice
@@ -51,38 +51,50 @@ const GamesByUser: React.FC<GamesByUserProps> = ({ initialUsername }) => {
       const gameArray = Array.isArray(gameData) ? gameData : [gameData];
       setGames(gameArray);
     } catch (err) {
-      console.error('Error loading games:', err);
-      setError(`Failed to load games: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      console.error("Error loading games:", err);
+      setError(
+        `Failed to load games: ${err instanceof Error ? err.message : "Unknown error"}`,
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return new Date(timestamp).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   const playersTemplate = (game: GameJson) => {
     return (
       <div>
-        <div style={{ marginBottom: '0.25rem' }}>
-          <span style={{ fontWeight: 'bold', color: 'var(--text-color)' }}>
-            {game.players.white.user?.name || 'Anonymous'}
+        <div style={{ marginBottom: "0.25rem" }}>
+          <span style={{ fontWeight: "bold", color: "var(--text-color)" }}>
+            {game.players.white.user?.name || "Anonymous"}
           </span>
-          <span style={{ color: 'var(--text-color-secondary)', marginLeft: '0.5rem' }}>
-            ({game.players.white.rating || '?'})
+          <span
+            style={{
+              color: "var(--text-color-secondary)",
+              marginLeft: "0.5rem",
+            }}
+          >
+            ({game.players.white.rating || "?"})
           </span>
         </div>
         <div>
-          <span style={{ fontWeight: 'bold', color: 'var(--text-color)' }}>
-            {game.players.black.user?.name || 'Anonymous'}
+          <span style={{ fontWeight: "bold", color: "var(--text-color)" }}>
+            {game.players.black.user?.name || "Anonymous"}
           </span>
-          <span style={{ color: 'var(--text-color-secondary)', marginLeft: '0.5rem' }}>
-            ({game.players.black.rating || '?'})
+          <span
+            style={{
+              color: "var(--text-color-secondary)",
+              marginLeft: "0.5rem",
+            }}
+          >
+            ({game.players.black.rating || "?"})
           </span>
         </div>
       </div>
@@ -95,21 +107,23 @@ const GamesByUser: React.FC<GamesByUserProps> = ({ initialUsername }) => {
       const whitePlayer = game.players.white.user?.name;
       const blackPlayer = game.players.black.user?.name;
       const searchedUser = username.trim().toLowerCase();
-      
+
       let resultText: string;
-      let severity: 'success' | 'danger' | 'info';
-      
-      if (winner === 'white') {
-        resultText = '1-0';
-        severity = whitePlayer?.toLowerCase() === searchedUser ? 'success' : 'danger';
-      } else if (winner === 'black') {
-        resultText = '0-1';
-        severity = blackPlayer?.toLowerCase() === searchedUser ? 'success' : 'danger';
+      let severity: "success" | "danger" | "info";
+
+      if (winner === "white") {
+        resultText = "1-0";
+        severity =
+          whitePlayer?.toLowerCase() === searchedUser ? "success" : "danger";
+      } else if (winner === "black") {
+        resultText = "0-1";
+        severity =
+          blackPlayer?.toLowerCase() === searchedUser ? "success" : "danger";
       } else {
-        resultText = '½-½';
-        severity = 'info';
+        resultText = "½-½";
+        severity = "info";
       }
-      
+
       return <Badge value={resultText} severity={severity} />;
     };
 
@@ -118,22 +132,19 @@ const GamesByUser: React.FC<GamesByUserProps> = ({ initialUsername }) => {
 
   const speedTemplate = (game: GameJson) => {
     return (
-      <Badge 
-        value={game.speed} 
-        severity={game.rated ? 'success' : 'warning'} 
-      />
+      <Badge value={game.speed} severity={game.rated ? "success" : "warning"} />
     );
   };
 
   const openingTemplate = (game: GameJson) => {
-    if (!game.opening) return '-';
-    
+    if (!game.opening) return "-";
+
     return (
       <div>
-        <div style={{ fontWeight: 'bold' }}>
-          {game.opening.name}
-        </div>
-        <div style={{ color: 'var(--text-color-secondary)', fontSize: '0.9rem' }}>
+        <div style={{ fontWeight: "bold" }}>{game.opening.name}</div>
+        <div
+          style={{ color: "var(--text-color-secondary)", fontSize: "0.9rem" }}
+        >
           {game.opening.eco}
         </div>
       </div>
@@ -142,11 +153,11 @@ const GamesByUser: React.FC<GamesByUserProps> = ({ initialUsername }) => {
 
   const gameIdTemplate = (game: GameJson) => {
     return (
-      <a 
-        href={`https://lichess.org/${game.id}`} 
-        target="_blank" 
+      <a
+        href={`https://lichess.org/${game.id}`}
+        target="_blank"
         rel="noopener noreferrer"
-        style={{ textDecoration: 'underline', color: 'var(--primary-color)' }}
+        style={{ textDecoration: "underline", color: "var(--primary-color)" }}
       >
         {game.id}
       </a>
@@ -159,32 +170,44 @@ const GamesByUser: React.FC<GamesByUserProps> = ({ initialUsername }) => {
 
   const statusTemplate = (game: GameJson) => {
     const statusColors: Record<string, string> = {
-      'mate': 'success',
-      'resign': 'info', 
-      'timeout': 'warning',
-      'draw': 'info',
-      'stalemate': 'info',
-      'aborted': 'danger'
+      mate: "success",
+      resign: "info",
+      timeout: "warning",
+      draw: "info",
+      stalemate: "info",
+      aborted: "danger",
     };
 
     return (
-      <Badge 
-        value={game.status} 
-        severity={statusColors[game.status] as any || 'secondary'} 
+      <Badge
+        value={game.status}
+        severity={(statusColors[game.status] as any) || "secondary"}
       />
     );
   };
 
-
-
   return (
-    <div className="games-by-user" style={{ padding: '1rem' }}>
+    <div className="games-by-user" style={{ padding: "1rem" }}>
       <h2>Games by User</h2>
-      
+
       <Panel header="User Games Lookup" className="mb-4">
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-          <div style={{ flex: '1', minWidth: '250px' }}>
-            <label htmlFor="username-input" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "1rem",
+            alignItems: "flex-end",
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ flex: "1", minWidth: "250px" }}>
+            <label
+              htmlFor="username-input"
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "bold",
+              }}
+            >
               Lichess Username:
             </label>
             <InputText
@@ -192,8 +215,8 @@ const GamesByUser: React.FC<GamesByUserProps> = ({ initialUsername }) => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Enter lichess username"
-              style={{ width: '100%' }}
-              onKeyDown={(e) => e.key === 'Enter' && loadGames()}
+              style={{ width: "100%" }}
+              onKeyDown={(e) => e.key === "Enter" && loadGames()}
             />
           </div>
           <div>
@@ -208,24 +231,33 @@ const GamesByUser: React.FC<GamesByUserProps> = ({ initialUsername }) => {
             />
           </div>
         </div>
-        
-        <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: 'var(--text-color-secondary)' }}>
-          This will load the most recent games from the last 3 months (up to 50 games).
+
+        <div
+          style={{
+            marginTop: "1rem",
+            fontSize: "0.9rem",
+            color: "var(--text-color-secondary)",
+          }}
+        >
+          This will load the most recent games from the last 3 months (up to 50
+          games).
         </div>
       </Panel>
 
       {error && (
-        <Message 
-          severity="error" 
-          text={error} 
-          style={{ width: '100%', marginBottom: '1rem' }} 
+        <Message
+          severity="error"
+          text={error}
+          style={{ width: "100%", marginBottom: "1rem" }}
         />
       )}
 
       {loading && (
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
+        <div style={{ textAlign: "center", padding: "2rem" }}>
           <ProgressSpinner />
-          <div style={{ marginTop: '1rem' }}>Loading games for {username}...</div>
+          <div style={{ marginTop: "1rem" }}>
+            Loading games for {username}...
+          </div>
         </div>
       )}
 
@@ -240,44 +272,44 @@ const GamesByUser: React.FC<GamesByUserProps> = ({ initialUsername }) => {
             className="p-datatable-sm"
             sortOrder={-1}
           >
-            <Column 
-              field="id" 
-              header="Game" 
+            <Column
+              field="id"
+              header="Game"
               body={gameIdTemplate}
-              style={{ width: '100px' }}
+              style={{ width: "100px" }}
             />
-            <Column 
-              header="Players" 
+            <Column
+              header="Players"
               body={playersTemplate}
-              style={{ width: '250px' }}
+              style={{ width: "250px" }}
             />
-            <Column 
-              header="Result" 
+            <Column
+              header="Result"
               body={resultTemplate}
-              style={{ width: '80px', textAlign: 'center' }}
+              style={{ width: "80px", textAlign: "center" }}
             />
-            <Column 
-              field="speed" 
-              header="Speed" 
+            <Column
+              field="speed"
+              header="Speed"
               body={speedTemplate}
-              style={{ width: '100px' }}
+              style={{ width: "100px" }}
             />
-            <Column 
-              header="Opening" 
+            <Column
+              header="Opening"
               body={openingTemplate}
-              style={{ width: '200px' }}
+              style={{ width: "200px" }}
             />
-            <Column 
-              header="Status" 
+            <Column
+              header="Status"
               body={statusTemplate}
-              style={{ width: '100px' }}
+              style={{ width: "100px" }}
             />
-            <Column 
-              field="createdAt" 
-              header="Date" 
+            <Column
+              field="createdAt"
+              header="Date"
               body={dateTemplate}
               sortable
-              style={{ width: '120px' }}
+              style={{ width: "120px" }}
             />
           </DataTable>
         </Panel>
@@ -287,7 +319,13 @@ const GamesByUser: React.FC<GamesByUserProps> = ({ initialUsername }) => {
 
       {!loading && !error && games.length === 0 && username && (
         <Panel>
-          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-color-secondary)' }}>
+          <div
+            style={{
+              textAlign: "center",
+              padding: "2rem",
+              color: "var(--text-color-secondary)",
+            }}
+          >
             No games found for user "{username}" in the last 3 months.
           </div>
         </Panel>

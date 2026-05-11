@@ -4,10 +4,14 @@ import pgnParser, { ParsedPGN } from "pgn-parser";
 
 const startingFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-export function calculateSlimRepertoire(lines: string | string[], repertoireName: string, setComments: any): Record<string, string[]> {
+export function calculateSlimRepertoire(
+  lines: string | string[],
+  repertoireName: string,
+  setComments: any,
+): Record<string, string[]> {
   let parsed: ParsedPGN[] = [];
   // let allLines = new Chess();
-  
+
   const parseStartTime = performance.now();
   try {
     // allLines.loadPgn(lines.join("\n"));
@@ -21,8 +25,9 @@ export function calculateSlimRepertoire(lines: string | string[], repertoireName
   }
   const parseEndTime = performance.now();
   const parseTime = parseEndTime - parseStartTime;
-  console.log(`PGN parsing time: ${parseTime.toFixed(2)}ms (${parsed.length} games)`);
-
+  console.log(
+    `PGN parsing time: ${parseTime.toFixed(2)}ms (${parsed.length} games)`,
+  );
 
   // { [fen]: [ line, line, line, line ] }
   // This object uses FEN strings, which is a string representation of a chess position, as keys
@@ -60,7 +65,7 @@ export function calculateSlimRepertoire(lines: string | string[], repertoireName
           fenRepo[startingFEN] = [historyMove.move];
         }
       }
-      
+
       try {
         stepByStepHistory.move(historyMove.move, { strict: false });
       } catch (e) {
@@ -79,7 +84,7 @@ export function calculateSlimRepertoire(lines: string | string[], repertoireName
       const nextMoveIndex = moveIndex + 1;
       if (nextMoveIndex < game.moves.length) {
         const nextMove = game.moves[nextMoveIndex].move;
-        
+
         // Add the next move to fenRepo
         if (fenRepo[trimmedFEN]) {
           if (!fenRepo[trimmedFEN].includes(nextMove)) {
@@ -90,11 +95,13 @@ export function calculateSlimRepertoire(lines: string | string[], repertoireName
         }
       }
     }
-    
+
     if (gameIndex % 100 === 0) {
       const gameEndTime = performance.now();
       const gameTime = gameEndTime - gameStartTime;
-      console.log(`Game ${gameIndex + 1}: ${gameTime.toFixed(2)}ms (${game.moves.length} moves)`);
+      console.log(
+        `Game ${gameIndex + 1}: ${gameTime.toFixed(2)}ms (${game.moves.length} moves)`,
+      );
       gameIndex++;
     }
   }

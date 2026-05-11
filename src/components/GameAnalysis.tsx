@@ -1,16 +1,16 @@
-import React, { useState, useRef } from 'react';
-import { InputText } from 'primereact/inputtext';
-import { Button } from 'primereact/button';
-import { Card } from 'primereact/card';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { Message } from 'primereact/message';
-import { Panel } from 'primereact/panel';
-import { Tag } from 'primereact/tag';
-import { Divider } from 'primereact/divider';
-import { LichessClient, GameJson } from '../integrations/lichess-client';
-import { Chess } from 'chess.js';
-import ChessBoard from './ChessBoard';
+import React, { useState, useRef } from "react";
+import { InputText } from "primereact/inputtext";
+import { Button } from "primereact/button";
+import { Card } from "primereact/card";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import { Message } from "primereact/message";
+import { Panel } from "primereact/panel";
+import { Tag } from "primereact/tag";
+import { Divider } from "primereact/divider";
+import { LichessClient, GameJson } from "../integrations/lichess-client";
+import { Chess } from "chess.js";
+import ChessBoard from "./ChessBoard";
 
 interface GameAnalysisProps {
   className?: string;
@@ -27,40 +27,48 @@ interface MoveListItem {
     mate?: number;
     best?: string;
     variation?: string;
-    judgment?: { name?: 'Inaccuracy' | 'Mistake' | 'Blunder'; comment?: string };
+    judgment?: {
+      name?: "Inaccuracy" | "Mistake" | "Blunder";
+      comment?: string;
+    };
   };
   blackAnalysis?: {
     eval?: number;
     mate?: number;
     best?: string;
     variation?: string;
-    judgment?: { name?: 'Inaccuracy' | 'Mistake' | 'Blunder'; comment?: string };
+    judgment?: {
+      name?: "Inaccuracy" | "Mistake" | "Blunder";
+      comment?: string;
+    };
   };
 }
 
-const GameAnalysis: React.FC<GameAnalysisProps> = ({ className = '' }) => {
-  const [gameId, setGameId] = useState('');
+const GameAnalysis: React.FC<GameAnalysisProps> = ({ className = "" }) => {
+  const [gameId, setGameId] = useState("");
   const [gameData, setGameData] = useState<GameJson | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
-  const [currentPosition, setCurrentPosition] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+  const [currentPosition, setCurrentPosition] = useState(
+    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+  );
   const [moveList, setMoveList] = useState<MoveListItem[]>([]);
   const [allMoves, setAllMoves] = useState<string[]>([]);
-  
+
   const chessboardRef = useRef<any>(null);
   const gameRef = useRef<Chess>(new Chess());
   const lichessClient = new LichessClient();
 
   const loadGameData = async () => {
     if (!gameId.trim()) {
-      setError('Please enter a game ID');
+      setError("Please enter a game ID");
       return;
     }
 
     setLoading(true);
     setError(null);
-    
+
     try {
       // Fetch game data with all available options
       const game = await lichessClient.gamePgn(gameId, {
@@ -73,16 +81,18 @@ const GameAnalysis: React.FC<GameAnalysisProps> = ({ className = '' }) => {
         opening: true,
         division: true,
         literate: true,
-        withBookmarked: true
+        withBookmarked: true,
       });
-      
+
       setGameData(game);
-      
+
       // Parse moves and set up the game
       if (game.moves) {
-        const moves = game.moves.split(' ').filter(move => move.trim() !== '');
+        const moves = game.moves
+          .split(" ")
+          .filter((move) => move.trim() !== "");
         setAllMoves(moves);
-        
+
         // Create move list for display
         const moveListItems: MoveListItem[] = [];
         for (let i = 0; i < moves.length; i += 2) {
@@ -92,21 +102,29 @@ const GameAnalysis: React.FC<GameAnalysisProps> = ({ className = '' }) => {
             black: moves[i + 1] || null,
             whiteIndex: i,
             blackIndex: i + 1,
-            whiteAnalysis: game.analysis && game.analysis[i] ? game.analysis[i] : undefined,
-            blackAnalysis: game.analysis && game.analysis[i + 1] ? game.analysis[i + 1] : undefined,
+            whiteAnalysis:
+              game.analysis && game.analysis[i] ? game.analysis[i] : undefined,
+            blackAnalysis:
+              game.analysis && game.analysis[i + 1]
+                ? game.analysis[i + 1]
+                : undefined,
           });
         }
         setMoveList(moveListItems);
-        
+
         // Reset to starting position
-        gameRef.current = new Chess(game.initialFen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+        gameRef.current = new Chess(
+          game.initialFen ||
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        );
         setCurrentPosition(gameRef.current.fen());
         setCurrentMoveIndex(0);
       }
-      
     } catch (err) {
-      setError(`Failed to load game: ${err instanceof Error ? err.message : 'Unknown error'}`);
-      console.error('Error loading game:', err);
+      setError(
+        `Failed to load game: ${err instanceof Error ? err.message : "Unknown error"}`,
+      );
+      console.error("Error loading game:", err);
     } finally {
       setLoading(false);
     }
@@ -114,10 +132,13 @@ const GameAnalysis: React.FC<GameAnalysisProps> = ({ className = '' }) => {
 
   const navigateToMove = (moveIndex: number) => {
     if (!gameData || !gameData.moves) return;
-    
+
     // Reset game to initial position
-    gameRef.current = new Chess(gameData.initialFen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
-    
+    gameRef.current = new Chess(
+      gameData.initialFen ||
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+    );
+
     // Play moves up to the target index
     for (let i = 0; i < moveIndex; i++) {
       if (i < allMoves.length) {
@@ -129,7 +150,7 @@ const GameAnalysis: React.FC<GameAnalysisProps> = ({ className = '' }) => {
         }
       }
     }
-    
+
     setCurrentPosition(gameRef.current.fen());
     setCurrentMoveIndex(moveIndex);
   };
@@ -147,10 +168,10 @@ const GameAnalysis: React.FC<GameAnalysisProps> = ({ className = '' }) => {
   };
 
   const formatPlayerInfo = (player: any) => {
-    if (!player) return 'Anonymous';
-    const rating = player.rating ? ` (${player.rating})` : '';
-    const title = player.title ? `${player.title} ` : '';
-    return `${title}${player.user?.name || player.name || 'Anonymous'}${rating}`;
+    if (!player) return "Anonymous";
+    const rating = player.rating ? ` (${player.rating})` : "";
+    const title = player.title ? `${player.title} ` : "";
+    return `${title}${player.user?.name || player.name || "Anonymous"}${rating}`;
   };
 
   const formatTime = (timestamp: number) => {
@@ -159,32 +180,44 @@ const GameAnalysis: React.FC<GameAnalysisProps> = ({ className = '' }) => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'mate': return 'success';
-      case 'resign': return 'warning';  
-      case 'timeout': return 'danger';
-      case 'draw': return 'info';
-      case 'stalemate': return 'info';
-      default: return 'secondary';
+      case "mate":
+        return "success";
+      case "resign":
+        return "warning";
+      case "timeout":
+        return "danger";
+      case "draw":
+        return "info";
+      case "stalemate":
+        return "info";
+      default:
+        return "secondary";
     }
   };
 
   const getJudgmentSeverity = (judgment?: string) => {
     switch (judgment) {
-      case 'Blunder': return 'danger';
-      case 'Mistake': return 'warning';
-      case 'Inaccuracy': return 'info';
-      default: return 'success';
+      case "Blunder":
+        return "danger";
+      case "Mistake":
+        return "warning";
+      case "Inaccuracy":
+        return "info";
+      default:
+        return "success";
     }
   };
 
   const formatEvaluation = (analysis?: { eval?: number; mate?: number }) => {
     if (!analysis) return null;
     if (analysis.mate !== undefined) {
-      return `M${analysis.mate > 0 ? '+' : ''}${analysis.mate}`;
+      return `M${analysis.mate > 0 ? "+" : ""}${analysis.mate}`;
     }
     if (analysis.eval !== undefined) {
       const eval_score = analysis.eval / 100;
-      return eval_score > 0 ? `+${eval_score.toFixed(1)}` : eval_score.toFixed(1);
+      return eval_score > 0
+        ? `+${eval_score.toFixed(1)}`
+        : eval_score.toFixed(1);
     }
     return null;
   };
@@ -197,17 +230,19 @@ const GameAnalysis: React.FC<GameAnalysisProps> = ({ className = '' }) => {
           {rowData.white && (
             <div className="flex flex-column gap-1">
               <div className="flex align-items-center gap-1">
-                <Button 
-                  text 
+                <Button
+                  text
                   size="small"
-                  className={`p-1 ${currentMoveIndex === rowData.whiteIndex + 1 ? 'bg-blue-100' : ''}`}
+                  className={`p-1 ${currentMoveIndex === rowData.whiteIndex + 1 ? "bg-blue-100" : ""}`}
                   onClick={() => navigateToMove(rowData.whiteIndex + 1)}
                   label={rowData.white}
                 />
                 {rowData.whiteAnalysis?.judgment && (
-                  <Tag 
+                  <Tag
                     value={rowData.whiteAnalysis.judgment.name}
-                    severity={getJudgmentSeverity(rowData.whiteAnalysis.judgment.name)}
+                    severity={getJudgmentSeverity(
+                      rowData.whiteAnalysis.judgment.name,
+                    )}
                     className="text-xs"
                   />
                 )}
@@ -227,17 +262,19 @@ const GameAnalysis: React.FC<GameAnalysisProps> = ({ className = '' }) => {
           {rowData.black && (
             <div className="flex flex-column gap-1">
               <div className="flex align-items-center gap-1">
-                <Button 
-                  text 
+                <Button
+                  text
                   size="small"
-                  className={`p-1 ${currentMoveIndex === rowData.blackIndex + 1 ? 'bg-blue-100' : ''}`}
+                  className={`p-1 ${currentMoveIndex === rowData.blackIndex + 1 ? "bg-blue-100" : ""}`}
                   onClick={() => navigateToMove(rowData.blackIndex + 1)}
                   label={rowData.black}
                 />
                 {rowData.blackAnalysis?.judgment && (
-                  <Tag 
+                  <Tag
                     value={rowData.blackAnalysis.judgment.name}
-                    severity={getJudgmentSeverity(rowData.blackAnalysis.judgment.name)}
+                    severity={getJudgmentSeverity(
+                      rowData.blackAnalysis.judgment.name,
+                    )}
                     className="text-xs"
                   />
                 )}
@@ -268,7 +305,7 @@ const GameAnalysis: React.FC<GameAnalysisProps> = ({ className = '' }) => {
             onChange={(e) => setGameId(e.target.value)}
             placeholder="Enter Lichess Game ID (e.g. 5IrD6Gzz)"
             className="flex-1"
-            onKeyDown={(e) => e.key === 'Enter' && loadGameData()}
+            onKeyDown={(e) => e.key === "Enter" && loadGameData()}
           />
           <Button
             label="Load Game"
@@ -279,9 +316,7 @@ const GameAnalysis: React.FC<GameAnalysisProps> = ({ className = '' }) => {
           />
         </div>
 
-        {error && (
-          <Message severity="error" text={error} className="mb-4" />
-        )}
+        {error && <Message severity="error" text={error} className="mb-4" />}
 
         {gameData && (
           <div className="grid">
@@ -296,9 +331,9 @@ const GameAnalysis: React.FC<GameAnalysisProps> = ({ className = '' }) => {
                   />
                   <span className="font-bold">
                     Move {currentMoveIndex} of {allMoves.length}
-                    {currentMoveIndex > 0 && allMoves[currentMoveIndex - 1] && 
-                      ` - ${allMoves[currentMoveIndex - 1]}`
-                    }
+                    {currentMoveIndex > 0 &&
+                      allMoves[currentMoveIndex - 1] &&
+                      ` - ${allMoves[currentMoveIndex - 1]}`}
                   </span>
                   <Button
                     icon="pi pi-chevron-right"
@@ -307,7 +342,7 @@ const GameAnalysis: React.FC<GameAnalysisProps> = ({ className = '' }) => {
                     tooltip="Next move"
                   />
                 </div>
-                
+
                 <ChessBoard
                   name="lichess-analysis"
                   game_url={`https://lichess.org/${gameData.id}`}
@@ -324,17 +359,21 @@ const GameAnalysis: React.FC<GameAnalysisProps> = ({ className = '' }) => {
                   <div className="col-12 md:col-6">
                     <h6>Players</h6>
                     <div className="mb-2">
-                      <strong>White:</strong> {formatPlayerInfo(gameData.players.white)}
+                      <strong>White:</strong>{" "}
+                      {formatPlayerInfo(gameData.players.white)}
                     </div>
                     <div className="mb-2">
-                      <strong>Black:</strong> {formatPlayerInfo(gameData.players.black)}
+                      <strong>Black:</strong>{" "}
+                      {formatPlayerInfo(gameData.players.black)}
                     </div>
                     {gameData.winner && (
                       <div className="mb-2">
-                        <strong>Winner:</strong> 
-                        <Tag 
-                          value={gameData.winner} 
-                          severity={gameData.winner === 'white' ? 'info' : 'secondary'}
+                        <strong>Winner:</strong>
+                        <Tag
+                          value={gameData.winner}
+                          severity={
+                            gameData.winner === "white" ? "info" : "secondary"
+                          }
                           className="ml-1"
                         />
                       </div>
@@ -344,9 +383,9 @@ const GameAnalysis: React.FC<GameAnalysisProps> = ({ className = '' }) => {
                   <div className="col-12 md:col-6">
                     <h6>Game Details</h6>
                     <div className="mb-2">
-                      <strong>Status:</strong> 
-                      <Tag 
-                        value={gameData.status} 
+                      <strong>Status:</strong>
+                      <Tag
+                        value={gameData.status}
                         severity={getStatusColor(gameData.status)}
                         className="ml-1"
                       />
@@ -358,7 +397,7 @@ const GameAnalysis: React.FC<GameAnalysisProps> = ({ className = '' }) => {
                       <strong>Speed:</strong> {gameData.speed}
                     </div>
                     <div className="mb-2">
-                      <strong>Rated:</strong> {gameData.rated ? 'Yes' : 'No'}
+                      <strong>Rated:</strong> {gameData.rated ? "Yes" : "No"}
                     </div>
                   </div>
 
@@ -367,10 +406,12 @@ const GameAnalysis: React.FC<GameAnalysisProps> = ({ className = '' }) => {
                     <h6>Timestamps</h6>
                     <div className="grid">
                       <div className="col-12 md:col-6">
-                        <strong>Started:</strong> {formatTime(gameData.createdAt)}
+                        <strong>Started:</strong>{" "}
+                        {formatTime(gameData.createdAt)}
                       </div>
                       <div className="col-12 md:col-6">
-                        <strong>Last Move:</strong> {formatTime(gameData.lastMoveAt)}
+                        <strong>Last Move:</strong>{" "}
+                        {formatTime(gameData.lastMoveAt)}
                       </div>
                     </div>
                   </div>
@@ -395,7 +436,11 @@ const GameAnalysis: React.FC<GameAnalysisProps> = ({ className = '' }) => {
                       <Divider />
                       <h6>Time Control</h6>
                       <div className="mb-2">
-                        <strong>Initial:</strong> {Math.floor(gameData.clock.initial / 60)}:{(gameData.clock.initial % 60).toString().padStart(2, '0')}
+                        <strong>Initial:</strong>{" "}
+                        {Math.floor(gameData.clock.initial / 60)}:
+                        {(gameData.clock.initial % 60)
+                          .toString()
+                          .padStart(2, "0")}
                       </div>
                       <div className="mb-2">
                         <strong>Increment:</strong> {gameData.clock.increment}s
@@ -416,20 +461,31 @@ const GameAnalysis: React.FC<GameAnalysisProps> = ({ className = '' }) => {
                   size="small"
                   expandedRows={undefined}
                 >
-                  <Column
-                    body={moveTemplate}
-                    header="Moves"
-                  />
+                  <Column body={moveTemplate} header="Moves" />
                 </DataTable>
-                
+
                 {gameData.analysis && (
                   <div className="mt-3 text-sm text-500">
                     <strong>Analysis Legend:</strong>
                     <div className="flex flex-wrap gap-2 mt-1">
-                      <Tag value="Blunder" severity="danger" className="text-xs" />
-                      <Tag value="Mistake" severity="warning" className="text-xs" />
-                      <Tag value="Inaccuracy" severity="info" className="text-xs" />
-                      <span className="text-xs">Eval: position evaluation in pawns</span>
+                      <Tag
+                        value="Blunder"
+                        severity="danger"
+                        className="text-xs"
+                      />
+                      <Tag
+                        value="Mistake"
+                        severity="warning"
+                        className="text-xs"
+                      />
+                      <Tag
+                        value="Inaccuracy"
+                        severity="info"
+                        className="text-xs"
+                      />
+                      <span className="text-xs">
+                        Eval: position evaluation in pawns
+                      </span>
                       <span className="text-xs">M#: mate in # moves</span>
                     </div>
                   </div>

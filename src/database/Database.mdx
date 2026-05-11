@@ -1,16 +1,19 @@
-import Database from './Database';
+import Database from "./Database";
 
-import ChessBoardLoader from '../components/ChessBoardLoader';
+import ChessBoardLoader from "../components/ChessBoardLoader";
 
-<div className="sb-unstyled" style={{
+<div
+  className="sb-unstyled"
+  style={{
     position: "absolute",
     left: 0,
     right: 0,
     top: 0,
     bottom: 0,
-    backgroundColor: "var(--surface-50)"
-}}>
-    <ChessBoardLoader>
-        <Database />
-    </ChessBoardLoader>
+    backgroundColor: "var(--surface-50)",
+  }}
+>
+  <ChessBoardLoader>
+    <Database />
+  </ChessBoardLoader>
 </div>

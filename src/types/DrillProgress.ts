@@ -9,7 +9,7 @@ export interface DrillCompletionData {
   /** The ending move number used in the drill */
   endingMove: number;
   /** The color drilled (white or black) */
-  drillColor: 'white' | 'black';
+  drillColor: "white" | "black";
   /** ISO timestamp of when the drill was completed */
   completedAt: string;
   /** Number of exercises completed in this session */

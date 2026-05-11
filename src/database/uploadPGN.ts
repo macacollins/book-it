@@ -1,4 +1,4 @@
-import { UploadedPGN, UploadedPGNClient, PGNType } from './index';
+import { UploadedPGN, UploadedPGNClient, PGNType } from "./index";
 
 export interface UploadPGNResult {
   success: boolean;
@@ -14,7 +14,7 @@ export const readFileContent = (file: File): Promise<string> => {
       resolve(content);
     };
     reader.onerror = () => {
-      reject(new Error('Failed to read file'));
+      reject(new Error("Failed to read file"));
     };
     reader.readAsText(file);
   });
@@ -22,11 +22,11 @@ export const readFileContent = (file: File): Promise<string> => {
 
 export const uploadPGNFile = async (
   file: File,
-  pgnType: PGNType
+  pgnType: PGNType,
 ): Promise<UploadPGNResult> => {
   try {
     const fileContent = await readFileContent(file);
-    
+
     const uploadedPGN: UploadedPGN = {
       id: `upload-${Date.now()}`,
       filename: file.name,
@@ -35,16 +35,16 @@ export const uploadPGNFile = async (
     };
 
     await UploadedPGNClient.insert(uploadedPGN);
-    
+
     return {
       success: true,
-      filename: file.name
+      filename: file.name,
     };
   } catch (error) {
-    console.error('Error uploading file:', error);
+    console.error("Error uploading file:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to upload file'
+      error: error instanceof Error ? error.message : "Failed to upload file",
     };
   }
 };

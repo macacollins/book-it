@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Chess } from 'chess.js';
-import { UploadedPGNClient } from '../database/UploadedPGNClient';
-import { SavedGameClient } from '../database/SavedGameClient';
-import { useSlimRepertoire } from '../hooks/useSlimRepertoire';
-import { UploadedPGN, SavedGame } from '../database/types';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { Dropdown } from 'primereact/dropdown';
-import { TinyFENDisplay } from '../pages/TinyFENDisplay';
-import { GameRefresher } from './GameRefresher';
+import React, { useState, useEffect } from "react";
+import { Chess } from "chess.js";
+import { UploadedPGNClient } from "../database/UploadedPGNClient";
+import { SavedGameClient } from "../database/SavedGameClient";
+import { useSlimRepertoire } from "../hooks/useSlimRepertoire";
+import { UploadedPGN, SavedGame } from "../database/types";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import { Dropdown } from "primereact/dropdown";
+import { TinyFENDisplay } from "../pages/TinyFENDisplay";
+import { GameRefresher } from "./GameRefresher";
+import { ChessableLink } from "./ChessableLink";
 
 interface GameDivergence {
   gameId: string;
@@ -19,18 +20,19 @@ interface GameDivergence {
   player: string;
 }
 
-const REPERTOIRE_DIFF_SELECTED_KEY = 'repertoireDiffSelected';
+const REPERTOIRE_DIFF_SELECTED_KEY = "repertoireDiffSelected";
 
 export const RepertoireDiff = () => {
   const [repertoires, setRepertoires] = useState<UploadedPGN[]>([]);
   const [selectedRepertoire, setSelectedRepertoire] = useState<string | null>(
-    () => localStorage.getItem(REPERTOIRE_DIFF_SELECTED_KEY)
+    () => localStorage.getItem(REPERTOIRE_DIFF_SELECTED_KEY),
   );
   const [games, setGames] = useState<SavedGame[]>([]);
   const [divergences, setDivergences] = useState<GameDivergence[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const { repertoire, loading: repertoireLoading } = useSlimRepertoire(selectedRepertoire);
+  const { repertoire, loading: repertoireLoading } =
+    useSlimRepertoire(selectedRepertoire);
 
   // Persist selected repertoire to localStorage
   useEffect(() => {
@@ -44,7 +46,7 @@ export const RepertoireDiff = () => {
   // Load repertoires on mount
   useEffect(() => {
     const loadRepertoires = async () => {
-      const allRepertoires = await UploadedPGNClient.getByType('repertoire');
+      const allRepertoires = await UploadedPGNClient.getByType("repertoire");
       setRepertoires(allRepertoires);
     };
     loadRepertoires();
@@ -54,7 +56,9 @@ export const RepertoireDiff = () => {
   const loadGames = async () => {
     const allGames = await SavedGameClient.getAll();
     // Get last 50 games by timestamp (most recent first)
-    const sortedGames = allGames.sort((a, b) => b.timestamp - a.timestamp).slice(0, 50);
+    const sortedGames = allGames
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 50);
     setGames(sortedGames);
   };
 
@@ -75,11 +79,11 @@ export const RepertoireDiff = () => {
 
     for (const game of games) {
       const chess = new Chess();
-      
+
       try {
         chess.loadPgn(game.pgn);
         const history = chess.history({ verbose: true });
-        
+
         // Step through each move
         const chessForAnalysis = new Chess();
         let diverged = false;
@@ -87,12 +91,12 @@ export const RepertoireDiff = () => {
         let currentDivergence = null;
 
         for (const move of history) {
-
-          console.log('Analyzing move:', move);
+          console.log("Analyzing move:", move);
           // debugger;
-          const player = move.color === 'w' ? 
-            chess.header()["White"] : 
-            chess.header()["Black"]
+          const player =
+            move.color === "w"
+              ? chess.header()["White"]
+              : chess.header()["Black"];
 
           if (repertoire[move.before] && !repertoire[move.after]) {
             currentDivergence = {
@@ -101,8 +105,8 @@ export const RepertoireDiff = () => {
               divergenceFen: move.before,
               movePlayed: move.san,
               expectedMoves: repertoire[move.before],
-              player: player || ""
-            }
+              player: player || "",
+            };
           }
         }
 
@@ -127,26 +131,26 @@ export const RepertoireDiff = () => {
   };
 
   const expectedMovesBodyTemplate = (rowData: GameDivergence) => {
-    return rowData.expectedMoves.join(', ');
+    return rowData.expectedMoves.join(", ");
   };
 
   const lichessButtonBodyTemplate = (rowData: GameDivergence) => {
     const lichessUrl = `https://lichess.org/analysis/${rowData.divergenceFen}`;
     return (
-      <a href={lichessUrl} target="_blank" rel="noopener noreferrer" className="p-button p-button-sm p-button-outlined">
+      <a
+        href={lichessUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="p-button p-button-sm p-button-outlined"
+      >
         Lichess
       </a>
     );
   };
 
-  const chessableButtonBodyTemplate = (rowData: GameDivergence) => {
-    const chessableUrl = `https://www.chessable.com/courses/fen/${encodeURIComponent(rowData.divergenceFen)}`;
-    return (
-      <a href={chessableUrl} target="_blank" rel="noopener noreferrer" className="p-button p-button-sm p-button-outlined">
-        Chessable
-      </a>
-    );
-  };
+  const chessableButtonBodyTemplate = (rowData: GameDivergence) => (
+    <ChessableLink fen={rowData.divergenceFen} />
+  );
 
   return (
     <div className="p-4">
@@ -154,7 +158,7 @@ export const RepertoireDiff = () => {
         <h1 className="m-0">Repertoire Diff Analysis</h1>
         <GameRefresher onGamesRefreshed={loadGames} />
       </div>
-      
+
       <div className="mb-4">
         <label htmlFor="repertoire-select" className="font-semibold block mb-2">
           Select Repertoire
@@ -162,7 +166,10 @@ export const RepertoireDiff = () => {
         <Dropdown
           id="repertoire-select"
           value={selectedRepertoire}
-          options={repertoires.map(r => ({ label: r.filename, value: r.filename }))}
+          options={repertoires.map((r) => ({
+            label: r.filename,
+            value: r.filename,
+          }))}
           onChange={(e) => setSelectedRepertoire(e.value)}
           placeholder="Choose a repertoire..."
           className="w-full"
@@ -197,43 +204,39 @@ export const RepertoireDiff = () => {
               field="gameTimestamp"
               header="Date"
               body={(rowData) => formatDate(rowData.gameTimestamp)}
-              style={{ width: '15%' }}
+              style={{ width: "15%" }}
             />
             <Column
               field="divergenceFen"
               header="Position"
               body={fenBodyTemplate}
-              style={{ width: '30%' }}
+              style={{ width: "30%" }}
             />
             <Column
               field="movePlayed"
               header="Move Played"
-              style={{ width: '15%' }}
+              style={{ width: "15%" }}
             />
             <Column
               field="expectedMoves"
               header="Expected Moves"
               body={expectedMovesBodyTemplate}
-              style={{ width: '40%' }}
+              style={{ width: "40%" }}
             />
 
-            <Column
-              field="player"
-              header="Player"
-              style={{ width: '15%' }}
-            />
+            <Column field="player" header="Player" style={{ width: "15%" }} />
 
             <Column
               field="player"
               header="Lichess"
               body={lichessButtonBodyTemplate}
-              style={{ width: '15%' }}
+              style={{ width: "15%" }}
             />
             <Column
               field="player"
               header="Chessable"
               body={chessableButtonBodyTemplate}
-              style={{ width: '15%' }}
+              style={{ width: "15%" }}
             />
           </DataTable>
         </div>

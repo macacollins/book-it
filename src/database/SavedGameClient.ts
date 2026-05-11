@@ -1,5 +1,5 @@
-import { SavedGame } from './types';
-import { db } from './db';
+import { SavedGame } from "./types";
+import { db } from "./db";
 
 export class SavedGameClient {
   /**
@@ -24,8 +24,8 @@ export class SavedGameClient {
    * @param source The game source to filter by
    * @returns Promise resolving to array of games from the specified source
    */
-  static async getBySource(source: SavedGame['source']): Promise<SavedGame[]> {
-    return await db.savedGames.where('source').equals(source).toArray();
+  static async getBySource(source: SavedGame["source"]): Promise<SavedGame[]> {
+    return await db.savedGames.where("source").equals(source).toArray();
   }
 
   /**
@@ -34,9 +34,12 @@ export class SavedGameClient {
    * @param toTimestamp End timestamp (inclusive)
    * @returns Promise resolving to array of games within the range
    */
-  static async getByTimestampRange(fromTimestamp: number, toTimestamp: number): Promise<SavedGame[]> {
+  static async getByTimestampRange(
+    fromTimestamp: number,
+    toTimestamp: number,
+  ): Promise<SavedGame[]> {
     return await db.savedGames
-      .where('timestamp')
+      .where("timestamp")
       .between(fromTimestamp, toTimestamp, true, true)
       .toArray();
   }
@@ -58,7 +61,7 @@ export class SavedGameClient {
    */
   static async insertMany(games: SavedGame[]): Promise<string[]> {
     await db.savedGames.bulkAdd(games);
-    return games.map(game => game.id);
+    return games.map((game) => game.id);
   }
 
   /**
@@ -67,7 +70,10 @@ export class SavedGameClient {
    * @param updates Partial game object with fields to update
    * @returns Promise resolving to number of updated records (0 or 1)
    */
-  static async update(id: string, updates: Partial<Omit<SavedGame, 'id'>>): Promise<number> {
+  static async update(
+    id: string,
+    updates: Partial<Omit<SavedGame, "id">>,
+  ): Promise<number> {
     return await db.savedGames.update(id, updates);
   }
 
@@ -95,7 +101,7 @@ export class SavedGameClient {
    * @returns Promise resolving to boolean indicating existence
    */
   static async exists(id: string): Promise<boolean> {
-    const count = await db.savedGames.where('id').equals(id).count();
+    const count = await db.savedGames.where("id").equals(id).count();
     return count > 0;
   }
 
@@ -112,8 +118,8 @@ export class SavedGameClient {
    * @param source The game source to count
    * @returns Promise resolving to the count of games from the source
    */
-  static async countBySource(source: SavedGame['source']): Promise<number> {
-    return await db.savedGames.where('source').equals(source).count();
+  static async countBySource(source: SavedGame["source"]): Promise<number> {
+    return await db.savedGames.where("source").equals(source).count();
   }
 
   /**

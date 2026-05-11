@@ -1,5 +1,5 @@
-import { UploadedPGN, PGNType } from './types';
-import { db } from './db';
+import { UploadedPGN, PGNType } from "./types";
+import { db } from "./db";
 
 export class UploadedPGNClient {
   /**
@@ -25,7 +25,7 @@ export class UploadedPGNClient {
    * @returns Promise resolving to array of PGNs of the specified type
    */
   static async getByType(type: PGNType): Promise<UploadedPGN[]> {
-    return await db.uploadedPGNs.where('type').equals(type).toArray();
+    return await db.uploadedPGNs.where("type").equals(type).toArray();
   }
 
   /**
@@ -35,7 +35,9 @@ export class UploadedPGNClient {
    */
   static async getByFilename(filename: string): Promise<UploadedPGN[]> {
     return await db.uploadedPGNs
-      .filter(pgn => pgn.filename.toLowerCase().includes(filename.toLowerCase()))
+      .filter((pgn) =>
+        pgn.filename.toLowerCase().includes(filename.toLowerCase()),
+      )
       .toArray();
   }
 
@@ -45,7 +47,7 @@ export class UploadedPGNClient {
    * @returns Promise resolving to array of PGNs with matching filename
    */
   static async getByExactFilename(filename: string): Promise<UploadedPGN[]> {
-    return await db.uploadedPGNs.where('filename').equals(filename).toArray();
+    return await db.uploadedPGNs.where("filename").equals(filename).toArray();
   }
 
   /**
@@ -65,7 +67,7 @@ export class UploadedPGNClient {
    */
   static async insertMany(pgns: UploadedPGN[]): Promise<string[]> {
     await db.uploadedPGNs.bulkAdd(pgns);
-    return pgns.map(pgn => pgn.id);
+    return pgns.map((pgn) => pgn.id);
   }
 
   /**
@@ -74,7 +76,10 @@ export class UploadedPGNClient {
    * @param updates Partial PGN object with fields to update
    * @returns Promise resolving to number of updated records (0 or 1)
    */
-  static async update(id: string, updates: Partial<Omit<UploadedPGN, 'id'>>): Promise<number> {
+  static async update(
+    id: string,
+    updates: Partial<Omit<UploadedPGN, "id">>,
+  ): Promise<number> {
     return await db.uploadedPGNs.update(id, updates);
   }
 
@@ -102,8 +107,8 @@ export class UploadedPGNClient {
    * @returns Promise resolving to number of deleted records
    */
   static async deleteByType(type: PGNType): Promise<number> {
-    const pgns = await db.uploadedPGNs.where('type').equals(type).toArray();
-    await db.uploadedPGNs.where('type').equals(type).delete();
+    const pgns = await db.uploadedPGNs.where("type").equals(type).toArray();
+    await db.uploadedPGNs.where("type").equals(type).delete();
     return pgns.length;
   }
 
@@ -113,7 +118,7 @@ export class UploadedPGNClient {
    * @returns Promise resolving to boolean indicating existence
    */
   static async exists(id: string): Promise<boolean> {
-    const count = await db.uploadedPGNs.where('id').equals(id).count();
+    const count = await db.uploadedPGNs.where("id").equals(id).count();
     return count > 0;
   }
 
@@ -123,7 +128,10 @@ export class UploadedPGNClient {
    * @returns Promise resolving to boolean indicating existence
    */
   static async existsByFilename(filename: string): Promise<boolean> {
-    const count = await db.uploadedPGNs.where('filename').equals(filename).count();
+    const count = await db.uploadedPGNs
+      .where("filename")
+      .equals(filename)
+      .count();
     return count > 0;
   }
 
@@ -141,7 +149,7 @@ export class UploadedPGNClient {
    * @returns Promise resolving to the count of PGNs of the specified type
    */
   static async countByType(type: PGNType): Promise<number> {
-    return await db.uploadedPGNs.where('type').equals(type).count();
+    return await db.uploadedPGNs.where("type").equals(type).count();
   }
 
   /**

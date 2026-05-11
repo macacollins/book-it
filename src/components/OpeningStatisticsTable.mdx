@@ -1,4 +1,4 @@
-import OpeningStatisticsTable from './OpeningStatisticsTable.tsx';
+import OpeningStatisticsTable from "./OpeningStatisticsTable.tsx";
 
 # Opening Statistics Table Component
 
@@ -6,46 +6,49 @@ This component displays chess opening statistics split by color (white/black pie
 
 ## Test with Sample Data
 
-<OpeningStatisticsTable 
+<OpeningStatisticsTable
   games={[
     {
-      id: 'test1',
+      id: "test1",
       players: {
-        white: { user: { name: 'testuser' }, rating: 1500 },
-        black: { user: { name: 'opponent1' }, rating: 1600 }
+        white: { user: { name: "testuser" }, rating: 1500 },
+        black: { user: { name: "opponent1" }, rating: 1600 },
       },
-      winner: 'white',
-      opening: { name: 'Sicilian Defense: Alapin Variation', eco: 'B22' },
+      winner: "white",
+      opening: { name: "Sicilian Defense: Alapin Variation", eco: "B22" },
       createdAt: Date.now() - 86400000,
-      status: 'mate',
-      speed: 'blitz',
-      rated: true
+      status: "mate",
+      speed: "blitz",
+      rated: true,
     },
     {
-      id: 'test2',
+      id: "test2",
       players: {
-        white: { user: { name: 'opponent2' }, rating: 1550 },
-        black: { user: { name: 'testuser' }, rating: 1500 }
+        white: { user: { name: "opponent2" }, rating: 1550 },
+        black: { user: { name: "testuser" }, rating: 1500 },
       },
-      winner: 'black',
-      opening: { name: 'Sicilian Defense: Najdorf Variation', eco: 'B90' },
+      winner: "black",
+      opening: { name: "Sicilian Defense: Najdorf Variation", eco: "B90" },
       createdAt: Date.now() - 172800000,
-      status: 'resign',
-      speed: 'rapid',
-      rated: true
+      status: "resign",
+      speed: "rapid",
+      rated: true,
     },
     {
-      id: 'test3',
+      id: "test3",
       players: {
-        white: { user: { name: 'testuser' }, rating: 1500 },
-        black: { user: { name: 'opponent3' }, rating: 1450 }
+        white: { user: { name: "testuser" }, rating: 1500 },
+        black: { user: { name: "opponent3" }, rating: 1450 },
       },
-      opening: { name: 'Queen\'s Gambit Declined: Orthodox Defense', eco: 'D63' },
+      opening: {
+        name: "Queen's Gambit Declined: Orthodox Defense",
+        eco: "D63",
+      },
       createdAt: Date.now() - 259200000,
-      status: 'draw',
-      speed: 'classical',
-      rated: true
-    }
+      status: "draw",
+      speed: "classical",
+      rated: true,
+    },
   ]}
   username="testuser"
 />

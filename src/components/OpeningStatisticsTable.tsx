@@ -1,42 +1,48 @@
-import React, { useState } from 'react';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { Panel } from 'primereact/panel';
-import { Badge } from 'primereact/badge';
-import { GameJson } from '../integrations/lichess-client';
+import React, { useState } from "react";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import { Panel } from "primereact/panel";
+import { Badge } from "primereact/badge";
+import { GameJson } from "../integrations/lichess-client";
 
 interface OpeningStatisticsTableProps {
   games: GameJson[];
   username: string;
 }
 
-const OpeningStatisticsTable: React.FC<OpeningStatisticsTableProps> = ({ games, username }) => {
+const OpeningStatisticsTable: React.FC<OpeningStatisticsTableProps> = ({
+  games,
+  username,
+}) => {
   const [expandedRowsWhite, setExpandedRowsWhite] = useState<any>(null);
   const [expandedRowsBlack, setExpandedRowsBlack] = useState<any>(null);
 
   const getOpeningStatsByColor = (asWhite: boolean) => {
-    const baseOpeningStats: Record<string, {
-      opening: string;
-      eco: string;
-      wins: number;
-      draws: number;
-      losses: number;
-      totalGames: number;
-      winRate: number;
-      variations: Array<{
-        fullName: string;
+    const baseOpeningStats: Record<
+      string,
+      {
+        opening: string;
         eco: string;
         wins: number;
         draws: number;
         losses: number;
         totalGames: number;
         winRate: number;
-      }>;
-    }> = {};
+        variations: Array<{
+          fullName: string;
+          eco: string;
+          wins: number;
+          draws: number;
+          losses: number;
+          totalGames: number;
+          winRate: number;
+        }>;
+      }
+    > = {};
 
     const searchedUser = username.trim().toLowerCase();
 
-    games.forEach(game => {
+    games.forEach((game) => {
       if (!game.opening) return;
 
       // Filter by color
@@ -50,9 +56,9 @@ const OpeningStatisticsTable: React.FC<OpeningStatisticsTableProps> = ({ games, 
       if (!asWhite && !userIsBlack) return;
 
       // Extract base opening name (before colon)
-      const baseName = game.opening.name.split(':')[0].trim();
+      const baseName = game.opening.name.split(":")[0].trim();
       const fullName = game.opening.name;
-      
+
       // Initialize base opening if not exists
       if (!baseOpeningStats[baseName]) {
         baseOpeningStats[baseName] = {
@@ -63,12 +69,14 @@ const OpeningStatisticsTable: React.FC<OpeningStatisticsTableProps> = ({ games, 
           losses: 0,
           totalGames: 0,
           winRate: 0,
-          variations: []
+          variations: [],
         };
       }
 
       // Find or create variation
-      let variation = baseOpeningStats[baseName].variations.find(v => v.fullName === fullName);
+      let variation = baseOpeningStats[baseName].variations.find(
+        (v) => v.fullName === fullName,
+      );
       if (!variation) {
         variation = {
           fullName,
@@ -77,7 +85,7 @@ const OpeningStatisticsTable: React.FC<OpeningStatisticsTableProps> = ({ games, 
           draws: 0,
           losses: 0,
           totalGames: 0,
-          winRate: 0
+          winRate: 0,
         };
         baseOpeningStats[baseName].variations.push(variation);
       }
@@ -85,12 +93,12 @@ const OpeningStatisticsTable: React.FC<OpeningStatisticsTableProps> = ({ games, 
       // Determine result
       let isWin = false;
       let isDraw = false;
-      
+
       if (!game.winner) {
         isDraw = true;
       } else if (
-        (game.winner === 'white' && userIsWhite) ||
-        (game.winner === 'black' && userIsBlack)
+        (game.winner === "white" && userIsWhite) ||
+        (game.winner === "black" && userIsBlack)
       ) {
         isWin = true;
       }
@@ -116,26 +124,38 @@ const OpeningStatisticsTable: React.FC<OpeningStatisticsTableProps> = ({ games, 
       }
 
       // Calculate score rates
-      baseOpeningStats[baseName].winRate = ((baseOpeningStats[baseName].wins + baseOpeningStats[baseName].draws * 0.5) / baseOpeningStats[baseName].totalGames) * 100;
-      variation.winRate = ((variation.wins + variation.draws * 0.5) / variation.totalGames) * 100;
+      baseOpeningStats[baseName].winRate =
+        ((baseOpeningStats[baseName].wins +
+          baseOpeningStats[baseName].draws * 0.5) /
+          baseOpeningStats[baseName].totalGames) *
+        100;
+      variation.winRate =
+        ((variation.wins + variation.draws * 0.5) / variation.totalGames) * 100;
     });
 
     // Sort variations within each opening
-    Object.values(baseOpeningStats).forEach(opening => {
+    Object.values(baseOpeningStats).forEach((opening) => {
       opening.variations.sort((a, b) => b.totalGames - a.totalGames);
     });
 
-    return Object.values(baseOpeningStats).sort((a, b) => b.totalGames - a.totalGames);
+    return Object.values(baseOpeningStats).sort(
+      (a, b) => b.totalGames - a.totalGames,
+    );
   };
 
   const renderOpeningTable = (asWhite: boolean) => {
     const data = getOpeningStatsByColor(asWhite);
     const expandedRows = asWhite ? expandedRowsWhite : expandedRowsBlack;
-    const setExpandedRows = asWhite ? setExpandedRowsWhite : setExpandedRowsBlack;
-    const colorLabel = asWhite ? 'White' : 'Black';
+    const setExpandedRows = asWhite
+      ? setExpandedRowsWhite
+      : setExpandedRowsBlack;
+    const colorLabel = asWhite ? "White" : "Black";
 
     return (
-      <Panel header={`Opening Statistics - Playing as ${colorLabel} (${data.reduce((sum, item) => sum + item.totalGames, 0)} games)`} className="mb-4">
+      <Panel
+        header={`Opening Statistics - Playing as ${colorLabel} (${data.reduce((sum, item) => sum + item.totalGames, 0)} games)`}
+        className="mb-4"
+      >
         <DataTable
           value={data}
           paginator
@@ -145,11 +165,16 @@ const OpeningStatisticsTable: React.FC<OpeningStatisticsTableProps> = ({ games, 
           className="p-datatable-sm"
           sortField="totalGames"
           sortOrder={-1}
-          expandedRows={expandedRows} 
+          expandedRows={expandedRows}
           onRowToggle={(e) => setExpandedRows(e.data)}
           rowExpansionTemplate={(rowData) => (
-            <div style={{ padding: '1rem' }}>
-              <h4 style={{ marginBottom: '0.5rem', color: 'var(--text-color-secondary)' }}>
+            <div style={{ padding: "1rem" }}>
+              <h4
+                style={{
+                  marginBottom: "0.5rem",
+                  color: "var(--text-color-secondary)",
+                }}
+              >
                 Variations of {rowData.opening} (as {colorLabel})
               </h4>
               <DataTable
@@ -157,109 +182,166 @@ const OpeningStatisticsTable: React.FC<OpeningStatisticsTableProps> = ({ games, 
                 className="p-datatable-sm"
                 emptyMessage="No variations found"
               >
-                <Column 
+                <Column
                   field="fullName"
                   header="Full Opening Name"
-                  style={{ width: '400px' }}
+                  style={{ width: "400px" }}
                   body={(varData) => (
                     <div>
-                      <div style={{ fontWeight: 'bold' }}>{varData.fullName}</div>
-                      <div style={{ color: 'var(--text-color-secondary)', fontSize: '0.9rem' }}>
+                      <div style={{ fontWeight: "bold" }}>
+                        {varData.fullName}
+                      </div>
+                      <div
+                        style={{
+                          color: "var(--text-color-secondary)",
+                          fontSize: "0.9rem",
+                        }}
+                      >
                         {varData.eco}
                       </div>
                     </div>
                   )}
                 />
-                <Column 
+                <Column
                   field="totalGames"
                   header="Games"
-                  style={{ width: '80px', textAlign: 'center' }}
+                  style={{ width: "80px", textAlign: "center" }}
                 />
-                <Column 
+                <Column
                   header="Record"
-                  style={{ width: '120px', textAlign: 'center' }}
+                  style={{ width: "120px", textAlign: "center" }}
                   body={(varData) => (
-                    <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "0.25rem",
+                        justifyContent: "center",
+                      }}
+                    >
                       <Badge value={`W: ${varData.wins}`} severity="success" />
                       <Badge value={`D: ${varData.draws}`} severity="info" />
                       <Badge value={`L: ${varData.losses}`} severity="danger" />
                     </div>
                   )}
                 />
-                <Column 
+                <Column
                   header="Score Rate"
-                  style={{ width: '100px', textAlign: 'center' }}
+                  style={{ width: "100px", textAlign: "center" }}
                   body={(varData) => {
-                    const scoreRate = varData.totalGames > 0 ? 
-                      (((varData.wins + varData.draws * 0.5) / varData.totalGames) * 100).toFixed(1) : '0.0';
+                    const scoreRate =
+                      varData.totalGames > 0
+                        ? (
+                            ((varData.wins + varData.draws * 0.5) /
+                              varData.totalGames) *
+                            100
+                          ).toFixed(1)
+                        : "0.0";
                     return `${scoreRate}%`;
                   }}
                 />
-                <Column 
+                <Column
                   header="Performance"
-                  style={{ width: '120px', textAlign: 'center' }}
+                  style={{ width: "120px", textAlign: "center" }}
                   body={(varData) => {
-                    const performanceNum = varData.totalGames > 0 ? 
-                      ((varData.wins + varData.draws * 0.5) / varData.totalGames * 100) : 0;
+                    const performanceNum =
+                      varData.totalGames > 0
+                        ? ((varData.wins + varData.draws * 0.5) /
+                            varData.totalGames) *
+                          100
+                        : 0;
                     const performance = performanceNum.toFixed(1);
-                    const severity = performanceNum >= 60 ? 'success' : performanceNum >= 40 ? 'warning' : 'danger';
-                    return <Badge value={`${performance}%`} severity={severity} />;
+                    const severity =
+                      performanceNum >= 60
+                        ? "success"
+                        : performanceNum >= 40
+                          ? "warning"
+                          : "danger";
+                    return (
+                      <Badge value={`${performance}%`} severity={severity} />
+                    );
                   }}
                 />
               </DataTable>
             </div>
           )}
         >
-          <Column expander style={{ width: '3rem' }} />
-          <Column 
-            field="opening" 
-            header="Opening" 
-            style={{ width: '300px' }}
+          <Column expander style={{ width: "3rem" }} />
+          <Column
+            field="opening"
+            header="Opening"
+            style={{ width: "300px" }}
             body={(rowData) => (
               <div>
-                <div style={{ fontWeight: 'bold' }}>{rowData.opening}</div>
-                <div style={{ color: 'var(--text-color-secondary)', fontSize: '0.9rem' }}>
-                  {rowData.variations.length} variation{rowData.variations.length !== 1 ? 's' : ''}
+                <div style={{ fontWeight: "bold" }}>{rowData.opening}</div>
+                <div
+                  style={{
+                    color: "var(--text-color-secondary)",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  {rowData.variations.length} variation
+                  {rowData.variations.length !== 1 ? "s" : ""}
                 </div>
               </div>
             )}
           />
-          <Column 
-            field="totalGames" 
-            header="Games" 
+          <Column
+            field="totalGames"
+            header="Games"
             sortable
-            style={{ width: '80px', textAlign: 'center' }}
+            style={{ width: "80px", textAlign: "center" }}
           />
-          <Column 
-            header="Record" 
-            style={{ width: '120px', textAlign: 'center' }}
+          <Column
+            header="Record"
+            style={{ width: "120px", textAlign: "center" }}
             body={(rowData) => (
-              <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "0.25rem",
+                  justifyContent: "center",
+                }}
+              >
                 <Badge value={`W: ${rowData.wins}`} severity="success" />
                 <Badge value={`D: ${rowData.draws}`} severity="info" />
                 <Badge value={`L: ${rowData.losses}`} severity="danger" />
               </div>
             )}
           />
-          <Column 
-            header="Score Rate" 
-            style={{ width: '100px', textAlign: 'center' }}
+          <Column
+            header="Score Rate"
+            style={{ width: "100px", textAlign: "center" }}
             body={(rowData) => {
-              const scoreRate = rowData.totalGames > 0 ? 
-                (((rowData.wins + rowData.draws * 0.5) / rowData.totalGames) * 100).toFixed(1) : '0.0';
+              const scoreRate =
+                rowData.totalGames > 0
+                  ? (
+                      ((rowData.wins + rowData.draws * 0.5) /
+                        rowData.totalGames) *
+                      100
+                    ).toFixed(1)
+                  : "0.0";
               return `${scoreRate}%`;
             }}
             sortable
             sortField="winRate"
           />
-          <Column 
-            header="Performance" 
-            style={{ width: '120px', textAlign: 'center' }}
+          <Column
+            header="Performance"
+            style={{ width: "120px", textAlign: "center" }}
             body={(rowData) => {
-              const performanceNum = rowData.totalGames > 0 ? 
-                ((rowData.wins + rowData.draws * 0.5) / rowData.totalGames * 100) : 0;
+              const performanceNum =
+                rowData.totalGames > 0
+                  ? ((rowData.wins + rowData.draws * 0.5) /
+                      rowData.totalGames) *
+                    100
+                  : 0;
               const performance = performanceNum.toFixed(1);
-              const severity = performanceNum >= 60 ? 'success' : performanceNum >= 40 ? 'warning' : 'danger';
+              const severity =
+                performanceNum >= 60
+                  ? "success"
+                  : performanceNum >= 40
+                    ? "warning"
+                    : "danger";
               return <Badge value={`${performance}%`} severity={severity} />;
             }}
           />

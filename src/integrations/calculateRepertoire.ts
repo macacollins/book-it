@@ -3,7 +3,11 @@ import { Chess } from "chess.js";
 import pgnParser, { ParsedPGN } from "pgn-parser";
 import { saveBookGame } from "../storage";
 
-export function calculateRepertoire(lines: string | string[], repertoireName: string, setComments: any): Record<string, string[]> {
+export function calculateRepertoire(
+  lines: string | string[],
+  repertoireName: string,
+  setComments: any,
+): Record<string, string[]> {
   let parsed: ParsedPGN[] = [];
   // let allLines = new Chess();
   try {

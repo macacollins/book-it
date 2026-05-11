@@ -1,5 +1,5 @@
-import { QueuedPosition } from './types';
-import { db } from './db';
+import { QueuedPosition } from "./types";
+import { db } from "./db";
 
 export class QueuedPositionClient {
   /**
@@ -25,7 +25,7 @@ export class QueuedPositionClient {
    * @returns Promise resolving to array of queued positions for the FEN
    */
   static async getByFEN(fen: string): Promise<QueuedPosition[]> {
-    return await db.queuedPositions.where('fen').equals(fen).toArray();
+    return await db.queuedPositions.where("fen").equals(fen).toArray();
   }
 
   /**
@@ -34,9 +34,12 @@ export class QueuedPositionClient {
    * @param toTimestamp End timestamp (inclusive)
    * @returns Promise resolving to array of positions within the range
    */
-  static async getByTimestampRange(fromTimestamp: number, toTimestamp: number): Promise<QueuedPosition[]> {
+  static async getByTimestampRange(
+    fromTimestamp: number,
+    toTimestamp: number,
+  ): Promise<QueuedPosition[]> {
     return await db.queuedPositions
-      .where('timestamp')
+      .where("timestamp")
       .between(fromTimestamp, toTimestamp, true, true)
       .toArray();
   }
@@ -48,7 +51,7 @@ export class QueuedPositionClient {
    */
   static async getRecent(limit: number = 50): Promise<QueuedPosition[]> {
     return await db.queuedPositions
-      .orderBy('timestamp')
+      .orderBy("timestamp")
       .reverse()
       .limit(limit)
       .toArray();
@@ -60,10 +63,7 @@ export class QueuedPositionClient {
    * @returns Promise resolving to array of oldest queued positions
    */
   static async getOldest(limit: number = 50): Promise<QueuedPosition[]> {
-    return await db.queuedPositions
-      .orderBy('timestamp')
-      .limit(limit)
-      .toArray();
+    return await db.queuedPositions.orderBy("timestamp").limit(limit).toArray();
   }
 
   /**
@@ -73,7 +73,9 @@ export class QueuedPositionClient {
    */
   static async searchByNotes(searchTerm: string): Promise<QueuedPosition[]> {
     return await db.queuedPositions
-      .filter(position => position.notes.toLowerCase().includes(searchTerm.toLowerCase()))
+      .filter((position) =>
+        position.notes.toLowerCase().includes(searchTerm.toLowerCase()),
+      )
       .toArray();
   }
 
@@ -83,7 +85,7 @@ export class QueuedPositionClient {
    */
   static async getWithoutNotes(): Promise<QueuedPosition[]> {
     return await db.queuedPositions
-      .filter(position => !position.notes || position.notes.trim() === '')
+      .filter((position) => !position.notes || position.notes.trim() === "")
       .toArray();
   }
 
@@ -93,7 +95,9 @@ export class QueuedPositionClient {
    */
   static async getWithNotes(): Promise<QueuedPosition[]> {
     return await db.queuedPositions
-      .filter(position => Boolean(position.notes && position.notes.trim() !== ''))
+      .filter((position) =>
+        Boolean(position.notes && position.notes.trim() !== ""),
+      )
       .toArray();
   }
 
@@ -114,7 +118,7 @@ export class QueuedPositionClient {
    */
   static async insertMany(positions: QueuedPosition[]): Promise<string[]> {
     await db.queuedPositions.bulkAdd(positions);
-    return positions.map(position => position.id);
+    return positions.map((position) => position.id);
   }
 
   /**
@@ -133,7 +137,10 @@ export class QueuedPositionClient {
    * @param updates Partial position object with fields to update
    * @returns Promise resolving to number of updated records (0 or 1)
    */
-  static async update(id: string, updates: Partial<Omit<QueuedPosition, 'id'>>): Promise<number> {
+  static async update(
+    id: string,
+    updates: Partial<Omit<QueuedPosition, "id">>,
+  ): Promise<number> {
     return await db.queuedPositions.update(id, updates);
   }
 
@@ -144,12 +151,15 @@ export class QueuedPositionClient {
    * @returns Promise resolving to the position ID
    */
   static async upsertByFEN(position: QueuedPosition): Promise<string> {
-    const existing = await db.queuedPositions.where('fen').equals(position.fen).first();
-    
+    const existing = await db.queuedPositions
+      .where("fen")
+      .equals(position.fen)
+      .first();
+
     if (existing) {
       await db.queuedPositions.update(existing.id, {
         notes: position.notes,
-        timestamp: position.timestamp
+        timestamp: position.timestamp,
       });
       return existing.id;
     } else {
@@ -182,8 +192,11 @@ export class QueuedPositionClient {
    * @returns Promise resolving to number of deleted records
    */
   static async deleteByFEN(fen: string): Promise<number> {
-    const positions = await db.queuedPositions.where('fen').equals(fen).toArray();
-    await db.queuedPositions.where('fen').equals(fen).delete();
+    const positions = await db.queuedPositions
+      .where("fen")
+      .equals(fen)
+      .toArray();
+    await db.queuedPositions.where("fen").equals(fen).delete();
     return positions.length;
   }
 
@@ -193,8 +206,11 @@ export class QueuedPositionClient {
    * @returns Promise resolving to number of deleted records
    */
   static async deleteOlderThan(timestamp: number): Promise<number> {
-    const positions = await db.queuedPositions.where('timestamp').below(timestamp).toArray();
-    await db.queuedPositions.where('timestamp').below(timestamp).delete();
+    const positions = await db.queuedPositions
+      .where("timestamp")
+      .below(timestamp)
+      .toArray();
+    await db.queuedPositions.where("timestamp").below(timestamp).delete();
     return positions.length;
   }
 
@@ -204,10 +220,10 @@ export class QueuedPositionClient {
    */
   static async deleteWithoutNotes(): Promise<number> {
     const positions = await db.queuedPositions
-      .filter(position => !position.notes || position.notes.trim() === '')
+      .filter((position) => !position.notes || position.notes.trim() === "")
       .toArray();
-    
-    const ids = positions.map(p => p.id);
+
+    const ids = positions.map((p) => p.id);
     await db.queuedPositions.bulkDelete(ids);
     return positions.length;
   }
@@ -218,7 +234,7 @@ export class QueuedPositionClient {
    * @returns Promise resolving to boolean indicating existence
    */
   static async exists(id: string): Promise<boolean> {
-    const count = await db.queuedPositions.where('id').equals(id).count();
+    const count = await db.queuedPositions.where("id").equals(id).count();
     return count > 0;
   }
 
@@ -228,7 +244,7 @@ export class QueuedPositionClient {
    * @returns Promise resolving to boolean indicating existence
    */
   static async existsByFEN(fen: string): Promise<boolean> {
-    const count = await db.queuedPositions.where('fen').equals(fen).count();
+    const count = await db.queuedPositions.where("fen").equals(fen).count();
     return count > 0;
   }
 
@@ -246,7 +262,9 @@ export class QueuedPositionClient {
    */
   static async countWithNotes(): Promise<number> {
     return await db.queuedPositions
-      .filter(position => Boolean(position.notes && position.notes.trim() !== ''))
+      .filter((position) =>
+        Boolean(position.notes && position.notes.trim() !== ""),
+      )
       .count();
   }
 
@@ -256,7 +274,7 @@ export class QueuedPositionClient {
    */
   static async countWithoutNotes(): Promise<number> {
     return await db.queuedPositions
-      .filter(position => !position.notes || position.notes.trim() === '')
+      .filter((position) => !position.notes || position.notes.trim() === "")
       .count();
   }
 

@@ -1,5 +1,5 @@
-import { DrillResult } from './types';
-import { db } from './db';
+import { DrillResult } from "./types";
+import { db } from "./db";
 
 export class DrillResultClient {
   /**
@@ -25,7 +25,7 @@ export class DrillResultClient {
    * @returns Promise resolving to array of drill results for the position
    */
   static async getByFEN(fen: string): Promise<DrillResult[]> {
-    return await db.drillResults.where('fen').equals(fen).toArray();
+    return await db.drillResults.where("fen").equals(fen).toArray();
   }
 
   /**
@@ -34,7 +34,9 @@ export class DrillResultClient {
    * @returns Promise resolving to array of drill results matching correctness
    */
   static async getByCorrectness(correct: boolean): Promise<DrillResult[]> {
-    return await db.drillResults.filter(result => result.correct === correct).toArray();
+    return await db.drillResults
+      .filter((result) => result.correct === correct)
+      .toArray();
   }
 
   /**
@@ -43,9 +45,12 @@ export class DrillResultClient {
    * @param toTimestamp End timestamp (inclusive)
    * @returns Promise resolving to array of drill results within the range
    */
-  static async getByTimestampRange(fromTimestamp: number, toTimestamp: number): Promise<DrillResult[]> {
+  static async getByTimestampRange(
+    fromTimestamp: number,
+    toTimestamp: number,
+  ): Promise<DrillResult[]> {
     return await db.drillResults
-      .where('timestamp')
+      .where("timestamp")
       .between(fromTimestamp, toTimestamp, true, true)
       .toArray();
   }
@@ -57,7 +62,7 @@ export class DrillResultClient {
    */
   static async getRecent(limit: number = 50): Promise<DrillResult[]> {
     return await db.drillResults
-      .orderBy('timestamp')
+      .orderBy("timestamp")
       .reverse()
       .limit(limit)
       .toArray();
@@ -76,18 +81,18 @@ export class DrillResultClient {
     averageTime: number;
     results: DrillResult[];
   }> {
-    const results = await db.drillResults.where('fen').equals(fen).toArray();
-    const correctAttempts = results.filter(r => r.correct).length;
+    const results = await db.drillResults.where("fen").equals(fen).toArray();
+    const correctAttempts = results.filter((r) => r.correct).length;
     const incorrectAttempts = results.length - correctAttempts;
     const totalTime = results.reduce((sum, r) => sum + r.timeTakenSeconds, 0);
-    
+
     return {
       totalAttempts: results.length,
       correctAttempts,
       incorrectAttempts,
       accuracy: results.length > 0 ? correctAttempts / results.length : 0,
       averageTime: results.length > 0 ? totalTime / results.length : 0,
-      results
+      results,
     };
   }
 
@@ -108,7 +113,7 @@ export class DrillResultClient {
    */
   static async insertMany(results: DrillResult[]): Promise<string[]> {
     await db.drillResults.bulkAdd(results);
-    return results.map(result => result.id);
+    return results.map((result) => result.id);
   }
 
   /**
@@ -117,7 +122,10 @@ export class DrillResultClient {
    * @param updates Partial result object with fields to update
    * @returns Promise resolving to number of updated records (0 or 1)
    */
-  static async update(id: string, updates: Partial<Omit<DrillResult, 'id'>>): Promise<number> {
+  static async update(
+    id: string,
+    updates: Partial<Omit<DrillResult, "id">>,
+  ): Promise<number> {
     return await db.drillResults.update(id, updates);
   }
 
@@ -145,8 +153,8 @@ export class DrillResultClient {
    * @returns Promise resolving to number of deleted records
    */
   static async deleteByFEN(fen: string): Promise<number> {
-    const results = await db.drillResults.where('fen').equals(fen).toArray();
-    await db.drillResults.where('fen').equals(fen).delete();
+    const results = await db.drillResults.where("fen").equals(fen).toArray();
+    await db.drillResults.where("fen").equals(fen).delete();
     return results.length;
   }
 
@@ -156,8 +164,11 @@ export class DrillResultClient {
    * @returns Promise resolving to number of deleted records
    */
   static async deleteOlderThan(timestamp: number): Promise<number> {
-    const results = await db.drillResults.where('timestamp').below(timestamp).toArray();
-    await db.drillResults.where('timestamp').below(timestamp).delete();
+    const results = await db.drillResults
+      .where("timestamp")
+      .below(timestamp)
+      .toArray();
+    await db.drillResults.where("timestamp").below(timestamp).delete();
     return results.length;
   }
 
@@ -167,7 +178,7 @@ export class DrillResultClient {
    * @returns Promise resolving to boolean indicating existence
    */
   static async exists(id: string): Promise<boolean> {
-    const count = await db.drillResults.where('id').equals(id).count();
+    const count = await db.drillResults.where("id").equals(id).count();
     return count > 0;
   }
 
@@ -185,7 +196,7 @@ export class DrillResultClient {
    * @returns Promise resolving to the count of results for the position
    */
   static async countByFEN(fen: string): Promise<number> {
-    return await db.drillResults.where('fen').equals(fen).count();
+    return await db.drillResults.where("fen").equals(fen).count();
   }
 
   /**
@@ -193,7 +204,9 @@ export class DrillResultClient {
    * @returns Promise resolving to the count of correct results
    */
   static async countCorrect(): Promise<number> {
-    return await db.drillResults.filter(result => result.correct === true).count();
+    return await db.drillResults
+      .filter((result) => result.correct === true)
+      .count();
   }
 
   /**
@@ -201,7 +214,9 @@ export class DrillResultClient {
    * @returns Promise resolving to the count of incorrect results
    */
   static async countIncorrect(): Promise<number> {
-    return await db.drillResults.filter(result => result.correct === false).count();
+    return await db.drillResults
+      .filter((result) => result.correct === false)
+      .count();
   }
 
   /**

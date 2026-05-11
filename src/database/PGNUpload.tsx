@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { Dialog } from 'primereact/dialog';
-import { Dropdown } from 'primereact/dropdown';
-import { FileUpload } from 'primereact/fileupload';
-import { Message } from 'primereact/message';
-import { PGNType } from './index';
-import { uploadPGNFile } from './uploadPGN';
+import React, { useState } from "react";
+import { Dialog } from "primereact/dialog";
+import { Dropdown } from "primereact/dropdown";
+import { FileUpload, FileUploadSelectEvent, FileUploadUploadEvent } from "primereact/fileupload";
+import { Message } from "primereact/message";
+import { PGNType } from "./index";
+import { uploadPGNFile } from "./uploadPGN";
 
 interface PGNUploadProps {
   visible: boolean;
@@ -15,9 +15,9 @@ interface PGNUploadProps {
 }
 
 const pgnTypeOptions = [
-  { label: 'Tactics', value: 'tactics' },
-  { label: 'Repertoire', value: 'repertoire' },
-  { label: 'Games', value: 'games' }
+  { label: "Tactics", value: "tactics" },
+  { label: "Repertoire", value: "repertoire" },
+  { label: "Games", value: "games" },
 ];
 
 export const PGNUpload: React.FC<PGNUploadProps> = ({
@@ -25,7 +25,7 @@ export const PGNUpload: React.FC<PGNUploadProps> = ({
   onHide,
   onSuccess,
   onError,
-  onUploadComplete
+  onUploadComplete,
 }) => {
   const [uploadPGNType, setUploadPGNType] = useState<PGNType | null>(null);
   const [uploading, setUploading] = useState<boolean>(false);
@@ -35,32 +35,50 @@ export const PGNUpload: React.FC<PGNUploadProps> = ({
     onHide();
   };
 
-  const handleFileUpload = async (event: any) => {
-    const file = event.files[0];
-    if (!file) return;
+  const handleFileUpload = async (event: FileUploadUploadEvent | FileUploadSelectEvent) => {
+    const files = event.files;
+    if (!files || files.length === 0) return;
 
     if (!uploadPGNType) {
-      onError('Please select a PGN type before uploading');
-      event.options.clear();
+      onError("Please select a PGN type before uploading");
       return;
     }
 
     setUploading(true);
     try {
-      const result = await uploadPGNFile(file, uploadPGNType);
-      
-      if (result.success && result.filename) {
-        onSuccess(`Successfully uploaded ${result.filename}`);
-        // event.options.clear();
-        setUploadPGNType(null);
+      const results = await Promise.all(
+        files.map((file) => uploadPGNFile(file, uploadPGNType)),
+      );
+
+      const failures = results.filter((r) => !r.success);
+      const successes = results.filter((r) => r.success && r.filename);
+
+      if (successes.length > 0) {
+        const names = successes.map((r) => r.filename).join(", ");
+        onSuccess(
+          successes.length === 1
+            ? `Successfully uploaded ${names}`
+            : `Successfully uploaded ${successes.length} files: ${names}`,
+        );
         onUploadComplete();
+      }
+
+      if (failures.length > 0) {
+        const msgs = failures.map((r) => r.error || "Unknown error").join("; ");
+        onError(
+          failures.length === 1
+            ? `Failed to upload file: ${msgs}`
+            : `Failed to upload ${failures.length} files: ${msgs}`,
+        );
+      }
+
+      if (failures.length === 0) {
+        setUploadPGNType(null);
         onHide();
-      } else {
-        onError(result.error || 'Failed to upload file');
       }
     } catch (error) {
-      console.error('Error uploading file:', error);
-      onError('Failed to upload file');
+      console.error("Error uploading files:", error);
+      onError("Failed to upload files");
     } finally {
       setUploading(false);
     }
@@ -70,22 +88,23 @@ export const PGNUpload: React.FC<PGNUploadProps> = ({
     <Dialog
       header="Upload PGN File"
       visible={visible}
-      style={{ width: '50vw' }}
+      style={{ width: "50vw" }}
       onHide={handleHide}
       modal
     >
       <div className="grid p-fluid">
         <div className="col-12 md:col-6 gap-3 flex flex-column">
           <div>
-            The file format is pgn and needs to parse as a 'pgn-parser' compatible PGN.
-            
-            <b>&nbsp;Importantly,</b> you will need to perform this step before using the PGNs in drills, repertoires, or analyses.
+            The file format is pgn and needs to parse as a 'pgn-parser'
+            compatible PGN.
+            <b>&nbsp;Importantly,</b> you will need to perform this step before
+            using the PGNs in drills, repertoires, or analyses.
           </div>
           <div>
             <label htmlFor="upload-pgn-type">PGN Type *</label>
-            <Dropdown 
+            <Dropdown
               id="upload-pgn-type"
-              value={uploadPGNType} 
+              value={uploadPGNType}
               options={pgnTypeOptions}
               onChange={(e) => setUploadPGNType(e.value)}
               placeholder="Select PGN Type"
@@ -100,7 +119,8 @@ export const PGNUpload: React.FC<PGNUploadProps> = ({
             maxFileSize={10000000} // 10MB limit
             onUpload={handleFileUpload}
             onSelect={handleFileUpload}
-            auto={true}
+            // auto={true}
+            multiple
             chooseLabel="Choose PGN File"
             className="mt-2"
             disabled={uploading || !uploadPGNType}
@@ -113,10 +133,7 @@ export const PGNUpload: React.FC<PGNUploadProps> = ({
         </div>
         {uploading && (
           <div className="col-12">
-            <Message 
-              severity="info" 
-              text="Uploading file... Please wait." 
-            />
+            <Message severity="info" text="Uploading file... Please wait." />
           </div>
         )}
       </div>
