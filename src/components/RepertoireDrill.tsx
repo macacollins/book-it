@@ -20,11 +20,13 @@ import { DrillCompletionData } from "../types/DrillProgress";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
+import { InputSwitch } from "primereact/inputswitch";
 const SELECTED_REPERTOIRE_PGN_KEY = "SELECTED_REPERTOIRE_PGN";
 const MOVE_DEPTH_KEY = "REPERTOIRE_DRILL_MOVE_DEPTH";
 const DRILL_COLOR_KEY = "REPERTOIRE_DRILL_COLOR";
 const DRILL_STARTED_KEY = "REPERTOIRE_DRILL_STARTED";
 const CURRENT_EXERCISE_INDEX_KEY = "REPERTOIRE_CURRENT_EXERCISE_INDEX";
+const LIMIT_MOVE_DEPTH_KEY = "REPERTOIRE_DRILL_LIMIT_MOVE_DEPTH";
 
 export const RepertoireDrill = () => {
   const [uploadedPGNs, setUploadedPGNs] = useState<UploadedPGN[]>([]);
@@ -41,6 +43,7 @@ export const RepertoireDrill = () => {
 
   const [startingMove, setStartingMove] = useState<number>(18);
   const [endingMove, setEndingMove] = useState<number>(20);
+  const [limitMoveDepth, setLimitMoveDepth] = useState<boolean>(true);
   const [drillColor, setDrillColor] = useState<"white" | "black">("white");
 
   const [drillStarted, setDrillStarted] = useState(false);
@@ -172,6 +175,11 @@ export const RepertoireDrill = () => {
           }
         }
 
+        const savedLimitMoveDepth = localStorage.getItem(LIMIT_MOVE_DEPTH_KEY);
+        if (savedLimitMoveDepth === "false") {
+          setLimitMoveDepth(false);
+        }
+
         // Load recent completions
         const histories = getAllDrillHistories();
         const allCompletions: DrillCompletionData[] = [];
@@ -224,24 +232,30 @@ export const RepertoireDrill = () => {
         setParsedPGNs(parsed);
 
         // Create exercises from parsed PGNs
+        type ExtractedLine = { path: string[]; isTerminal: boolean };
         const exerciseSet = new Set<string>();
-        const exerciseList: string[][] = [];
+        const exerciseList: ExtractedLine[] = [];
 
-        // Helper function to extract moves and expand RAVs recursively
+        // Helper function to extract moves and expand RAVs recursively.
+        // isTerminal is true when a path ends at a leaf node (no further main-line moves).
         const extractMoveLists = (
           moves: any[],
           parentMoves: string[] = [],
-        ): string[][] => {
-          const result: string[][] = [];
+        ): ExtractedLine[] => {
+          const result: ExtractedLine[] = [];
 
           for (let i = 0; i < moves.length; i++) {
             const move = moves[i];
             if (move.move) {
               const currentPath = [...parentMoves, move.move];
+              const isLastMove = i === moves.length - 1;
 
-              // If we have at least some moves, add this variation
+              // Emit this path; it's terminal when there are no further main-line moves
               if (currentPath.length > 0) {
-                result.push(currentPath.slice(0, 50)); // Limit to 50 moves
+                result.push({
+                  path: currentPath.slice(0, 50),
+                  isTerminal: isLastMove,
+                });
               }
 
               // Recursively expand RAVs (alternative variations)
@@ -277,24 +291,38 @@ export const RepertoireDrill = () => {
           if (pgn.moves && pgn.moves.length > 0) {
             const variations = extractMoveLists(pgn.moves);
 
-            variations.forEach((movesArray) => {
+            variations.forEach(({ path, isTerminal }) => {
               // Create unique key for deduplication
-              const key = movesArray.join("|");
+              const key = path.join("|");
 
               if (!exerciseSet.has(key)) {
                 exerciseSet.add(key);
-                exerciseList.push(movesArray);
+                exerciseList.push({ path, isTerminal });
               }
             });
           }
         });
 
-        const newExercises = exerciseList.filter(
-          (ex) =>
-            ex.length > startingMove &&
-            ex.length <= endingMove &&
-            ex.length % 2 === (drillColor === "white" ? 1 : 0),
-        );
+        let newExercises: string[][];
+        if (!limitMoveDepth) {
+          // Unlimited mode: only drill complete (terminal) lines
+          newExercises = exerciseList
+            .filter(({ isTerminal }) => isTerminal)
+            .map(({ path }) => path);
+        } else {
+          // Limited mode: depth window, but also include short terminal lines
+          const correctParity = (len: number) =>
+            len % 2 === (drillColor === "white" ? 1 : 0);
+          newExercises = exerciseList
+            .filter(({ path, isTerminal }) => {
+              if (!correctParity(path.length) || path.length === 0) return false;
+              // Complete lines shorter than the window are always included
+              if (isTerminal && path.length <= startingMove) return true;
+              // Normal depth-window filter
+              return path.length > startingMove && path.length <= endingMove;
+            })
+            .map(({ path }) => path);
+        }
         console.log("Setting exercises to ", newExercises);
         setExercises(newExercises);
 
@@ -331,7 +359,7 @@ export const RepertoireDrill = () => {
       // setCurrentExerciseIndex(0);
       // setCurrentMoveIndex(0);
     }
-  }, [selectedPGN, drillStarted]);
+  }, [selectedPGN, drillStarted, limitMoveDepth, startingMove, endingMove, drillColor]);
 
   // When a GradualRepertoire is selected, auto-set its color
   useEffect(() => {
@@ -629,9 +657,11 @@ export const RepertoireDrill = () => {
           Drilling as:{" "}
           <strong>{drillColor === "white" ? "White" : "Black"}</strong>
         </div>
-        <div>
-          Move depth: <strong>{endingMove / 2}</strong>
-        </div>
+        {limitMoveDepth && (
+          <div>
+            Move depth: <strong>{endingMove / 2}</strong>
+          </div>
+        )}
       </div>
     </>
   );
@@ -759,27 +789,44 @@ export const RepertoireDrill = () => {
             </div>
 
             <div className="col-12 md:col-6">
-              <label htmlFor="move-depth" className="block mb-2 font-semibold">
-                Move Depth:
-              </label>
-              <Dropdown
-                id="move-depth"
-                value={endingMove / 2}
-                options={Array.from({ length: 20 }, (_, i) => ({
-                  label: `${i + 1}`,
-                  value: i + 1,
-                }))}
-                onChange={(e) => {
-                  const moveDepth = e.value;
-                  const newEndingMove = moveDepth * 2;
-                  const newStartingMove = newEndingMove - 2;
-                  setEndingMove(newEndingMove);
-                  setStartingMove(newStartingMove);
-                  localStorage.setItem(MOVE_DEPTH_KEY, moveDepth.toString());
-                }}
-                className="w-full"
-              />
+              <label className="block mb-2 font-semibold">Limit Move Depth:</label>
+              <div className="flex align-items-center gap-2">
+                <InputSwitch
+                  checked={limitMoveDepth}
+                  onChange={(e) => {
+                    const val = e.value;
+                    setLimitMoveDepth(val);
+                    localStorage.setItem(LIMIT_MOVE_DEPTH_KEY, val.toString());
+                  }}
+                />
+                <span>{limitMoveDepth ? "On" : "Off (full lines)"}</span>
+              </div>
             </div>
+
+            {limitMoveDepth && (
+              <div className="col-12 md:col-6">
+                <label htmlFor="move-depth" className="block mb-2 font-semibold">
+                  Move Depth:
+                </label>
+                <Dropdown
+                  id="move-depth"
+                  value={endingMove / 2}
+                  options={Array.from({ length: 20 }, (_, i) => ({
+                    label: `${i + 1}`,
+                    value: i + 1,
+                  }))}
+                  onChange={(e) => {
+                    const moveDepth = e.value;
+                    const newEndingMove = moveDepth * 2;
+                    const newStartingMove = newEndingMove - 2;
+                    setEndingMove(newEndingMove);
+                    setStartingMove(newStartingMove);
+                    localStorage.setItem(MOVE_DEPTH_KEY, moveDepth.toString());
+                  }}
+                  className="w-full"
+                />
+              </div>
+            )}
           </div>
 
           {error && <Message severity="error" text={error} className="mb-4" />}
