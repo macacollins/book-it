@@ -29,6 +29,9 @@ const CURRENT_EXERCISE_INDEX_KEY = "REPERTOIRE_CURRENT_EXERCISE_INDEX";
 export const RepertoireDrill = () => {
   const [uploadedPGNs, setUploadedPGNs] = useState<UploadedPGN[]>([]);
   const [selectedPGN, setSelectedPGN] = useState<UploadedPGN | null>(null);
+  const [gradualRepertoireColors, setGradualRepertoireColors] = useState<
+    Map<string, "white" | "black">
+  >(new Map());
   const [parsedPGNs, setParsedPGNs] = useState<ParsedPGN[]>([]);
   const [exercises, setExercises] = useState<string[][]>([]);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
@@ -124,6 +127,11 @@ export const RepertoireDrill = () => {
         const repertoirePGNs = await UploadedPGNClient.getByType("repertoire");
         const gradualRepertoires = await GradualRepertoireClient.getAll();
         const gradualPGNs = gradualRepertoires.map(gradualRepertoireToSavedPGN);
+        const colorMap = new Map<string, "white" | "black">();
+        gradualRepertoires.forEach((gr, i) => {
+          colorMap.set(gradualPGNs[i].filename, gr.color);
+        });
+        setGradualRepertoireColors(colorMap);
         setUploadedPGNs([...repertoirePGNs, ...gradualPGNs]);
 
         // Restore previously selected PGN if available
@@ -325,6 +333,17 @@ export const RepertoireDrill = () => {
     }
   }, [selectedPGN, drillStarted]);
 
+  // When a GradualRepertoire is selected, auto-set its color
+  useEffect(() => {
+    if (selectedPGN) {
+      const gradualColor = gradualRepertoireColors.get(selectedPGN.filename);
+      if (gradualColor) {
+        setDrillColor(gradualColor);
+        localStorage.setItem(DRILL_COLOR_KEY, gradualColor);
+      }
+    }
+  }, [selectedPGN, gradualRepertoireColors]);
+
   if (loading) {
     return (
       <div
@@ -336,10 +355,12 @@ export const RepertoireDrill = () => {
     );
   }
 
-  const pgnOptions = uploadedPGNs.map((pgn) => ({
-    label: pgn.filename,
-    value: pgn,
-  }));
+  const pgnOptions = uploadedPGNs
+    .map((pgn) => ({
+      label: pgn.filename,
+      value: pgn,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label));
 
   const currentFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -675,6 +696,9 @@ export const RepertoireDrill = () => {
               id="pgn-select"
               value={selectedPGN}
               options={pgnOptions}
+              filter
+              filterMatchMode="contains"
+              filterPlaceholder="Search repertoires..."
               onChange={(e) => {
                 const newPGN = e.value;
                 setSelectedPGN(newPGN);
@@ -727,6 +751,10 @@ export const RepertoireDrill = () => {
                   localStorage.setItem(DRILL_COLOR_KEY, e.value);
                 }}
                 className="w-full"
+                disabled={!!(
+                  selectedPGN &&
+                  gradualRepertoireColors.has(selectedPGN.filename)
+                )}
               />
             </div>
 
