@@ -2,9 +2,9 @@ name: Continuous Integration / Continuous Deployment
 
 on:
   push:
-    branches: ["main", "frequency-drills"]
+    branches: ["main", "grb"]
   pull_request:
-    branches: ["main", "frequency-drills"]
+    branches: ["main", "grb"]
 
 permissions:
   contents: read
