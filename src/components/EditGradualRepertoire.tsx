@@ -132,6 +132,7 @@ export const EditGradualRepertoire: React.FC<EditGradualRepertoireProps> = ({
           ]}
           onChange={(e) => setSourceRepertoireId(e.value)}
           placeholder="Select a source repertoire"
+          filter
           className="w-full"
         />
       </div>

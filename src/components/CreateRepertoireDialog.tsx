@@ -164,6 +164,9 @@ export const CreateRepertoireDialog: React.FC<CreateRepertoireDialogProps> = ({
             onChange={(e) => setSelectedRepertoireId(e.value)}
             placeholder="Select a repertoire"
             className="w-full"
+            filter
+            filterMatchMode="contains"
+            filterPlaceholder="Search repertoires..."
           />
         </div>
       )}
