@@ -3,9 +3,11 @@ import ChessBoard from "../components/ChessBoard";
 export function TinyFENDisplay({
   fen,
   invert = false,
+  extraText = ""
 }: {
   fen: string;
   invert?: boolean;
+  extraText?: string;
 }) {
   const madeMoveRef = { current: true };
 
@@ -18,7 +20,7 @@ export function TinyFENDisplay({
         moves={[]}
         invert={invert}
         madeMoveRef={madeMoveRef}
-        name={sanitized}
+        name={extraText + sanitized}
         game_url={sanitized}
         draggable={true}
         size="168px"

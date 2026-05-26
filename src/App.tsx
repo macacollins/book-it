@@ -6,6 +6,7 @@ import RepertoireDiffPage from "./pages/RepertoireDiffPage";
 import TacticsPracticePage from "./pages/TacticsPracticePage";
 import RepertoireDrillPage from "./pages/RepertoireDrillPage";
 import GradualRepertoireBuilderPage from "./pages/GradualRepertoireBuilderPage";
+import GRBDiffPage from "./pages/GRBDiffPage";
 import { SavedGameClient } from "./database/SavedGameClient";
 import { Menubar } from "primereact/menubar";
 import "./App.css";
@@ -67,6 +68,13 @@ function App() {
         window.location.hash = "#/gradual-repertoire";
       },
     },
+    {
+      label: isCompact ? undefined : "GRB Diff",
+      icon: "bi bi-intersect",
+      command: () => {
+        window.location.hash = "#/grb-diff";
+      },
+    },
   ];
 
   if (hasGames === null) {
@@ -101,6 +109,11 @@ function App() {
               path="/gradual-repertoire"
               element={<GradualRepertoireBuilderPage />}
             />
+            <Route
+              path="/gradual-repertoire/:repertoireId"
+              element={<GradualRepertoireBuilderPage />}
+            />
+            <Route path="/grb-diff" element={<GRBDiffPage />} />
             <Route path="/notes" element={<Notes />} />
           </Routes>
         </div>

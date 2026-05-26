@@ -37,6 +37,8 @@ interface SinglePositionBuilderProps {
   sourceRepertoireId: string | null;
   moveSource: MoveSource;
   token: string;
+  /** Optional SAN moves (from startingFEN) to replay automatically on mount */
+  initialMoves?: string[];
   onHome?: () => void;
 }
 
@@ -61,6 +63,7 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
   sourceRepertoireId,
   moveSource,
   token,
+  initialMoves,
   onHome,
 }) => {
   const [moves, setMoves] = useState<MoveFrequencyResult[] | null>(null);
@@ -112,6 +115,30 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
   }, [repertoireId]);
 
   const [currentFEN, setCurrentFEN] = useState<string>(startingFEN);
+
+  // If initialMoves were passed (e.g. deep-linked from GRBDiff), replay them
+  // once after the component mounts so the board lands on the target position.
+  useEffect(() => {
+    console.log("top of effect");
+    if (!initialMoves || initialMoves.length === 0) return;
+    const chess = new Chess(startingFEN);
+    for (const san of initialMoves) {
+      try {
+        chess.move(san);
+      } catch {
+        break;
+      }
+    }
+    const targetFEN = chess.fen();
+    gameRef.current = chess;
+    setMoveHistory(initialMoves);
+    setPendingMove(null);
+    setCurrentFEN(targetFEN);
+    // Defer the imperative board position call to ensure the board is mounted
+    setTimeout(() => {
+      chessboardRef.current?.position(targetFEN);
+    }, 200);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getPositionCacheKey = (fen: string): string => `${repertoireId}:${fen}`;
 
@@ -592,6 +619,13 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
                   disabled: coverageProgress !== null,
                   command: handleCoverageAnalysis,
                 },
+                {
+                  label: "GRB Diff",
+                  icon: "bi bi-intersect",
+                  command: () => {
+                    window.location.hash = `#/grb-diff`;
+                  },
+                },
               ],
             },
           ]}
@@ -638,6 +672,7 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
             moveCallback={handleMoveCallback}
             chessboardRef={chessboardRef}
             gameRef={gameRef}
+            moves={initialMoves}
             size="376px"
           />
         </div>
