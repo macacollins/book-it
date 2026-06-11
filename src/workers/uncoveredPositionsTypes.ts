@@ -4,7 +4,11 @@ export interface UncoveredPosition {
   fen: string;
   /** SAN moves from the repertoire's startingFEN to reach this position. */
   startingMoves: string[];
-  /** Total Lichess games recorded at this position. */
+  /**
+   * Probability-weighted score: the likelihood of reaching this position
+   * through the repertoire, multiplied by the fraction of games in which the
+   * opponent plays this uncovered move.  Higher is higher-priority.
+   */
   numberGames: number;
 }
 

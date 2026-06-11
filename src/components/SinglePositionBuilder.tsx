@@ -28,6 +28,7 @@ import { getChessableMenuItem } from "../integrations/getChessableMenuItem";
 import { EditGradualRepertoire } from "./EditGradualRepertoire";
 import { LevelProgressBar } from "./LevelProgressBar";
 import { getLevelInformation } from "../analysis/getLevelInformation";
+import UsageSphere from './UsageSphere';
 
 interface SinglePositionBuilderProps {
   repertoireId: string;
@@ -42,7 +43,7 @@ interface SinglePositionBuilderProps {
   onHome?: () => void;
 }
 
-interface PositionAnalysisCacheEntry {
+interface PositionAnalysisCaclheEntry {
   moves: MoveFrequencyResult[];
   coveragePercentage: number;
 }
@@ -709,6 +710,12 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
           ) : (
             <h4>Potential moves by the opponent in this position</h4>
           )}
+          <UsageSphere
+            moves={moves ?? []}
+            coveragePercentage={coverageCache[currentFEN]?.coverage ?? coveragePercentage}
+            isUserTurn={userTurn}
+            onMoveClick={handleTableMoveClick}
+          />
           {moves && moves.length > 0 && !loading && (
             <DataTable
               value={moves}

@@ -42,25 +42,40 @@ export async function rankUncoveredPositions(
   type OpponentEntry = {
     path: string[]; // moves from startingFEN to reach this FEN
     coveredMoves: Set<string>; // opponent moves that ARE in our lines
+    /** The nearest ancestor opponent-turn FEN on the path, or null if none. */
+    parentOpponentFen: string | null;
+    /** The opponent move played at parentOpponentFen that eventually leads here. */
+    moveFromParent: string | null;
   };
 
   const opponentPositions = new Map<string, OpponentEntry>();
 
   for (const line of lines) {
     const chess = new Chess(startingFEN);
+    // Track the last opponent-turn FEN and the move played from it so we can
+    // build the parent → child probability chain.
+    let lastOpponentFen: string | null = null;
+    let lastOpponentMove: string | null = null;
+
     for (let i = 0; i < Math.min(line.length, maxDepth); i++) {
       const fen = chess.fen();
       const san = line[i];
 
       if (!isColorTurn(fen, color)) {
-        // Opponent's turn – record path + covered move
+        // Opponent's turn – record path + covered move + ancestry
         if (!opponentPositions.has(fen)) {
           opponentPositions.set(fen, {
             path: line.slice(0, i),
             coveredMoves: new Set(),
+            parentOpponentFen: lastOpponentFen,
+            moveFromParent: lastOpponentMove,
           });
         }
         opponentPositions.get(fen)!.coveredMoves.add(san);
+
+        // This position becomes the parent for the next opponent-turn FEN.
+        lastOpponentFen = fen;
+        lastOpponentMove = san;
       }
 
       try {
@@ -91,6 +106,61 @@ export async function rankUncoveredPositions(
   }
   onProgress?.(opponentArray.length, opponentArray.length);
 
+  // ── Phase 2.5: compute probability weights for each opponent-turn FEN ────
+  //
+  // prob(F) = 1.0                                        if parentOpponentFen is null
+  //         = prob(parent) × (parentMove.games / parent.totalGames)  otherwise
+  //
+  // This captures the likelihood of reaching F given the repertoire lines and
+  // the observed Lichess move distribution.
+
+  const probabilities = new Map<string, number>();
+
+  function computeProb(fen: string): number {
+    if (probabilities.has(fen)) return probabilities.get(fen)!;
+
+    const entry = opponentPositions.get(fen);
+    if (!entry) return 0;
+
+    if (entry.parentOpponentFen === null) {
+      // Root: we always start here, so probability is 100 %.
+      probabilities.set(fen, 1.0);
+      return 1.0;
+    }
+
+    const parentData = lichessCache.get(entry.parentOpponentFen);
+    if (!parentData) {
+      probabilities.set(fen, 0);
+      return 0;
+    }
+
+    const parentTotal = parentData.moves.reduce(
+      (sum, m) => sum + m.white + m.draws + m.black,
+      0,
+    );
+    if (parentTotal === 0) {
+      probabilities.set(fen, 0);
+      return 0;
+    }
+
+    const moveData = parentData.moves.find(
+      (m) => m.san === entry.moveFromParent,
+    );
+    if (!moveData) {
+      probabilities.set(fen, 0);
+      return 0;
+    }
+
+    const moveGames = moveData.white + moveData.draws + moveData.black;
+    const prob = computeProb(entry.parentOpponentFen) * (moveGames / parentTotal);
+    probabilities.set(fen, prob);
+    return prob;
+  }
+
+  for (const fen of opponentPositions.keys()) {
+    computeProb(fen);
+  }
+
   // ── Phase 3: identify uncovered moves ────────────────────────────────────
 
   // Keyed by the resulting FEN to deduplicate transpositions.
@@ -100,10 +170,20 @@ export async function rankUncoveredPositions(
     const data = lichessCache.get(fen);
     if (!data) continue;
 
+    const totalGames = data.moves.reduce(
+      (sum, m) => sum + m.white + m.draws + m.black,
+      0,
+    );
+    const positionProbParent = probabilities.get(fen) ?? 0;
+
     for (const move of data.moves) {
       const games = move.white + move.draws + move.black;
       if (games < minGames) continue;
       if (entry.coveredMoves.has(move.san)) continue;
+
+      // Weighted score: how likely are we to face this exact uncovered move?
+      const weightedScore = positionProbParent * (games / totalGames);
+        // totalGames > 0 ?  * (games / totalGames) : 0;
 
       try {
         const chess = new Chess(fen);
@@ -115,7 +195,7 @@ export async function rankUncoveredPositions(
           uncoveredMap.set(resultingFen, {
             fen: resultingFen,
             startingMoves: [...entry.path, move.san],
-            numberGames: games,
+            numberGames: weightedScore,
           });
         }
       } catch {
@@ -123,6 +203,9 @@ export async function rankUncoveredPositions(
       }
     }
   }
+
+  console.log("Uncovered positions before sorting:", Array.from(uncoveredMap.values()));
+  console.log("Probabilities:", Array.from(probabilities.entries()));
 
   return Array.from(uncoveredMap.values()).sort(
     (a, b) => b.numberGames - a.numberGames,
