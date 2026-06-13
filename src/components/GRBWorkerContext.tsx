@@ -56,6 +56,7 @@ export const GRBWorkerProvider: React.FC<{ children: React.ReactNode }> = ({
   const coverageWorkerRef = useRef<Worker | null>(null);
   const uncoveredWorkerRef = useRef<Worker | null>(null);
   const seqRef = useRef(0);
+  const coverageRunningRef = useRef(false);
 
   const [coverageProgress, setCoverageProgress] = useState<{
     completed: number;
@@ -75,26 +76,119 @@ export const GRBWorkerProvider: React.FC<{ children: React.ReactNode }> = ({
   const requestUncoveredPositionsRef = useRef<() => void>(() => {});
 
   const requestCoverageAnalysis = useCallback(() => {
-    if (coverageWorkerRef.current) {
-      coverageWorkerRef.current.terminate();
-    }
-    setCoverageProgress({ completed: 0, total: 0 });
+    const worker = coverageWorkerRef.current;
+    if (!worker) return;
 
-    // Read latest values at call time — avoids stale closure issues
+    setCoverageProgress({ completed: 0, total: 0 });
+    coverageRunningRef.current = true;
+
     const { setupResult: sr, token: tok } =
       useGradualRepertoireBuilderStore.getState();
     const currentRepertoireId = sr?.id ?? "";
     const currentToken = tok ?? "";
     const currentColor = sr?.color ?? "white";
+
+    worker.postMessage({
+      type: "ANALYZE_COVERAGE",
+      repertoireId: currentRepertoireId,
+      token: currentToken,
+      color: currentColor,
+    });
+  }, []);
+
+  const requestUncoveredPositions = useCallback(() => {
+    const worker = uncoveredWorkerRef.current;
+    if (!worker) return;
+
+    const { setupResult: sr, token: tok } =
+      useGradualRepertoireBuilderStore.getState();
+    const currentRepertoireId = sr?.id ?? "";
+    const currentToken = tok ?? "";
+
+    worker.postMessage({
+      type: "RANK_UNCOVERED_POSITIONS",
+      repertoireId: currentRepertoireId,
+      token: currentToken,
+    });
+  }, []);
+
+  // Keep stable refs in sync with the latest callbacks
+  useEffect(() => {
+    requestCoverageAnalysisRef.current = requestCoverageAnalysis;
+    requestUncoveredPositionsRef.current = requestUncoveredPositions;
+  }, [requestCoverageAnalysis, requestUncoveredPositions]);
+
+  // Create / recreate all persistent workers when the repertoire changes
+  useEffect(() => {
+    // Reset derived state for the new repertoire
+    setCoverageProgress(null);
+    setUncoveredPositions([]);
+    setCoveragePercentage(0);
+    setAnalyzing(true);
+    setError(null);
+    seqRef.current = 0;
+    coverageRunningRef.current = false;
+
+    if (!repertoireId) {
+      frequencyWorkerRef.current?.terminate();
+      frequencyWorkerRef.current = null;
+      coverageWorkerRef.current?.terminate();
+      coverageWorkerRef.current = null;
+      uncoveredWorkerRef.current?.terminate();
+      uncoveredWorkerRef.current = null;
+      return;
+    }
+
+    const { setupResult: sr } = useGradualRepertoireBuilderStore.getState();
+    const currentRepertoireId = sr?.id ?? "";
     const currentStartingFEN = sr?.startingFEN ?? "";
 
-    const worker = new Worker(
+    // --- Frequency worker ---
+    const freqWorker = new Worker(
+      new URL("../workers/FrequencyAnalysisWorker.ts", import.meta.url),
+      { type: "module" },
+    );
+    frequencyWorkerRef.current = freqWorker;
+
+    freqWorker.onmessage = (event: MessageEvent<FrequencyWorkerOutbound>) => {
+      const msg = event.data;
+
+      // Discard stale responses from superseded requests
+      if (msg.requestId !== seqRef.current) return;
+
+      if (msg.type === "FREQUENCY_ANALYSIS_RESULT") {
+        const cacheKey = `${currentRepertoireId}:${msg.fen}`;
+
+        const store = useSinglePositionBuilderStore.getState();
+        store.setMoves(msg.moves);
+        store.addToPositionCache(cacheKey, {
+          moves: msg.moves,
+          coveragePercentage: msg.coveragePercentage,
+        });
+
+        setCoveragePercentage(msg.coveragePercentage);
+        setLoading(false);
+        setError(null);
+
+        // Kick off coverage + uncovered analyses if coverage isn't already running
+        if (!coverageRunningRef.current) {
+          requestCoverageAnalysisRef.current();
+          requestUncoveredPositionsRef.current();
+        }
+      } else if (msg.type === "FREQUENCY_ANALYSIS_ERROR") {
+        setError(msg.error);
+        setLoading(false);
+      }
+    };
+
+    // --- Coverage worker ---
+    const covWorker = new Worker(
       new URL("../workers/CoverageAnalysisWorker.ts", import.meta.url),
       { type: "module" },
     );
-    coverageWorkerRef.current = worker;
+    coverageWorkerRef.current = covWorker;
 
-    worker.onmessage = (event: MessageEvent<CoverageWorkerOutbound>) => {
+    covWorker.onmessage = (event: MessageEvent<CoverageWorkerOutbound>) => {
       const msg = event.data;
       if (msg.type === "COVERAGE_PROGRESS") {
         setCoverageProgress({ completed: msg.completed, total: msg.total });
@@ -114,148 +208,43 @@ export const GRBWorkerProvider: React.FC<{ children: React.ReactNode }> = ({
         useSourceMovesStore.getState().setSourceMoves(msg.sourceMovesFromFen);
       } else if (msg.type === "COVERAGE_COMPLETE") {
         setCoverageProgress(null);
-        coverageWorkerRef.current = null;
+        coverageRunningRef.current = false;
         setAnalyzing(false);
       } else if (msg.type === "COVERAGE_ERROR") {
         console.error("Coverage analysis error:", msg.error);
         setCoverageProgress(null);
-        coverageWorkerRef.current = null;
+        coverageRunningRef.current = false;
       }
     };
 
-    worker.postMessage({
-      type: "ANALYZE_COVERAGE",
-      repertoireId: currentRepertoireId,
-      token: currentToken,
-      color: currentColor,
-    });
-  }, []);
-
-  const requestUncoveredPositions = useCallback(() => {
-    if (uncoveredWorkerRef.current) {
-      uncoveredWorkerRef.current.terminate();
-    }
-
-    const { setupResult: sr, token: tok } =
-      useGradualRepertoireBuilderStore.getState();
-    const currentRepertoireId = sr?.id ?? "";
-    const currentToken = tok ?? "";
-
-    const worker = new Worker(
+    // --- Uncovered positions worker ---
+    const uncovWorker = new Worker(
       new URL("../workers/UncoveredPositionsWorker.ts", import.meta.url),
       { type: "module" },
     );
-    uncoveredWorkerRef.current = worker;
+    uncoveredWorkerRef.current = uncovWorker;
 
-    worker.onmessage = (
+    uncovWorker.onmessage = (
       event: MessageEvent<UncoveredPositionsWorkerOutbound>,
     ) => {
       const msg = event.data;
       if (msg.type === "UNCOVERED_POSITIONS_RESULT") {
         setUncoveredPositions(msg.positions);
-        uncoveredWorkerRef.current = null;
       } else if (msg.type === "UNCOVERED_POSITIONS_ERROR") {
         console.error("Uncovered positions analysis error:", msg.error);
-        uncoveredWorkerRef.current = null;
       }
     };
 
-    worker.postMessage({
-      type: "RANK_UNCOVERED_POSITIONS",
-      repertoireId: currentRepertoireId,
-      token: currentToken,
-    });
-  }, []);
-
-  // Keep stable refs in sync with the latest callbacks
-  useEffect(() => {
-    requestCoverageAnalysisRef.current = requestCoverageAnalysis;
-    requestUncoveredPositionsRef.current = requestUncoveredPositions;
-  }, [requestCoverageAnalysis, requestUncoveredPositions]);
-
-  // Create / recreate the persistent FrequencyAnalysisWorker when the repertoire changes
-  useEffect(() => {
-    // Reset derived state for the new repertoire
-    setCoverageProgress(null);
-    setUncoveredPositions([]);
-    setCoveragePercentage(0);
-    setAnalyzing(true);
-    
-    setError(null);
-    seqRef.current = 0;
-
-    // Tear down coverage / uncovered workers from the previous repertoire
-    if (coverageWorkerRef.current) {
-      coverageWorkerRef.current.terminate();
-      coverageWorkerRef.current = null;
-    }
-    if (uncoveredWorkerRef.current) {
-      uncoveredWorkerRef.current.terminate();
-      uncoveredWorkerRef.current = null;
-    }
-
-    if (!repertoireId) {
-      frequencyWorkerRef.current?.terminate();
-      frequencyWorkerRef.current = null;
-      return;
-    }
-
-    const worker = new Worker(
-      new URL("../workers/FrequencyAnalysisWorker.ts", import.meta.url),
-      { type: "module" },
-    );
-    frequencyWorkerRef.current = worker;
-
-    worker.onmessage = (event: MessageEvent<FrequencyWorkerOutbound>) => {
-      const msg = event.data;
-
-      // Discard stale responses from superseded requests
-      if (msg.requestId !== seqRef.current) return;
-
-      if (msg.type === "FREQUENCY_ANALYSIS_RESULT") {
-        const { setupResult: sr } =
-          useGradualRepertoireBuilderStore.getState();
-        const currentRepertoireId = sr?.id ?? "";
-        const cacheKey = `${currentRepertoireId}:${msg.fen}`;
-
-        const store = useSinglePositionBuilderStore.getState();
-        store.setMoves(msg.moves);
-        store.addToPositionCache(cacheKey, {
-          moves: msg.moves,
-          coveragePercentage: msg.coveragePercentage,
-        });
-
-        setCoveragePercentage(msg.coveragePercentage);
-        setLoading(false);
-        setError(null);
-        // setAnalyzing(false);
-
-        // Kick off coverage + uncovered analyses if coverage isn't already running
-        if (!coverageWorkerRef.current) {
-          requestCoverageAnalysisRef.current();
-          requestUncoveredPositionsRef.current();
-        }
-      } else if (msg.type === "FREQUENCY_ANALYSIS_ERROR") {
-        setError(msg.error);
-        setLoading(false);
-        // setAnalyzing(false);
-      }
-    };
-
-    // Cleanup: terminate the frequency worker when repertoireId changes or provider unmounts
+    // Cleanup: terminate all workers when repertoireId changes or provider unmounts
     return () => {
-      worker.terminate();
+      freqWorker.terminate();
       frequencyWorkerRef.current = null;
+      covWorker.terminate();
+      coverageWorkerRef.current = null;
+      uncovWorker.terminate();
+      uncoveredWorkerRef.current = null;
     };
   }, [repertoireId]);
-
-  // Terminate coverage / uncovered workers on provider unmount
-  useEffect(() => {
-    return () => {
-      coverageWorkerRef.current?.terminate();
-      uncoveredWorkerRef.current?.terminate();
-    };
-  }, []);
 
   const requestFrequencyAnalysis = useCallback((fen: string) => {
     const worker = frequencyWorkerRef.current;
