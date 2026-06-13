@@ -1,11 +1,8 @@
-import React, { useState, useEffect } from "react";
-import {
-  RepertoireSetupForm,
-  RepertoireSetupResult,
-} from "./RepertoireSetupForm";
-import { MoveSourceChooser, MoveSource } from "./MoveSourceChooser";
+import React, { useEffect } from "react";
+import { RepertoireSetupForm } from "./RepertoireSetupForm";
 import { SinglePositionBuilder } from "./SinglePositionBuilder";
 import { GradualRepertoireClient } from "../database/GradualRepertoireClient";
+import { useGradualRepertoireBuilderStore } from "./useGradualRepertoireBuilderStore";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 interface GradualRepertoireBuilderProps {
@@ -17,12 +14,14 @@ export function GradualRepertoireBuilder({
   preselectedRepertoireId,
   initialMoves,
 }: GradualRepertoireBuilderProps = {}) {
-  const [setupResult, setSetupResult] = useState<RepertoireSetupResult | null>(
-    null,
-  );
-  const [moveSource, setMoveSource] = useState<MoveSource>("frequency");
+  const setupResult = useGradualRepertoireBuilderStore((s) => s.setupResult);
+  const setSetupResult = useGradualRepertoireBuilderStore((s) => s.setSetupResult);
+  const token = useGradualRepertoireBuilderStore((s) => s.token);
+  const setInitialMoves = useGradualRepertoireBuilderStore((s) => s.setInitialMoves);
 
-  const token = localStorage.getItem("lichessToken");
+  useEffect(() => {
+    setInitialMoves(initialMoves);
+  }, [initialMoves]);
 
   // If a repertoire ID was passed via URL, load it and skip the setup form
   useEffect(() => {
@@ -61,17 +60,5 @@ export function GradualRepertoireBuilder({
   //   return <MoveSourceChooser onSelect={setMoveSource} />;
   // }
 
-  return (
-    <SinglePositionBuilder
-      repertoireId={setupResult.id}
-      name={setupResult.name}
-      color={setupResult.color}
-      startingFEN={setupResult.startingFEN}
-      sourceRepertoireId={setupResult.sourceRepertoireId}
-      moveSource={moveSource}
-      token={token}
-      initialMoves={initialMoves}
-      onHome={() => setSetupResult(null)}
-    />
-  );
+  return <SinglePositionBuilder />;
 }

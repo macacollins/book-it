@@ -92,7 +92,7 @@ export default function UsageSphere({ moves, coveragePercentage, isUserTurn, onM
                 },
             },
         });
-        }, 2000);
+        }, 300);
 
         return () => clearTimeout(timer);
     }, [moves, isUserTurn, coverageCache]);

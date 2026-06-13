@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { GradualRepertoire, RepertoireColor } from "../database/types";
-import { MoveSource } from "./MoveSourceChooser";
+import { useGradualRepertoireBuilderStore } from "./useGradualRepertoireBuilderStore";
 import {
   MoveFrequencyResult,
   FrequencyWorkerOutbound,
@@ -11,42 +11,22 @@ import {
   UncoveredPositionsWorkerOutbound,
 } from "../workers/uncoveredPositionsTypes";
 import ChessBoard from "./ChessBoard";
-import { DataTable } from "primereact/datatable";
-import { Column } from "primereact/column";
 import { Button } from "primereact/button";
 import { Menu } from "primereact/menu";
 import { ProgressSpinner } from "primereact/progressspinner";
-import { Dialog } from "primereact/dialog";
 import { Chess, Move } from "chess.js";
 import { GradualRepertoireClient } from "../database/GradualRepertoireClient";
 import { useCoverageCache } from "./useCoverageCache";
-import { CachedCoverage } from "./CachedCoverage";
 import { useSourceMovesStore } from "./useSourceMovesStore";
-import { InSourceIndicator } from "./InSourceIndicator";
 import { gradualRepertoireToPGNString } from "../pgn/gradualRepertoireToPGNString";
 import { getChessableMenuItem } from "../integrations/getChessableMenuItem";
 import { EditGradualRepertoire } from "./EditGradualRepertoire";
+import { DeleteRepertoireLinesDialog } from "./DeleteRepertoireLinesDialog";
+import { MoveSelectionTable } from "./MoveSelectionTable";
+import { useSinglePositionBuilderStore } from "./useSinglePositionBuilderStore";
 import { LevelProgressBar } from "./LevelProgressBar";
 import { getLevelInformation } from "../analysis/getLevelInformation";
 import UsageSphere from './UsageSphere';
-
-interface SinglePositionBuilderProps {
-  repertoireId: string;
-  name: string;
-  color: RepertoireColor;
-  startingFEN: string;
-  sourceRepertoireId: string | null;
-  moveSource: MoveSource;
-  token: string;
-  /** Optional SAN moves (from startingFEN) to replay automatically on mount */
-  initialMoves?: string[];
-  onHome?: () => void;
-}
-
-interface PositionAnalysisCaclheEntry {
-  moves: MoveFrequencyResult[];
-  coveragePercentage: number;
-}
 
 function isUserTurn(fen: string, color: RepertoireColor): boolean {
   const sideToMove = fen.split(" ")[1];
@@ -56,27 +36,36 @@ function isUserTurn(fen: string, color: RepertoireColor): boolean {
   );
 }
 
-export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
-  repertoireId,
-  name,
-  color,
-  startingFEN,
-  sourceRepertoireId,
-  moveSource,
-  token,
-  initialMoves,
-  onHome,
-}) => {
-  const [moves, setMoves] = useState<MoveFrequencyResult[] | null>(null);
+export const SinglePositionBuilder: React.FC = () => {
+  const setupResult = useGradualRepertoireBuilderStore((s) => s.setupResult);
+  const setSetupResult = useGradualRepertoireBuilderStore((s) => s.setSetupResult);
+  const moveSource = useGradualRepertoireBuilderStore((s) => s.moveSource);
+  const token = useGradualRepertoireBuilderStore((s) => s.token) ?? "";
+  const initialMoves = useGradualRepertoireBuilderStore((s) => s.initialMoves);
+
+  const repertoireId = setupResult?.id ?? "";
+  const name = setupResult?.name ?? "";
+  const color = (setupResult?.color ?? "white") as RepertoireColor;
+  const startingFEN = setupResult?.startingFEN ?? "";
+  const sourceRepertoireId = setupResult?.sourceRepertoireId ?? null;
+
+  const moves = useSinglePositionBuilderStore((s) => s.moves);
+  const setMoves = useSinglePositionBuilderStore((s) => s.setMoves);
+  const moveHistory = useSinglePositionBuilderStore((s) => s.moveHistory);
+  const setMoveHistory = useSinglePositionBuilderStore((s) => s.setMoveHistory);
+  const positionAnalysisCache = useSinglePositionBuilderStore((s) => s.positionAnalysisCache);
+  const addToPositionCache = useSinglePositionBuilderStore((s) => s.addToPositionCache);
+  const clearPositionCache = useSinglePositionBuilderStore((s) => s.clearPositionCache);
+  const deletePending = useSinglePositionBuilderStore((s) => s.deletePending);
+  const setDeletePending = useSinglePositionBuilderStore((s) => s.setDeletePending);
+  const currentFEN = useSinglePositionBuilderStore((s) => s.currentFEN);
+  const setCurrentFEN = useSinglePositionBuilderStore((s) => s.setCurrentFEN);
+  const registerTableMoveClick = useSinglePositionBuilderStore((s) => s.registerTableMoveClick);
   const [coveragePercentage, setCoveragePercentage] = useState<number>(0);
   const movesRef = useRef<MoveFrequencyResult[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pendingMove, setPendingMove] = useState<Move | null>(null);
-  const [moveHistory, setMoveHistory] = useState<string[]>([]);
-  const [positionAnalysisCache, setPositionAnalysisCache] = useState<
-    Record<string, PositionAnalysisCacheEntry>
-  >({});
   const addPosition = useCoverageCache((state) => state.addPosition);
   const clearCoverageCache = useCoverageCache((state) => state.clearCache);
   const coverageCache = useCoverageCache((state) => state.coverageCache);
@@ -91,10 +80,6 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
   const uncoveredPositionsWorkerRef = useRef<Worker | null>(null);
   const [uncoveredPositions, setUncoveredPositions] = useState<UncoveredPosition[]>([]);
 
-  const [deletePending, setDeletePending] = useState<{
-    san: string;
-    count: number;
-  } | null>(null);
   const [deleteMessage, setDeleteMessage] = useState<string | null>(null);
 
   const chessboardRef = useRef<any>(null);
@@ -114,8 +99,6 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
   useEffect(() => {
     refreshRepertoire();
   }, [repertoireId]);
-
-  const [currentFEN, setCurrentFEN] = useState<string>(startingFEN);
 
   // If initialMoves were passed (e.g. deep-linked from GRBDiff), replay them
   // once after the component mounts so the board lands on the target position.
@@ -144,11 +127,13 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
   const getPositionCacheKey = (fen: string): string => `${repertoireId}:${fen}`;
 
   useEffect(() => {
-    setPositionAnalysisCache({});
+    clearPositionCache();
     clearCoverageCache();
     clearSourceMoves();
     setCoverageProgress(null);
     setUncoveredPositions([]);
+    setMoveHistory([]);
+    setCurrentFEN(startingFEN);
     if (coverageWorkerRef.current) {
       coverageWorkerRef.current.terminate();
       coverageWorkerRef.current = null;
@@ -180,6 +165,7 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
   }, [pendingMove]);
 
   useEffect(() => {
+    if (!currentFEN) return;
     const cacheKey = getPositionCacheKey(currentFEN);
     const cachedPosition = positionAnalysisCache[cacheKey];
     if (cachedPosition) {
@@ -213,13 +199,10 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
         setMoves(msg.moves);
         setCoveragePercentage(msg.coveragePercentage);
         movesRef.current = msg.moves;
-        setPositionAnalysisCache((prev) => ({
-          ...prev,
-          [cacheKey]: {
-            moves: msg.moves,
-            coveragePercentage: msg.coveragePercentage,
-          },
-        }));
+        addToPositionCache(cacheKey, {
+          moves: msg.moves,
+          coveragePercentage: msg.coveragePercentage,
+        });
         setLoading(false);
         if (!coverageWorkerRef.current) {
           handleCoverageAnalysis();
@@ -353,7 +336,7 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [moveHistory, startingFEN, uncoveredPositions, currentFEN]);
 
-  const handleTableMoveClick = (move: MoveFrequencyResult) => {
+  const handleTableMoveClick = useCallback((move: MoveFrequencyResult) => {
     const chess = new Chess(currentFEN);
     const playedMove = chess.move(move.san);
     if (!playedMove) {
@@ -362,7 +345,7 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
 
     if (pauseBoardRef.current) {
       console.log("Not applying due to paused")
-      return false;
+      return;
     }
     const alreadyInRepertoire = movesRef.current?.some(
       (m) => m.san === move.san && m.inRepertoire,
@@ -376,25 +359,18 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
       gameRef.current = chess;
       chessboardRef.current?.position(chess.fen());
     } else {
-
-
       gameRef.current = chess;
       chessboardRef.current?.position(chess.fen());
       setMoveHistory((prev) => [...prev, move.san]);
       setPendingMove(null);
       setCurrentFEN(chess.fen());
     }
-  };
+  }, [currentFEN, color]);
 
-  const handleDeleteClick = async (move: MoveFrequencyResult) => {
-    const repertoire = await GradualRepertoireClient.getById(repertoireId);
-    if (!repertoire) return;
-    const prefix = [...moveHistory, move.san];
-    const count = repertoire.lines.filter((line) =>
-      prefix.every((san, i) => line[i] === san),
-    ).length;
-    setDeletePending({ san: move.san, count });
-  };
+  useEffect(() => {
+    registerTableMoveClick(handleTableMoveClick);
+    return () => registerTableMoveClick(null);
+  }, [handleTableMoveClick]);
 
   const handleDeleteConfirm = async () => {
     if (!deletePending) return;
@@ -518,6 +494,8 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
     URL.revokeObjectURL(url);
   };
 
+  if (!setupResult) return null;
+
   if (loading) {
     return (
       <div
@@ -541,42 +519,16 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
     );
   }
 
-  const percentageTemplate = (row: MoveFrequencyResult) =>
-    `${row.percentage.toFixed(1)}%`;
-
-  const winRateTemplate = (row: MoveFrequencyResult) =>
-    `${row.winRate.toFixed(1)}%`;
-
-  const inRepertoireTemplate = (row: MoveFrequencyResult) =>
-    row.inRepertoire ? "Y" : "N";
-
-  const inSourceTemplate = (row: MoveFrequencyResult) => (
-    <InSourceIndicator fen={currentFEN} san={row.san} />
-  );
-
-  const deleteTemplate = (row: MoveFrequencyResult) => (
-    <Button
-      icon="bi bi-trash"
-      className="p-button-danger p-button-text p-button-sm"
-      onClick={(e) => {
-        e.stopPropagation();
-        handleDeleteClick(row);
-      }}
-    />
-  );
-
   return (
     <div className="p-3">
       <div className="flex align-items-center gap-3 mb-3">
         <h3 className="m-0">{name}</h3>
-        {onHome && (
-          <Button
-            aria-label="Home"
-            icon="bi bi-house"
-            className="p-button-outlined"
-            onClick={onHome}
-          />
-        )}
+        <Button
+          aria-label="Home"
+          icon="bi bi-house"
+          className="p-button-outlined"
+          onClick={() => setSetupResult(null)}
+        />
         <Menu
           model={[
             {
@@ -716,74 +668,18 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
             isUserTurn={userTurn}
             onMoveClick={handleTableMoveClick}
           />
-          {moves && moves.length > 0 && !loading && (
-            <DataTable
-              value={moves}
-              size="small"
-              stripedRows
-              rowHover
-              style={{ cursor: "pointer" }}
-              onRowClick={(event) =>
-                handleTableMoveClick(event.data as MoveFrequencyResult)
-              }
-            >
-              <Column field="san" header="Move" />
-              <Column header="%" body={percentageTemplate} />
-              <Column field="totalGames" header="Games" />
-              <Column header="Win Rate" body={winRateTemplate} />
-              {/*This one is for the lines in the lines property */}
-              <Column header="In GRB" body={inRepertoireTemplate} />
-              {/* New one is for lines from the linked source repertoire*/}
-              {sourceRepertoireId && (
-                <Column header="In Source" body={inSourceTemplate} />
-              )}
-              <Column
-                header="Cov."
-                body={(row: MoveFrequencyResult) => {
-                  const cached = positionAnalysisCache[getPositionCacheKey(row.resultingFen)];
-                  const fallback = cached
-                    ? `${cached.coveragePercentage.toFixed(1)}%`
-                    : undefined;
-                  return <CachedCoverage row={row} fallbackCoverage={fallback} />;
-                }}
-              />
-              <Column body={deleteTemplate} style={{ width: "3rem" }} />
-            </DataTable>
-          )}
+          <MoveSelectionTable />
           {moves && moves.length === 0 && (
             <p>No moves found in the database for this position.</p>
           )}
         </div>
       </div>
 
-      <Dialog
-        header="Delete Repertoire Lines"
-        visible={deletePending !== null}
-        style={{ width: "22rem" }}
+      <DeleteRepertoireLinesDialog
+        deletePending={deletePending}
         onHide={() => setDeletePending(null)}
-        modal
-        footer={
-          <div className="flex gap-2 justify-content-end">
-            <Button
-              label="Cancel"
-              className="p-button-text"
-              onClick={() => setDeletePending(null)}
-            />
-            <Button
-              label="Confirm"
-              className="p-button-danger"
-              onClick={handleDeleteConfirm}
-            />
-          </div>
-        }
-      >
-        <p>
-          This will delete{" "}
-          <strong>{deletePending?.count}</strong>{" "}
-          line{deletePending?.count !== 1 ? "s" : ""} from your repertoire.
-          Are you sure?
-        </p>
-      </Dialog>
+        onConfirm={handleDeleteConfirm}
+      />
 
       {deleteMessage && (
         <div className="flex align-items-center gap-2 mt-2 p-2 surface-card border-round">
