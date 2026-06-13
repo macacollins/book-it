@@ -4,6 +4,7 @@ export interface FrequencyAnalysisRequest {
   fen: string;
   repertoireId: string;
   token: string;
+  requestId: number;
 }
 
 export type FrequencyWorkerInbound = FrequencyAnalysisRequest;
@@ -25,12 +26,14 @@ export interface FrequencyAnalysisResponse {
   fen: string;
   moves: MoveFrequencyResult[];
   coveragePercentage: number;
+  requestId: number;
 }
 
 export interface FrequencyAnalysisError {
   type: "FREQUENCY_ANALYSIS_ERROR";
   fen: string;
   error: string;
+  requestId: number;
 }
 
 export type FrequencyWorkerOutbound =

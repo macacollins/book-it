@@ -15,7 +15,7 @@ ctx.onmessage = async (event: MessageEvent<FrequencyWorkerInbound>) => {
   const message = event.data;
 
   if (message.type === "ANALYZE_FREQUENCY") {
-    const { fen, repertoireId, token } = message;
+    const { fen, repertoireId, token, requestId } = message;
 
     try {
       const gradualRepertoire =
@@ -41,6 +41,7 @@ ctx.onmessage = async (event: MessageEvent<FrequencyWorkerInbound>) => {
         fen,
         moves,
         coveragePercentage,
+        requestId,
       };
 
       ctx.postMessage(response);
@@ -49,6 +50,7 @@ ctx.onmessage = async (event: MessageEvent<FrequencyWorkerInbound>) => {
         type: "FREQUENCY_ANALYSIS_ERROR",
         fen,
         error: err instanceof Error ? err.message : String(err),
+        requestId,
       };
 
       ctx.postMessage(response);

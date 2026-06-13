@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Chart } from 'primereact/chart';
 import { MoveFrequencyResult } from '../workers/frequencyAnalysisTypes';
 import { useCoverageCache } from './useCoverageCache';
+import { useGRBWorkers } from './GRBWorkerContext';
+import { ProgressSpinner } from 'primereact/progressspinner';
 
 interface UsageSphereProps {
   moves: MoveFrequencyResult[];
@@ -15,10 +17,11 @@ export default function UsageSphere({ moves, coveragePercentage, isUserTurn, onM
     const [chartOptions, setChartOptions] = useState({});
     const coverageCache = useCoverageCache((state) => state.coverageCache);
 
-    useEffect(() => {
-        if (!moves || moves.length === 0) return;
+    const { analyzing, coverageCompletionNumber } = useGRBWorkers();
 
-        const timer = setTimeout(() => {
+    useEffect(() => {
+        if (!moves || moves.length === 0 || analyzing) return;
+
         const documentStyle = getComputedStyle(document.documentElement);
         const green = documentStyle.getPropertyValue('--green-500');
         const greenHover = documentStyle.getPropertyValue('--green-400');
@@ -70,7 +73,7 @@ export default function UsageSphere({ moves, coveragePercentage, isUserTurn, onM
         });
 
         setChartOptions({
-            cutout: '70%',
+            cutout: '60%',
             onClick: (evt: any, item: any) => {
                 console.log("Got click", evt, item);
                 if (item.length === 0) return;
@@ -92,10 +95,7 @@ export default function UsageSphere({ moves, coveragePercentage, isUserTurn, onM
                 },
             },
         });
-        }, 300);
-
-        return () => clearTimeout(timer);
-    }, [moves, isUserTurn, coverageCache]);
+    }, [analyzing, coverageCompletionNumber]);
 
     if (!moves || moves.length === 0) return null;
 
@@ -119,9 +119,8 @@ export default function UsageSphere({ moves, coveragePercentage, isUserTurn, onM
                 }}
             >
                 <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>
-                    {coveragePercentage.toFixed(1)}%
+                    {analyzing ? <ProgressSpinner /> : `${coveragePercentage.toFixed(1)}%`}
                 </div>
-                <div style={{ fontSize: '0.65rem', opacity: 0.7 }}>covered</div>
             </div>
         </div>
     );

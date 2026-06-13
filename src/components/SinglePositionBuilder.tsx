@@ -1,15 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { GradualRepertoire, RepertoireColor } from "../database/types";
 import { useGradualRepertoireBuilderStore } from "./useGradualRepertoireBuilderStore";
-import {
-  MoveFrequencyResult,
-  FrequencyWorkerOutbound,
-} from "../workers/frequencyAnalysisTypes";
-import { CoverageWorkerOutbound } from "../workers/coverageAnalysisTypes";
-import {
-  UncoveredPosition,
-  UncoveredPositionsWorkerOutbound,
-} from "../workers/uncoveredPositionsTypes";
+import { MoveFrequencyResult } from "../workers/frequencyAnalysisTypes";
 import ChessBoard from "./ChessBoard";
 import { Button } from "primereact/button";
 import { Menu } from "primereact/menu";
@@ -27,6 +19,7 @@ import { useSinglePositionBuilderStore } from "./useSinglePositionBuilderStore";
 import { LevelProgressBar } from "./LevelProgressBar";
 import { getLevelInformation } from "../analysis/getLevelInformation";
 import UsageSphere from './UsageSphere';
+import { useGRBWorkers } from "./GRBWorkerContext";
 
 function isUserTurn(fen: string, color: RepertoireColor): boolean {
   const sideToMove = fen.split(" ")[1];
@@ -39,46 +32,37 @@ function isUserTurn(fen: string, color: RepertoireColor): boolean {
 export const SinglePositionBuilder: React.FC = () => {
   const setupResult = useGradualRepertoireBuilderStore((s) => s.setupResult);
   const setSetupResult = useGradualRepertoireBuilderStore((s) => s.setSetupResult);
-  const moveSource = useGradualRepertoireBuilderStore((s) => s.moveSource);
-  const token = useGradualRepertoireBuilderStore((s) => s.token) ?? "";
   const initialMoves = useGradualRepertoireBuilderStore((s) => s.initialMoves);
 
   const repertoireId = setupResult?.id ?? "";
   const name = setupResult?.name ?? "";
   const color = (setupResult?.color ?? "white") as RepertoireColor;
   const startingFEN = setupResult?.startingFEN ?? "";
-  const sourceRepertoireId = setupResult?.sourceRepertoireId ?? null;
+
+  const {
+    requestFrequencyAnalysis,
+    requestCoverageAnalysis,
+    coverageProgress,
+    uncoveredPositions,
+    loading,
+    error,
+    coveragePercentage,
+  } = useGRBWorkers();
 
   const moves = useSinglePositionBuilderStore((s) => s.moves);
-  const setMoves = useSinglePositionBuilderStore((s) => s.setMoves);
   const moveHistory = useSinglePositionBuilderStore((s) => s.moveHistory);
   const setMoveHistory = useSinglePositionBuilderStore((s) => s.setMoveHistory);
-  const positionAnalysisCache = useSinglePositionBuilderStore((s) => s.positionAnalysisCache);
-  const addToPositionCache = useSinglePositionBuilderStore((s) => s.addToPositionCache);
   const clearPositionCache = useSinglePositionBuilderStore((s) => s.clearPositionCache);
   const deletePending = useSinglePositionBuilderStore((s) => s.deletePending);
   const setDeletePending = useSinglePositionBuilderStore((s) => s.setDeletePending);
   const currentFEN = useSinglePositionBuilderStore((s) => s.currentFEN);
   const setCurrentFEN = useSinglePositionBuilderStore((s) => s.setCurrentFEN);
   const registerTableMoveClick = useSinglePositionBuilderStore((s) => s.registerTableMoveClick);
-  const [coveragePercentage, setCoveragePercentage] = useState<number>(0);
   const movesRef = useRef<MoveFrequencyResult[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [pendingMove, setPendingMove] = useState<Move | null>(null);
-  const addPosition = useCoverageCache((state) => state.addPosition);
   const clearCoverageCache = useCoverageCache((state) => state.clearCache);
   const coverageCache = useCoverageCache((state) => state.coverageCache);
-  const setSourceMoves = useSourceMovesStore((state) => state.setSourceMoves);
   const clearSourceMoves = useSourceMovesStore((state) => state.clearSourceMoves);
-  const [coverageProgress, setCoverageProgress] = useState<{
-    completed: number;
-    total: number;
-  } | null>(null);
-  const workerRef = useRef<Worker | null>(null);
-  const coverageWorkerRef = useRef<Worker | null>(null);
-  const uncoveredPositionsWorkerRef = useRef<Worker | null>(null);
-  const [uncoveredPositions, setUncoveredPositions] = useState<UncoveredPosition[]>([]);
 
   const [deleteMessage, setDeleteMessage] = useState<string | null>(null);
 
@@ -124,33 +108,13 @@ export const SinglePositionBuilder: React.FC = () => {
     }, 200);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const getPositionCacheKey = (fen: string): string => `${repertoireId}:${fen}`;
-
   useEffect(() => {
     clearPositionCache();
     clearCoverageCache();
     clearSourceMoves();
-    setCoverageProgress(null);
-    setUncoveredPositions([]);
     setMoveHistory([]);
     setCurrentFEN(startingFEN);
-    if (coverageWorkerRef.current) {
-      coverageWorkerRef.current.terminate();
-      coverageWorkerRef.current = null;
-    }
-    if (uncoveredPositionsWorkerRef.current) {
-      uncoveredPositionsWorkerRef.current.terminate();
-      uncoveredPositionsWorkerRef.current = null;
-    }
   }, [repertoireId]);
-
-  // Terminate workers on unmount
-  useEffect(() => {
-    return () => {
-      coverageWorkerRef.current?.terminate();
-      uncoveredPositionsWorkerRef.current?.terminate();
-    };
-  }, []);
 
   useEffect(() => {
     setDeleteMessage(null);
@@ -166,67 +130,13 @@ export const SinglePositionBuilder: React.FC = () => {
 
   useEffect(() => {
     if (!currentFEN) return;
-    const cacheKey = getPositionCacheKey(currentFEN);
-    const cachedPosition = positionAnalysisCache[cacheKey];
-    if (cachedPosition) {
-      setMoves(cachedPosition.moves);
-      setCoveragePercentage(cachedPosition.coveragePercentage);
-      movesRef.current = cachedPosition.moves;
-      // setLoading(false);
-      setError(null);
-    }
-
-    console.log(
-      "position changed, firing up frequency analysis worker",
-      currentFEN,
-    );
-    // setLoading(true);
-    const worker = new Worker(
-      new URL("../workers/FrequencyAnalysisWorker.ts", import.meta.url),
-      { type: "module" },
-    );
-    workerRef.current = worker;
-
-    worker.onmessage = (event: MessageEvent<FrequencyWorkerOutbound>) => {
-      const msg = event.data;
-      if (msg.type === "FREQUENCY_ANALYSIS_RESULT") {
-        console.log("Got moves back.", msg.moves);
-
-        if (msg.fen === currentFEN) {
-          setLoading((_current) => true);
-          setTimeout(() => setLoading((_current) => false), 100);
-        }
-        setMoves(msg.moves);
-        setCoveragePercentage(msg.coveragePercentage);
-        movesRef.current = msg.moves;
-        addToPositionCache(cacheKey, {
-          moves: msg.moves,
-          coveragePercentage: msg.coveragePercentage,
-        });
-        setLoading(false);
-        if (!coverageWorkerRef.current) {
-          handleCoverageAnalysis();
-          handleUncoveredPositionsAnalysis();
-        }
-      } else if (msg.type === "FREQUENCY_ANALYSIS_ERROR") {
-        console.log("Got error back.");
-
-        setError(msg.error);
-        setLoading(false);
-      }
-    };
-
-    worker.postMessage({
-      type: "ANALYZE_FREQUENCY",
-      fen: currentFEN,
-      repertoireId,
-      token,
-    });
-
-    return () => {
-      worker.terminate();
-    };
+    requestFrequencyAnalysis(currentFEN);
   }, [currentFEN]);
+
+  // Keep movesRef in sync with the store for use in non-reactive event handlers
+  useEffect(() => {
+    movesRef.current = moves;
+  }, [moves]);
 
   const userTurn = isUserTurn(currentFEN, color);
 
@@ -240,7 +150,7 @@ export const SinglePositionBuilder: React.FC = () => {
       (m) => m.san === move.san && m.inRepertoire,
     );
 
-    console.log("Was in repertoire?", alreadyInRepertoire)
+    console.log("Was in repertoire?", alreadyInRepertoire, "applyToGame?", applyToGame)
 
     if (applyToGame) {
 
@@ -254,7 +164,7 @@ export const SinglePositionBuilder: React.FC = () => {
       console.log("Offering to add move to repertoire");
       setPendingMove(move);
     } else {
-            console.log("Trying to apply move", move)
+      console.log("Trying to apply move", move)
 
       chessboardRef.current?.move(move.san);
       console.log("NEW FEN", move.after);
@@ -359,6 +269,7 @@ export const SinglePositionBuilder: React.FC = () => {
       gameRef.current = chess;
       chessboardRef.current?.position(chess.fen());
     } else {
+      console.log("Attempting to make move on board.");
       gameRef.current = chess;
       chessboardRef.current?.position(chess.fen());
       setMoveHistory((prev) => [...prev, move.san]);
@@ -387,90 +298,6 @@ export const SinglePositionBuilder: React.FC = () => {
       `Deleted ${deleted} line${deleted !== 1 ? "s" : ""} from repertoire.`,
     );
     refreshRepertoire();
-  };
-
-  const handleCoverageAnalysis = () => {
-    if (coverageWorkerRef.current) {
-      coverageWorkerRef.current.terminate();
-    }
-    setCoverageProgress({ completed: 0, total: 0 });
-
-    const worker = new Worker(
-      new URL("../workers/CoverageAnalysisWorker.ts", import.meta.url),
-      { type: "module" },
-    );
-    coverageWorkerRef.current = worker;
-
-    worker.onmessage = (event: MessageEvent<CoverageWorkerOutbound>) => {
-      // console.log(event);
-      const msg = event.data;
-      if (msg.type === "COVERAGE_PROGRESS") {
-        setCoverageProgress({ completed: msg.completed, total: msg.total });
-      } else if (msg.type === "COVERAGE_POSITION_RESULT") {
-        if (msg.fen === currentFEN) {
-          setLoading((_current) => false);
-          setTimeout(() => setLoading((_current) => false), 100);
-        }
-        addPosition(msg.fen, {
-          coverage: msg.coverage,
-          totalGames: msg.totalGames,
-          movePath: msg.movePath,
-        });
-        if (msg.fen === startingFEN) {
-          GradualRepertoireClient.updateCachedCoveragePercent(
-            repertoireId,
-            msg.coverage,
-          );
-        }
-      } else if (msg.type === "SOURCE_REPERTOIRE_LOADED") {
-        setSourceMoves(msg.sourceMovesFromFen);
-      } else if (msg.type === "COVERAGE_COMPLETE") {
-        setCoverageProgress(null);
-        coverageWorkerRef.current = null;
-      } else if (msg.type === "COVERAGE_ERROR") {
-        console.error("Coverage analysis error:", msg.error);
-        setCoverageProgress(null);
-        coverageWorkerRef.current = null;
-      }
-    };
-
-    worker.postMessage({
-      type: "ANALYZE_COVERAGE",
-      repertoireId,
-      token,
-      color,
-    });
-  };
-
-  const handleUncoveredPositionsAnalysis = () => {
-    if (uncoveredPositionsWorkerRef.current) {
-      uncoveredPositionsWorkerRef.current.terminate();
-    }
-
-    const worker = new Worker(
-      new URL("../workers/UncoveredPositionsWorker.ts", import.meta.url),
-      { type: "module" },
-    );
-    uncoveredPositionsWorkerRef.current = worker;
-
-    worker.onmessage = (
-      event: MessageEvent<UncoveredPositionsWorkerOutbound>,
-    ) => {
-      const msg = event.data;
-      if (msg.type === "UNCOVERED_POSITIONS_RESULT") {
-        setUncoveredPositions(msg.positions);
-        uncoveredPositionsWorkerRef.current = null;
-      } else if (msg.type === "UNCOVERED_POSITIONS_ERROR") {
-        console.error("Uncovered positions analysis error:", msg.error);
-        uncoveredPositionsWorkerRef.current = null;
-      }
-    };
-
-    worker.postMessage({
-      type: "RANK_UNCOVERED_POSITIONS",
-      repertoireId,
-      token,
-    });
   };
 
   const handleOpenInLichess = () => {
@@ -570,7 +397,7 @@ export const SinglePositionBuilder: React.FC = () => {
                     : "Coverage",
                   icon: "bi bi-graph-up",
                   disabled: coverageProgress !== null,
-                  command: handleCoverageAnalysis,
+                  command: requestCoverageAnalysis,
                 },
                 {
                   label: "GRB Diff",

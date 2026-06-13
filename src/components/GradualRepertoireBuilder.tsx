@@ -4,6 +4,7 @@ import { SinglePositionBuilder } from "./SinglePositionBuilder";
 import { GradualRepertoireClient } from "../database/GradualRepertoireClient";
 import { useGradualRepertoireBuilderStore } from "./useGradualRepertoireBuilderStore";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import { GRBWorkerProvider } from "./GRBWorkerContext";
 
 interface GradualRepertoireBuilderProps {
   preselectedRepertoireId?: string;
@@ -21,10 +22,13 @@ export function GradualRepertoireBuilder({
 
   useEffect(() => {
     setInitialMoves(initialMoves);
+    console.log("Setting initial moves in gradualRepertoirebuilder.tsx")
+
   }, [initialMoves]);
 
   // If a repertoire ID was passed via URL, load it and skip the setup form
   useEffect(() => {
+    console.log("Running effect in gradualRepertoirebuilder.tsx")
     if (!preselectedRepertoireId) return;
     GradualRepertoireClient.getById(preselectedRepertoireId).then((grb) => {
       if (grb) {
@@ -60,5 +64,5 @@ export function GradualRepertoireBuilder({
   //   return <MoveSourceChooser onSelect={setMoveSource} />;
   // }
 
-  return <SinglePositionBuilder />;
+  return <GRBWorkerProvider><SinglePositionBuilder /></GRBWorkerProvider>;
 }
