@@ -14,9 +14,9 @@ We should have a page that allows the user to drop in a large file of games and 
 
 We should have a page accessible from the main GRB page that takes the user to a list of matching games and allows them to replay the games, comment, or play guess the move with master games. 
 
-## Strip comment page
+## Show repertoire moves once we get to uncharted territory
 
-Create a page that allows the user to drop a pgn in and get a minified PGN back. This can go under PGN tools later.
+Currently, the only moves shown in the candidate moves table come from actually played games, which more or less makes sense as it discourages spending a lot of time analyzing novel positions. However, we should still show any repertoire moves so that the user can continue studying the repertoire. Also, any move in the GRB should show up even if it's not found in the current set of moves.
 
 ## Show comments in GRB
 
@@ -47,9 +47,6 @@ Similarly to how the levels of repertoires under one of the accordiontabs in gra
 ## Don't break the RepertoireDrill page when the user changes screen orientation
 When the page orientation changes, current progress is lost and the user is unable to return to their previous state. Similarly, after navigating forwards or backwards, the user cannot interact with the puzzle. The user should be able to do whatever they want in terms of orientation and forwards / backwards and the application should behave properly no matter what.
 
-## Stop freezing the page
-I think this is due to the code that spins a bunch of WebWorkers. We should probably condense the Webworkers to a single worker that sits in the page and handles all the lichess stuff. Making the API available across the application is interesting and not entirely trivial--let's plan how this will work before implementing the whole thing.
-
 ## Use the URL in gradual repertoire builder to allow refreshing and bookmarking specific positions
 This will allow us to quickly restore when the page breaks and go back to a given location easily.
 
@@ -71,6 +68,8 @@ The Chess Dojo has a calendar view like GitHub's usage graph with squares highli
  
 Most of this will happen behind the scenes, but there should be a new page for the eventual activity graph. The activity graph should be one week per column with one row per day of the week. The activity graph should have checkboxes for each type of activity allowing the user to toggle them on and off.
 
+# Database Page changes
 
+More streamlined around PGN intake. Hide most sections. Give feedback after upload. Allow multiple upload.
 
 

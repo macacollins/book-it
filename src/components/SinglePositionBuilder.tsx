@@ -455,6 +455,14 @@ export const SinglePositionBuilder: React.FC = () => {
             moves={initialMoves}
             size="376px"
           />
+          <div className="flex align-items-center justify-content-center mt-3">
+          <UsageSphere
+            moves={moves ?? []}
+            coveragePercentage={coverageCache[currentFEN]?.coverage ?? coveragePercentage}
+            isUserTurn={userTurn}
+            onMoveClick={handleTableMoveClick}
+          />
+          </div>
         </div>
         <div className="flex-1">
           {userTurn ? (
@@ -489,12 +497,7 @@ export const SinglePositionBuilder: React.FC = () => {
           ) : (
             <h4>Potential moves by the opponent in this position</h4>
           )}
-          <UsageSphere
-            moves={moves ?? []}
-            coveragePercentage={coverageCache[currentFEN]?.coverage ?? coveragePercentage}
-            isUserTurn={userTurn}
-            onMoveClick={handleTableMoveClick}
-          />
+
           <MoveSelectionTable />
           {moves && moves.length === 0 && (
             <p>No moves found in the database for this position.</p>
