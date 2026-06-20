@@ -57,8 +57,7 @@ export const SinglePositionBuilder: React.FC = () => {
   const setDeletePending = useSinglePositionBuilderStore((s) => s.setDeletePending);
   const currentFEN = useSinglePositionBuilderStore((s) => s.currentFEN);
   const setCurrentFEN = useSinglePositionBuilderStore((s) => s.setCurrentFEN);
-  const registerTableMoveClick = useSinglePositionBuilderStore((s) => s.registerTableMoveClick);
-  const movesRef = useRef<MoveFrequencyResult[] | null>(null);
+  const registerTableMoveClick = useSinglePositionBuilderStore((s) => s.registerTableMoveClick);  const setGrbLines = useSinglePositionBuilderStore((s) => s.setGrbLines);  const movesRef = useRef<MoveFrequencyResult[] | null>(null);
   const [pendingMove, setPendingMove] = useState<Move | null>(null);
   const clearCoverageCache = useCoverageCache((state) => state.clearCache);
   const coverageCache = useCoverageCache((state) => state.coverageCache);
@@ -76,7 +75,10 @@ export const SinglePositionBuilder: React.FC = () => {
 
   const refreshRepertoire = () => {
     GradualRepertoireClient.getById(repertoireId).then((r) => {
-      if (r) setRepertoire(r);
+      if (r) {
+        setRepertoire(r);
+        setGrbLines(r.lines);
+      }
     });
   };
 
@@ -112,6 +114,7 @@ export const SinglePositionBuilder: React.FC = () => {
     clearPositionCache();
     clearCoverageCache();
     clearSourceMoves();
+    setGrbLines(null);
     setMoveHistory([]);
     setCurrentFEN(startingFEN);
   }, [repertoireId]);

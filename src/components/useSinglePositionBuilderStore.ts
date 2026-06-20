@@ -15,6 +15,7 @@ interface SinglePositionBuilderState {
   positionAnalysisCache: Record<string, PositionAnalysisCacheEntry>;
   deletePending: { san: string; count: number } | null;
   registeredTableMoveClick: ((move: MoveFrequencyResult) => void) | null;
+  grbLines: string[][] | null;
 
   setMoves: (moves: MoveFrequencyResult[] | null) => void;
   setCurrentFEN: (fen: string) => void;
@@ -24,6 +25,7 @@ interface SinglePositionBuilderState {
   setDeletePending: (pending: { san: string; count: number } | null) => void;
   registerTableMoveClick: (fn: ((move: MoveFrequencyResult) => void) | null) => void;
   triggerDeleteClick: (move: MoveFrequencyResult) => Promise<void>;
+  setGrbLines: (lines: string[][] | null) => void;
 }
 
 export const useSinglePositionBuilderStore = create<SinglePositionBuilderState>(
@@ -34,6 +36,7 @@ export const useSinglePositionBuilderStore = create<SinglePositionBuilderState>(
     positionAnalysisCache: {},
     deletePending: null,
     registeredTableMoveClick: null,
+    grbLines: null,
 
     setMoves: (moves) => set({ moves }),
     setCurrentFEN: (fen) => set({ currentFEN: fen }),
@@ -49,6 +52,7 @@ export const useSinglePositionBuilderStore = create<SinglePositionBuilderState>(
     clearPositionCache: () => set({ positionAnalysisCache: {} }),
     setDeletePending: (pending) => set({ deletePending: pending }),
     registerTableMoveClick: (fn) => set({ registeredTableMoveClick: fn }),
+    setGrbLines: (lines) => set({ grbLines: lines }),
     triggerDeleteClick: async (move) => {
       const { moveHistory } = get();
       const repertoireId =
