@@ -64,6 +64,7 @@ export const SinglePositionBuilder: React.FC = () => {
   const clearSourceMoves = useSourceMovesStore((state) => state.clearSourceMoves);
 
   const [deleteMessage, setDeleteMessage] = useState<string | null>(null);
+  const [showUsageSphere, setShowUsageSphere] = useState(true);
 
   const chessboardRef = useRef<any>(null);
   const gameRef = useRef<Chess>(new Chess());
@@ -409,6 +410,11 @@ export const SinglePositionBuilder: React.FC = () => {
                     window.location.hash = `#/grb-diff`;
                   },
                 },
+                {
+                  label: showUsageSphere ? "Hide Usage Sphere" : "Show Usage Sphere",
+                  icon: showUsageSphere ? "bi bi-eye-slash" : "bi bi-eye",
+                  command: () => setShowUsageSphere((v) => !v),
+                },
               ],
             },
           ]}
@@ -458,14 +464,16 @@ export const SinglePositionBuilder: React.FC = () => {
             moves={initialMoves}
             size="376px"
           />
+          {showUsageSphere && (
           <div className="flex align-items-center justify-content-center mt-3">
-          <UsageSphere
-            moves={moves ?? []}
-            coveragePercentage={coverageCache[currentFEN]?.coverage ?? coveragePercentage}
-            isUserTurn={userTurn}
-            onMoveClick={handleTableMoveClick}
-          />
+            <UsageSphere
+              moves={moves ?? []}
+              coveragePercentage={coverageCache[currentFEN]?.coverage ?? coveragePercentage}
+              isUserTurn={userTurn}
+              onMoveClick={handleTableMoveClick}
+            />
           </div>
+          )}
         </div>
         <div className="flex-1">
           {userTurn ? (
