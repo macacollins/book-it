@@ -7,6 +7,7 @@ import TacticsPracticePage from "./pages/TacticsPracticePage";
 import RepertoireDrillPage from "./pages/RepertoireDrillPage";
 import GradualRepertoireBuilderPage from "./pages/GradualRepertoireBuilderPage";
 import GRBDiffPage from "./pages/GRBDiffPage";
+// import GameTaskTrackingPage from "./pages/GameTaskTrackingPage";
 import { SavedGameClient } from "./database/SavedGameClient";
 import { Menubar } from "primereact/menubar";
 import "./App.css";
@@ -33,18 +34,6 @@ function App() {
       icon: "bi bi-database",
       command: () => {
         window.location.hash = "#/database";
-      },
-    },
-    // {
-    //   label: 'Game Annotator',
-    //   icon: 'bi bi-pencil',
-    //   command: () => { window.location.hash = '#/annotator'; }
-    // },
-    {
-      label: isCompact ? undefined : "Game Analysis",
-      icon: "bi bi-stars",
-      command: () => {
-        window.location.hash = "#/diff";
       },
     },
     {
@@ -74,7 +63,7 @@ function App() {
       command: () => {
         window.location.hash = "#/grb-diff";
       },
-    },
+    }
   ];
 
   if (hasGames === null) {
@@ -114,6 +103,7 @@ function App() {
               element={<GradualRepertoireBuilderPage />}
             />
             <Route path="/grb-diff" element={<GRBDiffPage />} />
+            {/* <Route path="/game-task-tracking" element={<GameTaskTrackingPage />} /> */}
             <Route path="/notes" element={<Notes />} />
           </Routes>
         </div>

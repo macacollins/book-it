@@ -119,3 +119,20 @@ export interface GradualRepertoire {
   minimumGamesThreshold: number; // min Lichess games for a move to count (default 5)
   cachedCoveragePercent: number | null; // last computed coverage % for the startingFEN
 }
+
+// Tracks the progress of a matched GRB position from a recent game
+// Should support:
+// - retrieval by ID
+// - retrieval by gameId
+// - insertion
+// - updating completionStatus and coverage
+export interface PositionUpdateTask {
+  id: string;              // uuid
+  gameId: string;          // FK → SavedGame.id (indexed)
+  grbId: string;           // FK → GradualRepertoire.id (indexed)
+  latestFEN: string;       // normalised FEN of the matched position
+  coverage: number | null; // last-computed coverage rate 0–100, or null if not yet checked
+  completionStatus: boolean; // true once coverage >= 90%
+  createdAt: number;       // Unix ms timestamp
+  updatedAt: number;       // Unix ms timestamp
+}

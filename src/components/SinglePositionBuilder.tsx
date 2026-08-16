@@ -20,6 +20,8 @@ import { LevelProgressBar } from "./LevelProgressBar";
 import { getLevelInformation } from "../analysis/getLevelInformation";
 import UsageSphere from './UsageSphere';
 import { useGRBWorkers } from "./GRBWorkerContext";
+import { Dialog } from "primereact/dialog";
+import { Accordion, AccordionTab } from "primereact/accordion";
 
 function isUserTurn(fen: string, color: RepertoireColor): boolean {
   const sideToMove = fen.split(" ")[1];
@@ -33,11 +35,23 @@ export const SinglePositionBuilder: React.FC = () => {
   const setupResult = useGradualRepertoireBuilderStore((s) => s.setupResult);
   const setSetupResult = useGradualRepertoireBuilderStore((s) => s.setSetupResult);
   const initialMoves = useGradualRepertoireBuilderStore((s) => s.initialMoves);
+  const setInitialMoves = useGradualRepertoireBuilderStore((s) => s.setInitialMoves);
 
   const repertoireId = setupResult?.id ?? "";
   const name = setupResult?.name ?? "";
   const color = (setupResult?.color ?? "white") as RepertoireColor;
   const startingFEN = setupResult?.startingFEN ?? "";
+
+  useEffect(() => {
+    // We need to populate the moves array and do the other stuff
+    // from the applyMove function
+
+    if (initialMoves) {
+
+    }
+
+
+  }, [initialMoves]);
 
   const {
     requestFrequencyAnalysis,
@@ -74,6 +88,8 @@ export const SinglePositionBuilder: React.FC = () => {
     useState<GradualRepertoire | null>(null);
   const [repertoire, setRepertoire] = useState<GradualRepertoire | null>(null);
 
+  const [ showDebugModal, setShowDebugModal ] = useState<boolean>(false);
+
   const refreshRepertoire = () => {
     GradualRepertoireClient.getById(repertoireId).then((r) => {
       if (r) {
@@ -87,13 +103,25 @@ export const SinglePositionBuilder: React.FC = () => {
     refreshRepertoire();
   }, [repertoireId]);
 
-  // If initialMoves were passed (e.g. deep-linked from GRBDiff), replay them
+  useEffect(() => {
+    clearPositionCache();
+    clearCoverageCache();
+    clearSourceMoves();
+    setGrbLines(null);
+    setMoveHistory([]);
+    setCurrentFEN(startingFEN);
+  }, [repertoireId]);
+
+ // If initialMoves were passed (e.g. deep-linked from GRBDiff), replay them
   // once after the component mounts so the board lands on the target position.
   useEffect(() => {
     console.log("top of effect");
     if (!initialMoves || initialMoves.length === 0) return;
-    const chess = new Chess(startingFEN);
-    for (const san of initialMoves) {
+    const chess = new Chess();
+
+    const fullGameArray = [...(setupResult?.startingMoves || []), ...initialMoves];
+
+    for (const san of fullGameArray) {
       try {
         chess.move(san);
       } catch {
@@ -105,20 +133,12 @@ export const SinglePositionBuilder: React.FC = () => {
     setMoveHistory(initialMoves);
     setPendingMove(null);
     setCurrentFEN(targetFEN);
+    setInitialMoves([]);
     // Defer the imperative board position call to ensure the board is mounted
     setTimeout(() => {
       chessboardRef.current?.position(targetFEN);
     }, 200);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    clearPositionCache();
-    clearCoverageCache();
-    clearSourceMoves();
-    setGrbLines(null);
-    setMoveHistory([]);
-    setCurrentFEN(startingFEN);
-  }, [repertoireId]);
 
   useEffect(() => {
     setDeleteMessage(null);
@@ -415,6 +435,11 @@ export const SinglePositionBuilder: React.FC = () => {
                   icon: showUsageSphere ? "bi bi-eye-slash" : "bi bi-eye",
                   command: () => setShowUsageSphere((v) => !v),
                 },
+                {
+                  label: "Show Debug Modal",
+                  icon: "bi bi-stars",
+                  command: () => setShowDebugModal(true),
+                },
               ],
             },
           ]}
@@ -544,6 +569,30 @@ export const SinglePositionBuilder: React.FC = () => {
           }}
         />
       )}
+
+      { showDebugModal && 
+      <Dialog header="Debug" visible={showDebugModal} onHide={() => setShowDebugModal(false)} style={{ width: "700px" }}>
+        <Accordion multiple>
+          <AccordionTab header="GradualRepertoire Builder Store">
+            <pre style={{ overflow: "auto", maxHeight: "300px" }}>{JSON.stringify({ setupResult, initialMoves }, undefined, 2)}</pre>
+          </AccordionTab>
+          <AccordionTab header="Single Position Builder Store">
+            <pre style={{ overflow: "auto", maxHeight: "300px" }}>{JSON.stringify({ moves, moveHistory, deletePending, currentFEN }, undefined, 2)}</pre>
+          </AccordionTab>
+          <AccordionTab header="GRB Workers">
+            <pre style={{ overflow: "auto", maxHeight: "300px" }}>{JSON.stringify({ coverageProgress, uncoveredPositions, loading, error, coveragePercentage }, undefined, 2)}</pre>
+          </AccordionTab>
+          <AccordionTab header="Coverage Cache">
+            <pre style={{ overflow: "auto", maxHeight: "300px" }}>{JSON.stringify({ coverageCache }, undefined, 2)}</pre>
+          </AccordionTab>
+          <AccordionTab header="Component State">
+            <pre style={{ overflow: "auto", maxHeight: "300px" }}>{JSON.stringify({ pendingMove, deleteMessage, showUsageSphere, showEditDialog, repertoireForEdit, repertoire, showDebugModal }, undefined, 2)}</pre>
+          </AccordionTab>
+          <AccordionTab header="Derived">
+            <pre style={{ overflow: "auto", maxHeight: "300px" }}>{JSON.stringify({ userTurn, name, color, startingFEN, repertoireId }, undefined, 2)}</pre>
+          </AccordionTab>
+        </Accordion>
+      </Dialog>}
     </div>
   );
 };

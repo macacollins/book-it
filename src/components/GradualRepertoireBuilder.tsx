@@ -1,7 +1,11 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { Chess } from "chess.js";
+import { InputText } from "primereact/inputtext";
+import { Button } from "primereact/button";
 import { RepertoireSetupForm } from "./RepertoireSetupForm";
 import { SinglePositionBuilder } from "./SinglePositionBuilder";
 import { GradualRepertoireClient } from "../database/GradualRepertoireClient";
+import { GradualRepertoire } from "../database/types";
 import { useGradualRepertoireBuilderStore } from "./useGradualRepertoireBuilderStore";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { GRBWorkerProvider } from "./GRBWorkerContext";
@@ -19,6 +23,21 @@ export function GradualRepertoireBuilder({
   const setSetupResult = useGradualRepertoireBuilderStore((s) => s.setSetupResult);
   const token = useGradualRepertoireBuilderStore((s) => s.token);
   const setInitialMoves = useGradualRepertoireBuilderStore((s) => s.setInitialMoves);
+
+  const [fenInput, setFenInput] = useState("");
+  const [fenError, setFenError] = useState<string | null>(null);
+  const [fullGrb, setFullGrb] = useState<GradualRepertoire | null>(null);
+
+  // Keep a full copy of the GRB (with lines) for the FEN jump feature
+  useEffect(() => {
+    if (!setupResult?.id) {
+      setFullGrb(null);
+      return;
+    }
+    GradualRepertoireClient.getById(setupResult.id).then((grb) => {
+      setFullGrb(grb ?? null);
+    });
+  }, [setupResult?.id]);
 
   useEffect(() => {
     setInitialMoves(initialMoves);
@@ -64,5 +83,11 @@ export function GradualRepertoireBuilder({
   //   return <MoveSourceChooser onSelect={setMoveSource} />;
   // }
 
-  return <GRBWorkerProvider><SinglePositionBuilder /></GRBWorkerProvider>;
+  return (
+    <>
+      <GRBWorkerProvider>
+        <SinglePositionBuilder />
+      </GRBWorkerProvider>
+    </>
+  );
 }

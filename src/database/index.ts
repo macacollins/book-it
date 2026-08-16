@@ -9,6 +9,7 @@ export { QueuedPositionClient } from "./QueuedPositionClient";
 export { QueuedGameClient } from "./QueuedGameClient";
 export { PositionNotesClient } from "./PositionNotesClient";
 export { GradualRepertoireClient } from "./GradualRepertoireClient";
+export { PositionUpdateTaskClient } from "./PositionUpdateTaskClient";
 
 // Re-export types for convenience
 export type {
@@ -24,4 +25,5 @@ export type {
   RepertoireColor,
   GameSource,
   PGNType,
+  PositionUpdateTask,
 } from "./types";

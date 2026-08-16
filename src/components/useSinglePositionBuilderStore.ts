@@ -28,6 +28,8 @@ interface SinglePositionBuilderState {
   setGrbLines: (lines: string[][] | null) => void;
 }
 
+const debugging = true;
+
 export const useSinglePositionBuilderStore = create<SinglePositionBuilderState>(
   (set, get) => ({
     moves: null,
@@ -38,20 +40,51 @@ export const useSinglePositionBuilderStore = create<SinglePositionBuilderState>(
     registeredTableMoveClick: null,
     grbLines: null,
 
-    setMoves: (moves) => set({ moves }),
-    setCurrentFEN: (fen) => set({ currentFEN: fen }),
-    setMoveHistory: (history) =>
+    setMoves: (moves) => {
+      if (debugging) {
+        console.log("Moves set to ", moves)
+      }
+      set({ moves })
+    },
+    setCurrentFEN: (fen) => {
+      if (debugging) {
+        console.log("FEN set to ", fen)
+      }
+      set({ currentFEN: fen })
+    },
+    setMoveHistory: (history) => {
+      if (debugging) {
+        console.log("Move history set to ", history)
+      }
       set((state) => ({
         moveHistory:
           typeof history === "function" ? history(state.moveHistory) : history,
-      })),
-    addToPositionCache: (key, entry) =>
+      }))
+    },
+    addToPositionCache: (key, entry) => {
+      if (debugging) {
+        console.log("adding position cache set to ", key, entry)
+      }
       set((state) => ({
         positionAnalysisCache: { ...state.positionAnalysisCache, [key]: entry },
-      })),
-    clearPositionCache: () => set({ positionAnalysisCache: {} }),
-    setDeletePending: (pending) => set({ deletePending: pending }),
-    registerTableMoveClick: (fn) => set({ registeredTableMoveClick: fn }),
+      })) 
+    },
+    clearPositionCache: () => {
+      if (debugging) {
+        console.log("Clearing position cache.")
+      }
+      set({ positionAnalysisCache: {} })
+    },
+    setDeletePending: (pending) => {
+      
+      if (debugging) {
+        console.log("Delete pending set to ", pending);
+      }
+      set({ deletePending: pending })
+    },
+    registerTableMoveClick: (fn) => {
+      set({ registeredTableMoveClick: fn })
+    },
     setGrbLines: (lines) => set({ grbLines: lines }),
     triggerDeleteClick: async (move) => {
       const { moveHistory } = get();

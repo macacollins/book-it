@@ -146,7 +146,7 @@ const ChessBoard = ({
         );
       }
 
-      function onDrop(source: any, target: any) {
+      async function onDrop(source: any, target: any) {
         console.log("onDrop called", gameRef.current);
 
         try {

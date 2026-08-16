@@ -9,6 +9,7 @@ import {
   QueuedGame,
   PositionNotes,
   GradualRepertoire,
+  PositionUpdateTask,
 } from "./types";
 
 export class BookItDatabase extends Dexie {
@@ -18,6 +19,7 @@ export class BookItDatabase extends Dexie {
   drillResults!: Table<DrillResult, string>;
   tacticsProgress!: Table<TacticsProgress, string>;
   queuedPositions!: Table<QueuedPosition, string>;
+  positionUpdateTasks!: Table<PositionUpdateTask, string>;
   queuedGames!: Table<QueuedGame, string>;
   positionNotes!: Table<PositionNotes, string>;
   gradualRepertoires!: Table<GradualRepertoire, string>;
@@ -111,6 +113,19 @@ export class BookItDatabase extends Dexie {
             }
           });
       });
+
+    this.version(5).stores({
+      savedGames: "id, timestamp, source",
+      uploadedPGNs: "id, filename, type",
+      gameAnalyses: "[gameID+repertoireID], gameID, repertoireID",
+      drillResults: "id, fen, correct, timestamp",
+      tacticsProgress: "id, lastSolvedTimestamp",
+      queuedPositions: "id, fen, timestamp",
+      queuedGames: "id, gameID, timestamp",
+      positionNotes: "fen, source, status",
+      gradualRepertoires: "id, timestamp",
+      positionUpdateTasks: "id, gameId, grbId, completionStatus, createdAt",
+    });
   }
 }
 

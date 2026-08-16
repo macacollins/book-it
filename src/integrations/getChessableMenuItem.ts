@@ -2,7 +2,7 @@ import { MenuItem } from "primereact/menuitem";
 import { getChessableURL } from "./getChessableURL";
 
 export function getChessableMenuItem(fen: string): MenuItem {
-  console.log("Copying chessable link for fen:", fen);
+  // console.log("Copying chessable link for fen:", fen);
   return {
     label: "Chessable",
     icon: "bi bi-book",

@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { Chess } from "chess.js";
+import React, { useState, useEffect, useRef } from "react";
 import { GradualRepertoireClient } from "../database/GradualRepertoireClient";
 import { SavedGameClient } from "../database/SavedGameClient";
 import { GradualRepertoire, SavedGame } from "../database/types";
@@ -9,30 +8,8 @@ import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { TinyFENDisplay } from "../pages/TinyFENDisplay";
 import { GameRefresher } from "./GameRefresher";
-import { matchGameToGRB, GRBMatchResult } from "../analysis/matchGameToGRB";
-
-interface GRBGameRow {
-  gameId: string;
-  gameTimestamp: number;
-  opponent: string;
-  match: GRBMatchResult | null;
-}
-
-function getOpponentFromPGN(pgn: string, usernames: string[]): string {
-  try {
-    const chess = new Chess();
-    chess.loadPgn(pgn);
-    const headers = chess.header();
-    const white = headers["White"] || "";
-    const black = headers["Black"] || "";
-    const normalized = usernames.map((u) => u.trim().toLowerCase());
-    if (normalized.some((u) => u === white.toLowerCase())) return black;
-    if (normalized.some((u) => u === black.toLowerCase())) return white;
-    return black || "Unknown";
-  } catch {
-    return "Unknown";
-  }
-}
+import { GRBMatchResult } from "../analysis/matchGameToGRB";
+import { GRBGameRow, GRBDiffWorkerOutbound } from "../workers/grbDiffTypes";
 
 export const GRBDiff = () => {
   const [grbs, setGrbs] = useState<GradualRepertoire[]>([]);
@@ -40,6 +17,7 @@ export const GRBDiff = () => {
   const [rows, setRows] = useState<GRBGameRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedRow, setSelectedRow] = useState<GRBGameRow | null>(null);
+  const workerRef = useRef<Worker | null>(null);
 
   const usernames = [
     localStorage.getItem("chessComUsername") || "",
@@ -50,6 +28,8 @@ export const GRBDiff = () => {
   useEffect(() => {
     GradualRepertoireClient.getAll().then(setGrbs);
   }, []);
+
+  
 
   const loadGames = async () => {
     const allGames = await SavedGameClient.getAll();
@@ -63,28 +43,48 @@ export const GRBDiff = () => {
     loadGames();
   }, []);
 
-  // Analyse games whenever GRBs or games change
+  // Analyse games via web worker whenever GRBs or games change
   useEffect(() => {
+    // Terminate any in-flight worker
+    workerRef.current?.terminate();
+    workerRef.current = null;
+
     if (!games.length) {
       setRows([]);
       return;
     }
 
+    setRows([]);
     setLoading(true);
-    const analyzed: GRBGameRow[] = games.map((game) => {
-      const match = matchGameToGRB(game, grbs, usernames);
-      const opponent = match
-        ? match.opponent
-        : getOpponentFromPGN(game.pgn, usernames);
-      return {
-        gameId: game.id,
-        gameTimestamp: game.timestamp,
-        opponent: opponent || "Unknown",
-        match,
-      };
-    });
-    setRows(analyzed);
-    setLoading(false);
+
+    const worker = new Worker(
+      new URL("../workers/GRBDiffWorker.ts", import.meta.url),
+      { type: "module" },
+    );
+    workerRef.current = worker;
+
+    worker.onmessage = (event: MessageEvent<GRBDiffWorkerOutbound>) => {
+      const msg = event.data;
+      if (msg.type === "GRB_DIFF_ROW") {
+        setRows((prev) => [...prev, msg.row]);
+      } else if (msg.type === "GRB_DIFF_COMPLETE") {
+        setLoading(false);
+        worker.terminate();
+        workerRef.current = null;
+      } else if (msg.type === "GRB_DIFF_ERROR") {
+        console.error("GRBDiff worker error:", msg.error);
+        setLoading(false);
+        worker.terminate();
+        workerRef.current = null;
+      }
+    };
+
+    worker.postMessage({ type: "ANALYZE_GRB_DIFF", games, grbs, usernames });
+
+    return () => {
+      worker.terminate();
+      workerRef.current = null;
+    };
   }, [grbs, games]);
 
   const navigateToBuilder = (
@@ -105,7 +105,10 @@ export const GRBDiff = () => {
 
   const positionBodyTemplate = (rowData: GRBGameRow) => {
     if (!rowData.match) return <span className="text-500">No Match</span>;
-    return <TinyFENDisplay fen={rowData.match.beforeFEN} />;
+    return <TinyFENDisplay 
+      fen={rowData.match.beforeFEN}
+      invert={rowData.match.userColor === "black"}
+      />;
   };
 
   const addButtonBodyTemplate = (rowData: GRBGameRow) => (
@@ -131,7 +134,6 @@ export const GRBDiff = () => {
         rows={10}
         className="p-datatable-sm"
         emptyMessage="No games found"
-        loading={loading}
       >
         <Column field="opponent" header="Opponent" style={{ width: "25%" }} />
         <Column
@@ -169,7 +171,11 @@ export const GRBDiff = () => {
             <div className="flex gap-4 justify-content-center">
               <div className="flex flex-column align-items-center gap-2">
                 <span className="font-semibold">Before uncovered move</span>
-                <TinyFENDisplay extraText="before" fen={selectedRow.match.beforeFEN} />
+                <TinyFENDisplay 
+                  extraText="before" 
+                  fen={selectedRow.match.beforeFEN} 
+                  invert={selectedRow.match.userColor === "black"}
+                  />
                 <Button
                   label="Go to Builder"
                   size="small"
@@ -180,7 +186,10 @@ export const GRBDiff = () => {
               </div>
               <div className="flex flex-column align-items-center gap-2">
                 <span className="font-semibold">After uncovered move</span>
-                <TinyFENDisplay fen={selectedRow.match.afterFEN} />
+                <TinyFENDisplay 
+                  fen={selectedRow.match.afterFEN}
+                  invert={selectedRow.match.userColor === "black"} 
+                  />
                 <Button
                   label="Go to Builder"
                   size="small"
