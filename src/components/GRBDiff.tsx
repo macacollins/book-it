@@ -12,6 +12,22 @@ import { GRBMatchResult } from "../analysis/matchGameToGRB";
 import { GRBGameRow, GRBDiffWorkerOutbound } from "../workers/grbDiffTypes";
 
 import { Chess } from "chess.js";
+
+const getFENAfterTenMoves = (pgn: string): string | null => {
+  try {
+    const chess = new Chess();
+    chess.loadPgn(pgn);
+
+    while (chess.history().length > 10) {
+      chess.undo();
+    }
+
+    return chess.fen();
+  } catch {
+    return null;
+  }
+};
+
 export const GRBDiff = () => {
   const [grbs, setGrbs] = useState<GradualRepertoire[]>([]);
   const [games, setGames] = useState<SavedGame[]>([]);
@@ -112,18 +128,31 @@ export const GRBDiff = () => {
         <p className="mb-3 text-500">
           <b>Uncovered move:</b> {rowData.match.uncoveredSAN}
         </p>
+        <p className="mb-3 text-500">
+          <b>Repertoire move{rowData.match.expectedSANs.length === 1 ? "" : "s"}:</b>{" "}
+          {rowData.match.expectedSANs.join(", ")}
+        </p>
       </div>
     );
   };
   const positionBodyTemplate = (rowData: GRBGameRow) => {
     if (!rowData.match) {
-      return <span className="text-500">{rowData.savedGame.pgn}</span>;
+      const fen = getFENAfterTenMoves(rowData.savedGame.pgn);
+      return fen ? (
+        <TinyFENDisplay fen={fen} />
+      ) : (
+        <span className="text-500">Unable to load game</span>
+      );
     }
       
     return <div>
             <p className="mb-3">
               <strong>Uncovered move:</strong>{" "}
               {rowData.match.uncoveredSAN}
+            </p>
+            <p className="mb-3">
+              <strong>Repertoire move{rowData.match.expectedSANs.length === 1 ? "" : "s"}:</strong>{" "}
+              {rowData.match.expectedSANs.join(", ")}
             </p>
             <p className="mb-3 text-500">
               Choose which position to navigate to in the builder:

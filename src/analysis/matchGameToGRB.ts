@@ -11,6 +11,8 @@ export interface GRBMatchResult {
   /** SAN moves from GRB startingFEN to the position just after the uncovered move */
   movesToAfter: string[];
   uncoveredSAN: string;
+  /** Repertoire SAN moves available before the uncovered move */
+  expectedSANs: string[];
   userColor: "white" | "black";
   opponent: string;
 }
@@ -49,18 +51,28 @@ function findBestGRB(
   return bestGRB;
 }
 
+interface RepertoirePositions {
+  coveredFENs: Set<string>;
+  movesByFEN: Map<string, Set<string>>;
+}
+
 /**
- * Build the set of covered (normalised) FENs from a GRB's lines.
+ * Build covered positions and the repertoire moves available from each one.
  */
-function buildCoveredFENs(grb: GradualRepertoire): Set<string> {
+function buildRepertoirePositions(grb: GradualRepertoire): RepertoirePositions {
   const coveredFENs = new Set<string>();
+  const movesByFEN = new Map<string, Set<string>>();
   coveredFENs.add(normalizePosition(grb.startingFEN));
 
   for (const line of grb.lines) {
     const lineChess = new Chess(grb.startingFEN);
     for (const san of line) {
       try {
-        lineChess.move(san);
+        const beforeFEN = normalizePosition(lineChess.fen());
+        const repertoireMove = lineChess.move(san);
+        const moves = movesByFEN.get(beforeFEN) ?? new Set<string>();
+        moves.add(repertoireMove.san);
+        movesByFEN.set(beforeFEN, moves);
         coveredFENs.add(normalizePosition(lineChess.fen()));
       } catch {
         break;
@@ -68,7 +80,7 @@ function buildCoveredFENs(grb: GradualRepertoire): Set<string> {
     }
   }
 
-  return coveredFENs;
+  return { coveredFENs, movesByFEN };
 }
 
 interface Divergence {
@@ -77,6 +89,7 @@ interface Divergence {
   movesToBefore: string[];
   movesToAfter: string[];
   uncoveredSAN: string;
+  expectedSANs: string[];
 }
 
 /**
@@ -87,7 +100,7 @@ function findDivergence(
   grb: GradualRepertoire,
   history: VerboseMove[],
 ): Divergence | null {
-  const coveredFENs = buildCoveredFENs(grb);
+  const { coveredFENs, movesByFEN } = buildRepertoirePositions(grb);
   const movesFromStart: string[] = [];
 
   for (let i = grb.startingMoves.length; i < history.length; i++) {
@@ -100,6 +113,7 @@ function findDivergence(
         movesToBefore: [...movesFromStart],
         movesToAfter: [...movesFromStart, move.san],
         uncoveredSAN: move.san,
+        expectedSANs: [...(movesByFEN.get(normalizePosition(move.before)) ?? [])],
       };
     }
 
