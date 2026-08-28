@@ -6,6 +6,7 @@ export interface GRBGameRow {
   gameTimestamp: number;
   opponent: string;
   match: GRBMatchResult | null;
+  savedGame: SavedGame;
 }
 
 // ─── Inbound (main thread → worker) ────────────────────────────────────────

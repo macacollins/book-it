@@ -11,6 +11,7 @@ import { GameRefresher } from "./GameRefresher";
 import { GRBMatchResult } from "../analysis/matchGameToGRB";
 import { GRBGameRow, GRBDiffWorkerOutbound } from "../workers/grbDiffTypes";
 
+import { Chess } from "chess.js";
 export const GRBDiff = () => {
   const [grbs, setGrbs] = useState<GradualRepertoire[]>([]);
   const [games, setGames] = useState<SavedGame[]>([]);
@@ -28,8 +29,6 @@ export const GRBDiff = () => {
   useEffect(() => {
     GradualRepertoireClient.getAll().then(setGrbs);
   }, []);
-
-  
 
   const loadGames = async () => {
     const allGames = await SavedGameClient.getAll();
@@ -103,12 +102,64 @@ export const GRBDiff = () => {
   const formatDate = (timestamp: number) =>
     new Date(timestamp).toLocaleDateString();
 
-  const positionBodyTemplate = (rowData: GRBGameRow) => {
+  const repertoireNameBodyTemplate = (rowData: GRBGameRow) => {
     if (!rowData.match) return <span className="text-500">No Match</span>;
-    return <TinyFENDisplay 
-      fen={rowData.match.beforeFEN}
-      invert={rowData.match.userColor === "black"}
-      />;
+    return (
+      <div>
+        <p className="mb-3">
+          <strong>Repertoire:</strong> {rowData.match.matchedGRB.name}
+        </p>
+        <p className="mb-3 text-500">
+          <b>Uncovered move:</b> {rowData.match.uncoveredSAN}
+        </p>
+      </div>
+    );
+  };
+  const positionBodyTemplate = (rowData: GRBGameRow) => {
+    if (!rowData.match) {
+      return <span className="text-500">{rowData.savedGame.pgn}</span>;
+    }
+      
+    return <div>
+            <p className="mb-3">
+              <strong>Uncovered move:</strong>{" "}
+              {rowData.match.uncoveredSAN}
+            </p>
+            <p className="mb-3 text-500">
+              Choose which position to navigate to in the builder:
+            </p>
+            <div className="flex gap-4 justify-content-center">
+              <div className="flex flex-column align-items-center gap-2">
+                <span className="font-semibold">Before uncovered move</span>
+                <TinyFENDisplay 
+                  extraText="before" 
+                  fen={rowData.match.beforeFEN} 
+                  invert={rowData.match.userColor === "black"}
+                  />
+                <Button
+                  label="Go to Builder"
+                  size="small"
+                  onClick={() =>
+                    navigateToBuilder(rowData, "movesToBefore")
+                  }
+                />
+              </div>
+              <div className="flex flex-column align-items-center gap-2">
+                <span className="font-semibold">After uncovered move</span>
+                <TinyFENDisplay 
+                  fen={rowData.match.afterFEN}
+                  invert={rowData.match.userColor === "black"} 
+                  />
+                <Button
+                  label="Go to Builder"
+                  size="small"
+                  onClick={() =>
+                    navigateToBuilder(rowData, "movesToAfter")
+                  }
+                />
+              </div>
+            </div>
+          </div>;
   };
 
   const addButtonBodyTemplate = (rowData: GRBGameRow) => (
@@ -131,11 +182,17 @@ export const GRBDiff = () => {
       <DataTable
         value={rows}
         paginator
+        loading={loading}
         rows={10}
         className="p-datatable-sm"
         emptyMessage="No games found"
       >
         <Column field="opponent" header="Opponent" style={{ width: "25%" }} />
+        <Column
+          header="Repertoire"
+          body={repertoireNameBodyTemplate}
+          style={{ width: "25%" }}
+        />
         <Column
           header="Position"
           body={positionBodyTemplate}

@@ -2,7 +2,6 @@ import {
   createMoveTree,
   addStartNode,
   addMoveNode,
-  updateNotes,
   generateMoveTreeFromPGN,
   moveTreeToJSON,
   moveTreeFromJSON,

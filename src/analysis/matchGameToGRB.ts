@@ -1,4 +1,4 @@
-import { Chess } from "chess.js";
+import { Chess, Move } from "chess.js";
 import { GradualRepertoire } from "../database/types";
 import { SavedGame } from "../database/types";
 
@@ -21,6 +21,93 @@ export interface GRBMatchResult {
  */
 function normalizePosition(fen: string): string {
   return fen.split(" ").slice(0, 4).join(" ");
+}
+
+type VerboseMove = Move;
+
+/**
+ * Find the GRB whose startingMoves is the longest prefix of gameSANs.
+ */
+function findBestGRB(
+  gameSANs: string[],
+  candidates: GradualRepertoire[],
+): GradualRepertoire | null {
+  let bestGRB: GradualRepertoire | null = null;
+  let bestMatchLength = -1;
+
+  for (const grb of candidates) {
+    const sm = grb.startingMoves;
+    if (sm.length > gameSANs.length) continue;
+
+    const isPrefix = sm.every((san, i) => gameSANs[i] === san);
+    if (isPrefix && sm.length > bestMatchLength) {
+      bestMatchLength = sm.length;
+      bestGRB = grb;
+    }
+  }
+
+  return bestGRB;
+}
+
+/**
+ * Build the set of covered (normalised) FENs from a GRB's lines.
+ */
+function buildCoveredFENs(grb: GradualRepertoire): Set<string> {
+  const coveredFENs = new Set<string>();
+  coveredFENs.add(normalizePosition(grb.startingFEN));
+
+  for (const line of grb.lines) {
+    const lineChess = new Chess(grb.startingFEN);
+    for (const san of line) {
+      try {
+        lineChess.move(san);
+        coveredFENs.add(normalizePosition(lineChess.fen()));
+      } catch {
+        break;
+      }
+    }
+  }
+
+  return coveredFENs;
+}
+
+interface Divergence {
+  beforeFEN: string;
+  afterFEN: string;
+  movesToBefore: string[];
+  movesToAfter: string[];
+  uncoveredSAN: string;
+}
+
+/**
+ * Walk game moves beyond the GRB's startingMoves prefix and find the first
+ * position that is not covered by any of the GRB's lines.
+ */
+function findDivergence(
+  grb: GradualRepertoire,
+  history: VerboseMove[],
+): Divergence | null {
+  const coveredFENs = buildCoveredFENs(grb);
+  const movesFromStart: string[] = [];
+
+  for (let i = grb.startingMoves.length; i < history.length; i++) {
+    const move = history[i];
+
+    if (!coveredFENs.has(normalizePosition(move.after))) {
+      return {
+        beforeFEN: move.before,
+        afterFEN: move.after,
+        movesToBefore: [...movesFromStart],
+        movesToAfter: [...movesFromStart, move.san],
+        uncoveredSAN: move.san,
+      };
+    }
+
+    movesFromStart.push(move.san);
+  }
+
+  // The entire game is covered — no divergence
+  return null;
 }
 
 /**
@@ -84,62 +171,64 @@ export function matchGameToGRB(
   // Full ordered SAN sequence of the game
   const gameSANs = history.map((m) => m.san);
 
-  // Find the GRB whose startingMoves is the longest prefix of the game
-  let bestGRB: GradualRepertoire | null = null;
-  let bestMatchLength = -1;
-
-  for (const grb of colorMatched) {
-    const sm = grb.startingMoves;
-    if (sm.length > gameSANs.length) continue;
-
-    const isPrefix = sm.every((san, i) => gameSANs[i] === san);
-    if (isPrefix && sm.length > bestMatchLength) {
-      bestMatchLength = sm.length;
-      bestGRB = grb;
-    }
-  }
-
+  const bestGRB = findBestGRB(gameSANs, colorMatched);
   if (!bestGRB) return null;
 
-  // Build the set of covered (normalised) FENs from the GRB's lines
-  const coveredFENs = new Set<string>();
-  coveredFENs.add(normalizePosition(bestGRB.startingFEN));
+  const divergence = findDivergence(bestGRB, history);
+  if (!divergence) return null;
 
-  for (const line of bestGRB.lines) {
-    const lineChess = new Chess(bestGRB.startingFEN);
-    for (const san of line) {
-      try {
-        lineChess.move(san);
-        coveredFENs.add(normalizePosition(lineChess.fen()));
-      } catch {
-        break;
-      }
-    }
+  return {
+    matchedGRB: bestGRB,
+    ...divergence,
+    userColor,
+    opponent,
+  };
+}
+
+/**
+ * Given a raw PGN string for a single game (of any origin — not necessarily
+ * the app user's own game) and the full list of GradualRepertoires, find the
+ * best-matching GRB and locate the first uncovered position, exactly like
+ * {@link matchGameToGRB} but without any username/colour filtering: every GRB
+ * is considered regardless of colour, and the longest startingMoves prefix
+ * wins.
+ *
+ * The returned `userColor` holds the *matched GRB's own* colour (used purely
+ * to orient the board display) and `opponent` holds a "White vs Black"
+ * string built from the PGN headers, since there is no concept of "the user"
+ * for an arbitrary uploaded game.
+ *
+ * Returns null when the PGN fails to parse, no GRB matches, or the entire
+ * game is covered.
+ */
+export function matchGamePGNToGRB(
+  pgn: string,
+  grbs: GradualRepertoire[],
+): GRBMatchResult | null {
+  const chess = new Chess();
+  try {
+    chess.loadPgn(pgn);
+  } catch {
+    return null;
   }
 
-  // Walk game moves beyond the startingMoves prefix and find the first
-  // position that is not covered by the GRB
-  const movesFromStart: string[] = [];
+  const history = chess.history({ verbose: true });
+  const gameSANs = history.map((m) => m.san);
 
-  for (let i = bestGRB.startingMoves.length; i < history.length; i++) {
-    const move = history[i];
+  const bestGRB = findBestGRB(gameSANs, grbs);
+  if (!bestGRB) return null;
 
-    if (!coveredFENs.has(normalizePosition(move.after))) {
-      return {
-        matchedGRB: bestGRB,
-        beforeFEN: move.before,
-        afterFEN: move.after,
-        movesToBefore: [...movesFromStart],
-        movesToAfter: [...movesFromStart, move.san],
-        uncoveredSAN: move.san,
-        userColor,
-        opponent,
-      };
-    }
+  const divergence = findDivergence(bestGRB, history);
+  if (!divergence) return null;
 
-    movesFromStart.push(move.san);
-  }
+  const headers = chess.header();
+  const white = headers["White"] || "White";
+  const black = headers["Black"] || "Black";
 
-  // The entire game is covered — no divergence
-  return null;
+  return {
+    matchedGRB: bestGRB,
+    ...divergence,
+    userColor: bestGRB.color,
+    opponent: `${white} vs ${black}`,
+  };
 }

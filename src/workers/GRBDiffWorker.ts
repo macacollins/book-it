@@ -41,6 +41,7 @@ ctx.onmessage = (event: MessageEvent<GRBDiffWorkerInbound>) => {
         gameTimestamp: game.timestamp,
         opponent: opponent || "Unknown",
         match,
+        savedGame: game,
       };
       ctx.postMessage({
         type: "GRB_DIFF_ROW",
