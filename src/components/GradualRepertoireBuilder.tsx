@@ -22,7 +22,6 @@ export function GradualRepertoireBuilder({
   const setupResult = useGradualRepertoireBuilderStore((s) => s.setupResult);
   const setSetupResult = useGradualRepertoireBuilderStore((s) => s.setSetupResult);
   const token = useGradualRepertoireBuilderStore((s) => s.token);
-  const setInitialMoves = useGradualRepertoireBuilderStore((s) => s.setInitialMoves);
 
   const [fenInput, setFenInput] = useState("");
   const [fenError, setFenError] = useState<string | null>(null);
@@ -38,12 +37,6 @@ export function GradualRepertoireBuilder({
       setFullGrb(grb ?? null);
     });
   }, [setupResult?.id]);
-
-  useEffect(() => {
-    setInitialMoves(initialMoves);
-    console.log("Setting initial moves in gradualRepertoirebuilder.tsx")
-
-  }, [initialMoves]);
 
   // If a repertoire ID was passed via URL, load it and skip the setup form
   useEffect(() => {
@@ -86,7 +79,7 @@ export function GradualRepertoireBuilder({
   return (
     <>
       <GRBWorkerProvider>
-        <SinglePositionBuilder />
+        <SinglePositionBuilder initialMoves={initialMoves} />
       </GRBWorkerProvider>
     </>
   );

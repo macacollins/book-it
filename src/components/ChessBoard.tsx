@@ -17,6 +17,7 @@ export interface ChessBoardProps {
   gameRef?: any;
   dropOffBoard?: string;
   arrows?: ReactElement[];
+  onBoardReady?: () => void;
 
   size?: string;
   moveCallback?: (move: Move) => boolean;
@@ -28,6 +29,7 @@ const ChessBoard = ({
   invert = false,
   fen = "r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R",
   arrows = [],
+  onBoardReady,
   draggable = false,
   dropOffBoard = "snapback",
   madeMoveRef = { current: true },
@@ -232,6 +234,7 @@ const ChessBoard = ({
         /*global Chessboard */
         // @ts-expect-error It's OK until we get a react chess board
         chessboardRef.current = Chessboard(finalID, config);
+        onBoardReady?.();
       } catch (e) {
         // This fires sometimes when it does not affect the experience
         console.log("Got exception", e);

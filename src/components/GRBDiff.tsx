@@ -146,17 +146,7 @@ export const GRBDiff = () => {
     }
       
     return <div>
-            <p className="mb-3">
-              <strong>Uncovered move:</strong>{" "}
-              {rowData.match.uncoveredSAN}
-            </p>
-            <p className="mb-3">
-              <strong>Repertoire move{rowData.match.expectedSANs.length === 1 ? "" : "s"}:</strong>{" "}
-              {rowData.match.expectedSANs.join(", ")}
-            </p>
-            <p className="mb-3 text-500">
-              Choose which position to navigate to in the builder:
-            </p>
+            
             <div className="flex gap-4 justify-content-center">
               <div className="flex flex-column align-items-center gap-2">
                 <span className="font-semibold">Before uncovered move</span>
@@ -211,7 +201,6 @@ export const GRBDiff = () => {
       <DataTable
         value={rows}
         paginator
-        loading={loading}
         rows={10}
         className="p-datatable-sm"
         emptyMessage="No games found"

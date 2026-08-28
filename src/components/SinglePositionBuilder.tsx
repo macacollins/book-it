@@ -31,27 +31,36 @@ function isUserTurn(fen: string, color: RepertoireColor): boolean {
   );
 }
 
-export const SinglePositionBuilder: React.FC = () => {
+interface SinglePositionBuilderProps {
+  initialMoves?: string[];
+}
+
+function buildPosition(startingFEN: string, moves: string[]) {
+  const chess = new Chess(startingFEN);
+  const appliedMoves: string[] = [];
+
+  for (const san of moves) {
+    try {
+      chess.move(san);
+      appliedMoves.push(san);
+    } catch {
+      break;
+    }
+  }
+
+  return { chess, appliedMoves, fen: chess.fen() };
+}
+
+export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
+  initialMoves,
+}) => {
   const setupResult = useGradualRepertoireBuilderStore((s) => s.setupResult);
   const setSetupResult = useGradualRepertoireBuilderStore((s) => s.setSetupResult);
-  const initialMoves = useGradualRepertoireBuilderStore((s) => s.initialMoves);
-  const setInitialMoves = useGradualRepertoireBuilderStore((s) => s.setInitialMoves);
 
   const repertoireId = setupResult?.id ?? "";
   const name = setupResult?.name ?? "";
   const color = (setupResult?.color ?? "white") as RepertoireColor;
   const startingFEN = setupResult?.startingFEN ?? "";
-
-  useEffect(() => {
-    // We need to populate the moves array and do the other stuff
-    // from the applyMove function
-
-    if (initialMoves) {
-
-    }
-
-
-  }, [initialMoves]);
 
   const {
     requestFrequencyAnalysis,
@@ -64,6 +73,7 @@ export const SinglePositionBuilder: React.FC = () => {
   } = useGRBWorkers();
 
   const moves = useSinglePositionBuilderStore((s) => s.moves);
+  const setMoves = useSinglePositionBuilderStore((s) => s.setMoves);
   const moveHistory = useSinglePositionBuilderStore((s) => s.moveHistory);
   const setMoveHistory = useSinglePositionBuilderStore((s) => s.setMoveHistory);
   const clearPositionCache = useSinglePositionBuilderStore((s) => s.clearPositionCache);
@@ -82,6 +92,7 @@ export const SinglePositionBuilder: React.FC = () => {
 
   const chessboardRef = useRef<any>(null);
   const gameRef = useRef<Chess>(new Chess());
+  const currentFENRef = useRef(currentFEN);
   const actionsMenuRef = useRef<Menu>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [repertoireForEdit, setRepertoireForEdit] =
@@ -108,37 +119,26 @@ export const SinglePositionBuilder: React.FC = () => {
     clearCoverageCache();
     clearSourceMoves();
     setGrbLines(null);
-    setMoveHistory([]);
-    setCurrentFEN(startingFEN);
   }, [repertoireId]);
 
- // If initialMoves were passed (e.g. deep-linked from GRBDiff), replay them
-  // once after the component mounts so the board lands on the target position.
   useEffect(() => {
-    console.log("top of effect");
-    if (!initialMoves || initialMoves.length === 0) return;
-    const chess = new Chess();
-
-    const fullGameArray = [...(setupResult?.startingMoves || []), ...initialMoves];
-
-    for (const san of fullGameArray) {
-      try {
-        chess.move(san);
-      } catch {
-        break;
-      }
-    }
-    const targetFEN = chess.fen();
-    gameRef.current = chess;
-    setMoveHistory(initialMoves);
+    if (!startingFEN) return;
+    const position = buildPosition(startingFEN, initialMoves ?? []);
+    gameRef.current = position.chess;
+    setMoves(null);
+    setMoveHistory(position.appliedMoves);
+    setDeletePending(null);
     setPendingMove(null);
-    setCurrentFEN(targetFEN);
-    setInitialMoves([]);
-    // Defer the imperative board position call to ensure the board is mounted
-    setTimeout(() => {
-      chessboardRef.current?.position(targetFEN);
-    }, 200);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    setCurrentFEN(position.fen);
+  }, [initialMoves, repertoireId, startingFEN]);
+
+  useEffect(() => {
+    if (currentFEN && chessboardRef.current) {
+      chessboardRef.current.position(currentFEN);
+    }
+  }, [currentFEN]);
+
+  currentFENRef.current = currentFEN;
 
   useEffect(() => {
     setDeleteMessage(null);
@@ -486,7 +486,11 @@ export const SinglePositionBuilder: React.FC = () => {
             moveCallback={handleMoveCallback}
             chessboardRef={chessboardRef}
             gameRef={gameRef}
-            moves={initialMoves}
+            onBoardReady={() => {
+              if (currentFENRef.current) {
+                chessboardRef.current?.position(currentFENRef.current);
+              }
+            }}
             size="376px"
           />
           {showUsageSphere && (

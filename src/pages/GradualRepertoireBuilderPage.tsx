@@ -1,7 +1,6 @@
 import React from "react";
 import { useParams, useSearchParams } from "react-router";
 import { GradualRepertoireBuilder } from "../components/GradualRepertoireBuilder";
-import { GRBWorkerProvider } from "../components/GRBWorkerContext";
 
 const GradualRepertoireBuilderPage = () => {
   const { repertoireId } = useParams<{ repertoireId?: string }>();
@@ -12,14 +11,12 @@ const GradualRepertoireBuilderPage = () => {
     : undefined;
 
   return (
-    <GRBWorkerProvider>
-      <div className="">
-        <GradualRepertoireBuilder
-          preselectedRepertoireId={repertoireId}
-          initialMoves={initialMoves}
-        />
-      </div>
-    </GRBWorkerProvider>
+    <div className="">
+      <GradualRepertoireBuilder
+        preselectedRepertoireId={repertoireId}
+        initialMoves={initialMoves}
+      />
+    </div>
   );
 };
 
