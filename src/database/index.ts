@@ -10,7 +10,7 @@ export { QueuedGameClient } from "./QueuedGameClient";
 export { PositionNotesClient } from "./PositionNotesClient";
 export { GradualRepertoireClient } from "./GradualRepertoireClient";
 export { PositionUpdateTaskClient } from "./PositionUpdateTaskClient";
-export { GRBDiffCacheClient } from "./GRBDiffCacheClient";
+// export { GRBDiffCacheClient } from "./GRBDiffCacheClient";
 
 // Re-export types for convenience
 export type {

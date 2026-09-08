@@ -6,7 +6,7 @@ import RepertoireDiffPage from "./pages/RepertoireDiffPage";
 import TacticsPracticePage from "./pages/TacticsPracticePage";
 import RepertoireDrillPage from "./pages/RepertoireDrillPage";
 import GradualRepertoireBuilderPage from "./pages/GradualRepertoireBuilderPage";
-import GRBDiffPage from "./pages/GRBDiffPage";
+// import GRBDiffPage from "./pages/GRBDiffPage";
 // import GameTaskTrackingPage from "./pages/GameTaskTrackingPage";
 import { SavedGameClient } from "./database/SavedGameClient";
 import { Menubar } from "primereact/menubar";
@@ -102,7 +102,7 @@ function App() {
               path="/gradual-repertoire/:repertoireId"
               element={<GradualRepertoireBuilderPage />}
             />
-            <Route path="/grb-diff" element={<GRBDiffPage />} />
+            {/* <Route path="/grb-diff" element={<GRBDiffPage />} /> */}
             {/* <Route path="/game-task-tracking" element={<GameTaskTrackingPage />} /> */}
             <Route path="/notes" element={<Notes />} />
           </Routes>
