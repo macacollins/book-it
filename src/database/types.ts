@@ -136,3 +136,10 @@ export interface PositionUpdateTask {
   createdAt: number;       // Unix ms timestamp
   updatedAt: number;       // Unix ms timestamp
 }
+
+export interface GRBDiffCacheEntry {
+  gameId: string;
+  inputSignature: string;
+  analyzedAt: number;
+  row: import("../workers/grbDiffTypes").GRBGameRow;
+}

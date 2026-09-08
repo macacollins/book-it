@@ -1,15 +1,19 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { GradualRepertoireClient } from "../database/GradualRepertoireClient";
 import { SavedGameClient } from "../database/SavedGameClient";
-import { GradualRepertoire, SavedGame } from "../database/types";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
+import { ProgressSpinner } from "primereact/progressspinner";
 import { TinyFENDisplay } from "../pages/TinyFENDisplay";
 import { GameRefresher } from "./GameRefresher";
-import { GRBMatchResult } from "../analysis/matchGameToGRB";
 import { GRBGameRow, GRBDiffWorkerOutbound } from "../workers/grbDiffTypes";
+import {
+  getGRBDiffInputSignature,
+  GRB_DIFF_CACHE_MAX_AGE_MS,
+} from "../analysis/grbDiffCache";
+import { GRBDiffCacheClient } from "../database/GRBDiffCacheClient";
 
 import { Chess } from "chess.js";
 
@@ -29,47 +33,73 @@ const getFENAfterTenMoves = (pgn: string): string | null => {
 };
 
 export const GRBDiff = () => {
-  const [grbs, setGrbs] = useState<GradualRepertoire[]>([]);
-  const [games, setGames] = useState<SavedGame[]>([]);
   const [rows, setRows] = useState<GRBGameRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedRow, setSelectedRow] = useState<GRBGameRow | null>(null);
   const workerRef = useRef<Worker | null>(null);
+  const requestIdRef = useRef(0);
 
-  const usernames = [
-    localStorage.getItem("chessComUsername") || "",
-    localStorage.getItem("lichessUsername") || "",
-  ].filter(Boolean);
-
-  // Load all GRBs on mount
-  useEffect(() => {
-    GradualRepertoireClient.getAll().then(setGrbs);
-  }, []);
-
-  const loadGames = async () => {
-    const allGames = await SavedGameClient.getAll();
-    const sorted = allGames
-      .sort((a, b) => b.timestamp - a.timestamp)
-      .slice(0, 50);
-    setGames(sorted);
-  };
-
-  useEffect(() => {
-    loadGames();
-  }, []);
-
-  // Analyse games via web worker whenever GRBs or games change
-  useEffect(() => {
-    // Terminate any in-flight worker
+  const loadAnalysis = useCallback(async () => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
     workerRef.current?.terminate();
     workerRef.current = null;
 
+    const usernames = [
+      localStorage.getItem("chessComUsername") || "",
+      localStorage.getItem("lichessUsername") || "",
+    ].filter(Boolean);
+    const [allGames, grbs] = await Promise.all([
+      SavedGameClient.getAll(),
+      GradualRepertoireClient.getAll(),
+    ]);
+
+    if (requestId !== requestIdRef.current) return;
+
+    const games = allGames
+      .sort((left, right) => right.timestamp - left.timestamp)
+      .slice(0, 50);
     if (!games.length) {
       setRows([]);
+      setLoading(false);
       return;
     }
 
-    setRows([]);
+    const inputSignatures = Object.fromEntries(
+      games.map((game) => [
+        game.id,
+        getGRBDiffInputSignature(game, grbs, usernames),
+      ]),
+    );
+    const cachedRows = await GRBDiffCacheClient.getByGameIds(
+      games.map((game) => game.id),
+    );
+    if (requestId !== requestIdRef.current) return;
+
+    const cachedByGameId = new Map(
+      cachedRows.map((entry) => [entry.gameId, entry]),
+    );
+    const cachedDisplayRows = games.flatMap((game) => {
+      const entry = cachedByGameId.get(game.id);
+      return entry ? [entry.row] : [];
+    });
+    if (cachedDisplayRows.length > 0) setRows(cachedDisplayRows);
+
+    const staleBefore = Date.now() - GRB_DIFF_CACHE_MAX_AGE_MS;
+    const gamesToAnalyze = games.filter((game) => {
+      const entry = cachedByGameId.get(game.id);
+      return (
+        !entry ||
+        entry.inputSignature !== inputSignatures[game.id] ||
+        entry.analyzedAt < staleBefore
+      );
+    });
+
+    if (!gamesToAnalyze.length) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     const worker = new Worker(
@@ -80,10 +110,25 @@ export const GRBDiff = () => {
 
     worker.onmessage = (event: MessageEvent<GRBDiffWorkerOutbound>) => {
       const msg = event.data;
-      if (msg.type === "GRB_DIFF_ROW") {
-        setRows((prev) => [...prev, msg.row]);
-      } else if (msg.type === "GRB_DIFF_COMPLETE") {
-        setLoading(false);
+      if (msg.requestId !== requestIdRef.current) return;
+
+      if (msg.type === "GRB_DIFF_COMPLETE") {
+        void GRBDiffCacheClient.putRows(msg.rows, inputSignatures)
+          .then(() => {
+            if (requestId !== requestIdRef.current) return;
+            const freshRows = new Map(msg.rows.map((row) => [row.gameId, row]));
+            setRows(games.flatMap((game) => {
+              const cached = cachedByGameId.get(game.id)?.row;
+              const fresh = freshRows.get(game.id);
+              return fresh || cached ? [fresh || cached!] : [];
+            }));
+          })
+          .catch((error) => {
+            console.error("Unable to cache GRBDiff results:", error);
+          })
+          .finally(() => {
+            if (requestId === requestIdRef.current) setLoading(false);
+          });
         worker.terminate();
         workerRef.current = null;
       } else if (msg.type === "GRB_DIFF_ERROR") {
@@ -94,13 +139,22 @@ export const GRBDiff = () => {
       }
     };
 
-    worker.postMessage({ type: "ANALYZE_GRB_DIFF", games, grbs, usernames });
+    worker.postMessage({
+      type: "ANALYZE_GRB_DIFF",
+      requestId,
+      games: gamesToAnalyze,
+      grbs,
+      usernames,
+    });
+  }, []);
 
+  useEffect(() => {
+    void loadAnalysis();
     return () => {
-      worker.terminate();
+      workerRef.current?.terminate();
       workerRef.current = null;
     };
-  }, [grbs, games]);
+  }, [loadAnalysis]);
 
   const navigateToBuilder = (
     row: GRBGameRow,
@@ -195,7 +249,8 @@ export const GRBDiff = () => {
     <div className="p-4">
       <div className="flex align-items-center gap-2 mb-3">
         <h1 className="m-0">GRB Game Analysis</h1>
-        <GameRefresher onGamesRefreshed={loadGames} />
+        {loading && <ProgressSpinner style={{ width: "24px", height: "24px" }} />}
+        <GameRefresher onGamesRefreshed={loadAnalysis} />
       </div>
 
       <DataTable

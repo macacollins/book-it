@@ -40,10 +40,15 @@ export function GradualRepertoireBuilder({
 
   // If a repertoire ID was passed via URL, load it and skip the setup form
   useEffect(() => {
-    console.log("Running effect in gradualRepertoirebuilder.tsx")
     if (!preselectedRepertoireId) return;
+    let cancelled = false;
+
     GradualRepertoireClient.getById(preselectedRepertoireId).then((grb) => {
-      if (grb) {
+      if (
+        grb &&
+        !cancelled &&
+        useGradualRepertoireBuilderStore.getState().setupResult?.id !== grb.id
+      ) {
         setSetupResult({
           id: grb.id,
           name: grb.name,
@@ -54,6 +59,10 @@ export function GradualRepertoireBuilder({
         });
       }
     });
+
+    return () => {
+      cancelled = true;
+    };
   }, [preselectedRepertoireId]);
 
   if (!token) {

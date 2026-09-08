@@ -22,6 +22,8 @@ import UsageSphere from './UsageSphere';
 import { useGRBWorkers } from "./GRBWorkerContext";
 import { Dialog } from "primereact/dialog";
 import { Accordion, AccordionTab } from "primereact/accordion";
+import crossReferenceGames from "../analysis/crossReferenceGames";
+import { GradualGamesTable } from "./GradualGamesTable";
 
 function isUserTurn(fen: string, color: RepertoireColor): boolean {
   const sideToMove = fen.split(" ")[1];
@@ -82,6 +84,8 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
   const currentFEN = useSinglePositionBuilderStore((s) => s.currentFEN);
   const setCurrentFEN = useSinglePositionBuilderStore((s) => s.setCurrentFEN);
   const registerTableMoveClick = useSinglePositionBuilderStore((s) => s.registerTableMoveClick);  const setGrbLines = useSinglePositionBuilderStore((s) => s.setGrbLines);  const movesRef = useRef<MoveFrequencyResult[] | null>(null);
+  const gameMatches = useSinglePositionBuilderStore((s) => s.gameMatches);
+  const setGameMatches = useSinglePositionBuilderStore((s) => s.setGameMatches);
   const [pendingMove, setPendingMove] = useState<Move | null>(null);
   const clearCoverageCache = useCoverageCache((state) => state.clearCache);
   const coverageCache = useCoverageCache((state) => state.coverageCache);
@@ -89,6 +93,7 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
 
   const [deleteMessage, setDeleteMessage] = useState<string | null>(null);
   const [showUsageSphere, setShowUsageSphere] = useState(true);
+  const [selectedView, setSelectedView] = useState<"moves" | "games">("moves");
 
   const chessboardRef = useRef<any>(null);
   const gameRef = useRef<Chess>(new Chess());
@@ -270,6 +275,18 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [moveHistory, startingFEN, uncoveredPositions, currentFEN]);
 
+  const loadGameMatches = async () => {
+    console.log("Loadinbg game matches.")
+    if (!repertoire) return;
+    setGameMatches(await crossReferenceGames(repertoire));
+  }
+
+  function syncLoadGameMatches() {
+    (async () => {
+      await loadGameMatches();
+    })();
+  }
+  useEffect(syncLoadGameMatches, []);
   const handleTableMoveClick = useCallback((move: MoveFrequencyResult) => {
     const chess = new Chess(currentFEN);
     const playedMove = chess.move(move.san);
@@ -431,6 +448,11 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
                   },
                 },
                 {
+                  label: "Cross-reference Games",
+                  icon: "bi bi-controller",
+                  command: loadGameMatches,
+                },
+                {
                   label: showUsageSphere ? "Hide Usage Sphere" : "Show Usage Sphere",
                   icon: showUsageSphere ? "bi bi-eye-slash" : "bi bi-eye",
                   command: () => setShowUsageSphere((v) => !v),
@@ -505,7 +527,21 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
           )}
         </div>
         <div className="flex-1">
-          {userTurn ? (
+          <div className="flex gap-2 mb-3">
+            <Button
+              label="Moves"
+              outlined={selectedView !== "moves"}
+              onClick={() => setSelectedView("moves")}
+            />
+            <Button
+              label="Games"
+              outlined={selectedView !== "games"}
+              onClick={() => setSelectedView("games")}
+            />
+          </div>
+          {selectedView === "moves" ? (
+            <>
+              {userTurn ? (
             <>
               <h4>What move do you want to play in this position?</h4>
               {pendingMove ? (
@@ -541,6 +577,10 @@ export const SinglePositionBuilder: React.FC<SinglePositionBuilderProps> = ({
           <MoveSelectionTable />
           {moves && moves.length === 0 && (
             <p>No moves found in the database for this position.</p>
+          )}
+            </>
+          ) : (
+            <GradualGamesTable loadData={syncLoadGameMatches}/>
           )}
         </div>
       </div>

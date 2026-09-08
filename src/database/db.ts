@@ -10,6 +10,7 @@ import {
   PositionNotes,
   GradualRepertoire,
   PositionUpdateTask,
+  GRBDiffCacheEntry,
 } from "./types";
 
 export class BookItDatabase extends Dexie {
@@ -23,6 +24,7 @@ export class BookItDatabase extends Dexie {
   queuedGames!: Table<QueuedGame, string>;
   positionNotes!: Table<PositionNotes, string>;
   gradualRepertoires!: Table<GradualRepertoire, string>;
+  grbDiffCache!: Table<GRBDiffCacheEntry, string>;
 
   constructor() {
     super("BookItDatabase");
@@ -125,6 +127,19 @@ export class BookItDatabase extends Dexie {
       positionNotes: "fen, source, status",
       gradualRepertoires: "id, timestamp",
       positionUpdateTasks: "id, gameId, grbId, completionStatus, createdAt",
+    });
+
+    this.version(6).stores({
+      savedGames: "id, timestamp, source",
+      uploadedPGNs: "id, filename, type",
+      gameAnalyses: "[gameID+repertoireID], gameID, repertoireID",
+      drillResults: "id, fen, correct, timestamp",
+      tacticsProgress: "id, lastSolvedTimestamp",
+      queuedPositions: "id, gameID, timestamp",
+      positionNotes: "fen, source, status",
+      gradualRepertoires: "id, timestamp",
+      positionUpdateTasks: "id, gameId, grbId, completionStatus, createdAt",
+      grbDiffCache: "gameId, inputSignature, analyzedAt",
     });
   }
 }

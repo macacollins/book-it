@@ -61,6 +61,7 @@ export default function getGameFromPGN(
   return null;
 }
 
+// this is silly
 export function rePGNLine(parsedPgn: ParsedPGN): string {
   let headerPGN = "";
   let result = "*";

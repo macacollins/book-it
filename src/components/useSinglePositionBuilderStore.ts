@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { MoveFrequencyResult } from "../workers/frequencyAnalysisTypes";
 import { GradualRepertoireClient } from "../database/GradualRepertoireClient";
 import { useGradualRepertoireBuilderStore } from "./useGradualRepertoireBuilderStore";
+import { GameMatch } from "../analysis/crossReferenceGames";
 
 export interface PositionAnalysisCacheEntry {
   moves: MoveFrequencyResult[];
@@ -16,6 +17,7 @@ interface SinglePositionBuilderState {
   deletePending: { san: string; count: number } | null;
   registeredTableMoveClick: ((move: MoveFrequencyResult) => void) | null;
   grbLines: string[][] | null;
+  gameMatches: Record<string, GameMatch[]>;
 
   setMoves: (moves: MoveFrequencyResult[] | null) => void;
   setCurrentFEN: (fen: string) => void;
@@ -26,6 +28,7 @@ interface SinglePositionBuilderState {
   registerTableMoveClick: (fn: ((move: MoveFrequencyResult) => void) | null) => void;
   triggerDeleteClick: (move: MoveFrequencyResult) => Promise<void>;
   setGrbLines: (lines: string[][] | null) => void;
+  setGameMatches: (matches: GameMatch[]) => void;
 }
 
 const debugging = true;
@@ -39,6 +42,7 @@ export const useSinglePositionBuilderStore = create<SinglePositionBuilderState>(
     deletePending: null,
     registeredTableMoveClick: null,
     grbLines: null,
+    gameMatches: {},
 
     setMoves: (moves) => {
       if (debugging) {
@@ -86,6 +90,26 @@ export const useSinglePositionBuilderStore = create<SinglePositionBuilderState>(
       set({ registeredTableMoveClick: fn })
     },
     setGrbLines: (lines) => set({ grbLines: lines }),
+    setGameMatches: (gameMatches) => {
+      
+      if (gameMatches) {
+        const firstGame = gameMatches[0];
+        if (firstGame) {
+          
+          const id = firstGame.gradualRepertoire.id;
+          const partial = {
+            [id]: gameMatches
+          }
+          console.log("Updating to ", partial);
+          set(state => ({ gameMatches: {
+            ...state.gameMatches,
+            ...partial
+          }}));
+        } else {
+          console.log("First game was falsy");
+        }
+      }
+    },
     triggerDeleteClick: async (move) => {
       const { moveHistory } = get();
       const repertoireId =

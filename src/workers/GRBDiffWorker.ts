@@ -28,33 +28,32 @@ ctx.onmessage = (event: MessageEvent<GRBDiffWorkerInbound>) => {
   const message = event.data;
   if (message.type !== "ANALYZE_GRB_DIFF") return;
 
-  const { games, grbs, usernames } = message;
+  const { games, grbs, usernames, requestId } = message;
 
   try {
-    for (const game of games) {
+    const rows: GRBGameRow[] = games.map((game) => {
       const match = matchGameToGRB(game, grbs, usernames);
       const opponent = match
         ? match.opponent
         : getOpponentFromPGN(game.pgn, usernames);
-      const row: GRBGameRow = {
+      return {
         gameId: game.id,
         gameTimestamp: game.timestamp,
         opponent: opponent || "Unknown",
         match,
         savedGame: game,
       };
-      ctx.postMessage({
-        type: "GRB_DIFF_ROW",
-        row,
-      } satisfies GRBDiffWorkerOutbound);
-    }
+    });
 
     ctx.postMessage({
       type: "GRB_DIFF_COMPLETE",
+      requestId,
+      rows,
     } satisfies GRBDiffWorkerOutbound);
   } catch (err) {
     ctx.postMessage({
       type: "GRB_DIFF_ERROR",
+      requestId,
       error: err instanceof Error ? err.message : String(err),
     } satisfies GRBDiffWorkerOutbound);
   }

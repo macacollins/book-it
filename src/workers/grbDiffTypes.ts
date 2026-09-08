@@ -13,6 +13,7 @@ export interface GRBGameRow {
 
 export interface GRBDiffRequest {
   type: "ANALYZE_GRB_DIFF";
+  requestId: number;
   games: SavedGame[];
   grbs: GradualRepertoire[];
   usernames: string[];
@@ -22,21 +23,18 @@ export type GRBDiffWorkerInbound = GRBDiffRequest;
 
 // ─── Outbound (worker → main thread) ───────────────────────────────────────
 
-export interface GRBDiffRowMessage {
-  type: "GRB_DIFF_ROW";
-  row: GRBGameRow;
-}
-
 export interface GRBDiffCompleteMessage {
   type: "GRB_DIFF_COMPLETE";
+  requestId: number;
+  rows: GRBGameRow[];
 }
 
 export interface GRBDiffErrorMessage {
   type: "GRB_DIFF_ERROR";
+  requestId: number;
   error: string;
 }
 
 export type GRBDiffWorkerOutbound =
-  | GRBDiffRowMessage
   | GRBDiffCompleteMessage
   | GRBDiffErrorMessage;
