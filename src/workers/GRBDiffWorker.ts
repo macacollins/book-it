@@ -6,6 +6,8 @@ import {
   GRBGameRow,
 } from "./grbDiffTypes";
 
+console.log("Starting! GRB Diff worker running.");
+
 const ctx: Worker = self as unknown as Worker;
 
 function getOpponentFromPGN(pgn: string, usernames: string[]): string {
@@ -25,6 +27,7 @@ function getOpponentFromPGN(pgn: string, usernames: string[]): string {
 }
 
 ctx.onmessage = (event: MessageEvent<GRBDiffWorkerInbound>) => {
+  console.log("Got incoming message", event);
   const message = event.data;
   if (message.type !== "ANALYZE_GRB_DIFF") return;
 

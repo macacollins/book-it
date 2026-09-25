@@ -33,8 +33,10 @@ export const RepertoireSetupForm: React.FC<RepertoireSetupFormProps> = ({
   >([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
-  const [showExportWorkspaceDialog, setShowExportWorkspaceDialog] = useState(false);
-  const [showImportWorkspaceDialog, setShowImportWorkspaceDialog] = useState(false);
+  const [showExportWorkspaceDialog, setShowExportWorkspaceDialog] =
+    useState(false);
+  const [showImportWorkspaceDialog, setShowImportWorkspaceDialog] =
+    useState(false);
   const menuRef = useRef<Menu>(null);
   const [activeIndex, setActiveIndex] = useState<number[]>([]);
   const initializedRef = useRef(false);
@@ -80,6 +82,22 @@ export const RepertoireSetupForm: React.FC<RepertoireSetupFormProps> = ({
 
     for (const rep of existingGradualRepertoires) {
       let moves;
+
+      if (rep.name.includes("::")) {
+        let array = rep.name.split("::");
+        let firstItem = array[0];
+        if (!groupMap.has(firstItem)) {
+          const group: AccordionGroup = {
+            key: firstItem,
+            label: formatTabLabel(rep.color, [firstItem]),
+            repertoires: [],
+          };
+          groupMap.set(firstItem, group);
+          groups.push(group);
+        }
+        groupMap.get(firstItem)!.repertoires.push(rep);
+        continue;
+      }
 
       if (rep.color === "white") {
         moves = rep.startingMoves.slice(0, 1);
@@ -169,7 +187,11 @@ export const RepertoireSetupForm: React.FC<RepertoireSetupFormProps> = ({
       {existingGradualRepertoires.length > 0 && (
         <div className="mb-4">
           <h3>Continue Existing Repertoire</h3>
-          <Accordion multiple activeIndex={activeIndex} onTabChange={handleTabChange}>
+          <Accordion
+            multiple
+            activeIndex={activeIndex}
+            onTabChange={handleTabChange}
+          >
             {accordionGroups.map((group) => (
               <AccordionTab
                 key={group.key}
@@ -178,7 +200,9 @@ export const RepertoireSetupForm: React.FC<RepertoireSetupFormProps> = ({
                     <span>{group.label}</span>
                     <div style={{ flex: 1, maxWidth: "200px" }}>
                       <LevelProgressBar
-                        levelInformation={getLevelInformation(group.repertoires)}
+                        levelInformation={getLevelInformation(
+                          group.repertoires,
+                        )}
                       />
                     </div>
                   </div>

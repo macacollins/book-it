@@ -14,6 +14,7 @@ import "./App.css";
 import { MegaMenu } from "primereact/megamenu";
 import Notes from "./components/Notes";
 import useWindowSize from "./hooks/useWindowSize";
+import Timeline from "./components/timeline/Timeline";
 
 function App() {
   const [hasGames, setHasGames] = useState<boolean | null>(null);
@@ -63,7 +64,7 @@ function App() {
       command: () => {
         window.location.hash = "#/grb-diff";
       },
-    }
+    },
   ];
 
   if (hasGames === null) {
@@ -102,7 +103,7 @@ function App() {
               path="/gradual-repertoire/:repertoireId"
               element={<GradualRepertoireBuilderPage />}
             />
-            {/* <Route path="/grb-diff" element={<GRBDiffPage />} /> */}
+            <Route path="/grb-diff" element={<Timeline />} />
             {/* <Route path="/game-task-tracking" element={<GameTaskTrackingPage />} /> */}
             <Route path="/notes" element={<Notes />} />
           </Routes>

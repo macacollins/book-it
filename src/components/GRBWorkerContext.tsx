@@ -17,11 +17,22 @@ import { useSinglePositionBuilderStore } from "./useSinglePositionBuilderStore";
 import { useCoverageCache } from "./useCoverageCache";
 import { useSourceMovesStore } from "./useSourceMovesStore";
 import { GradualRepertoireClient } from "../database/GradualRepertoireClient";
+import {
+  GRBDiffWorkerInbound,
+  GRBDiffWorkerOutbound,
+} from "../workers/grbDiffTypes";
+import { GradualRepertoire, SavedGame } from "../database";
+import { useTimelineStore } from "./timeline/useTimelineStore";
 
 interface GRBWorkerContextValue {
   requestFrequencyAnalysis: (fen: string) => void;
   requestCoverageAnalysis: () => void;
   requestUncoveredPositions: () => void;
+  requestGRBDiff: (
+    games: SavedGame[],
+    grbs: GradualRepertoire[],
+    usernames: string[],
+  ) => void;
   coverageProgress: { completed: number; total: number } | null;
   uncoveredPositions: UncoveredPosition[];
   loading: boolean;
@@ -35,13 +46,14 @@ const GRBWorkerContext = createContext<GRBWorkerContextValue>({
   requestFrequencyAnalysis: () => {},
   requestCoverageAnalysis: () => {},
   requestUncoveredPositions: () => {},
+  requestGRBDiff: () => {},
   coverageProgress: null,
   uncoveredPositions: [],
   loading: true,
   analyzing: true,
   error: null,
   coveragePercentage: 0,
-  coverageCompletionNumber: 0
+  coverageCompletionNumber: 0,
 });
 
 export const useGRBWorkers = () => useContext(GRBWorkerContext);
@@ -55,6 +67,7 @@ export const GRBWorkerProvider: React.FC<{ children: React.ReactNode }> = ({
   const frequencyWorkerRef = useRef<Worker | null>(null);
   const coverageWorkerRef = useRef<Worker | null>(null);
   const uncoveredWorkerRef = useRef<Worker | null>(null);
+  const grbDiffWorker = useRef<Worker | null>(null);
   const seqRef = useRef(0);
   const coverageRunningRef = useRef(false);
 
@@ -120,6 +133,7 @@ export const GRBWorkerProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Create / recreate all persistent workers when the repertoire changes
   useEffect(() => {
+    console.log("At start of useEffect in GRBWorkerContext.");
     // Reset derived state for the new repertoire
     setCoverageProgress(null);
     setUncoveredPositions([]);
@@ -129,19 +143,43 @@ export const GRBWorkerProvider: React.FC<{ children: React.ReactNode }> = ({
     seqRef.current = 0;
     coverageRunningRef.current = false;
 
-    if (!repertoireId) {
-      frequencyWorkerRef.current?.terminate();
-      frequencyWorkerRef.current = null;
-      coverageWorkerRef.current?.terminate();
-      coverageWorkerRef.current = null;
-      uncoveredWorkerRef.current?.terminate();
-      uncoveredWorkerRef.current = null;
-      return;
-    }
+    // if (!repertoireId) {
+    //   frequencyWorkerRef.current?.terminate();
+    //   frequencyWorkerRef.current = null;
+    //   coverageWorkerRef.current?.terminate();
+    //   coverageWorkerRef.current = null;
+    //   uncoveredWorkerRef.current?.terminate();
+    //   uncoveredWorkerRef.current = null;
+    //   return;
+    // }
 
     const { setupResult: sr } = useGradualRepertoireBuilderStore.getState();
     const currentRepertoireId = sr?.id ?? "";
     const currentStartingFEN = sr?.startingFEN ?? "";
+
+    console.log("About to start worker");
+    const newGRBDiffWorker = new Worker(
+      new URL("../workers/GRBDiffWorker.ts", import.meta.url),
+      { type: "module" },
+    );
+
+    grbDiffWorker.current = newGRBDiffWorker;
+
+    newGRBDiffWorker.addEventListener("error", (e: ErrorEvent) => {
+      console.log("Error setting up newGRBDiffWorker", e);
+    });
+
+    newGRBDiffWorker.onmessage = (
+      event: MessageEvent<GRBDiffWorkerOutbound>,
+    ) => {
+      console.log("Got coverage event", event);
+
+      const store = useTimelineStore.getState();
+
+      if (event.data.type === "GRB_DIFF_COMPLETE") {
+        store.addToGameCacheMultiple(event.data.rows);
+      }
+    };
 
     // --- Frequency worker ---
     const freqWorker = new Worker(
@@ -243,6 +281,8 @@ export const GRBWorkerProvider: React.FC<{ children: React.ReactNode }> = ({
       coverageWorkerRef.current = null;
       uncovWorker.terminate();
       uncoveredWorkerRef.current = null;
+      newGRBDiffWorker.terminate();
+      grbDiffWorker.current = null;
     };
   }, [repertoireId]);
 
@@ -262,7 +302,7 @@ export const GRBWorkerProvider: React.FC<{ children: React.ReactNode }> = ({
       setCoveragePercentage(cachedPosition.coveragePercentage);
       setLoading(false);
       setAnalyzing(false);
-      setCoverageCompletionNumber(current => current + 1);
+      setCoverageCompletionNumber((current) => current + 1);
       setError(null);
     } else {
       setAnalyzing(true);
@@ -279,12 +319,32 @@ export const GRBWorkerProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   }, []);
 
+  const requestGRBDiff = useCallback(
+    (games: SavedGame[], grbs: GradualRepertoire[], usernames: string[]) => {
+      const worker = grbDiffWorker.current;
+      console.log("Worker", worker);
+      if (!worker) return;
+
+      const messageToWorker: GRBDiffWorkerInbound = {
+        type: "ANALYZE_GRB_DIFF",
+        requestId: 0,
+        games: games,
+        grbs: grbs,
+        usernames: usernames,
+      };
+
+      worker.postMessage(messageToWorker);
+    },
+    [grbDiffWorker, grbDiffWorker.current],
+  );
+
   return (
     <GRBWorkerContext.Provider
       value={{
         requestFrequencyAnalysis,
         requestCoverageAnalysis,
         requestUncoveredPositions,
+        requestGRBDiff,
         coverageProgress,
         uncoveredPositions,
         loading,

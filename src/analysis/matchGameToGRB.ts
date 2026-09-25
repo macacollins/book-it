@@ -1,9 +1,11 @@
-import { Chess, Move } from "chess.js";
+import { Chess, Color, Move } from "chess.js";
 import { GradualRepertoire } from "../database/types";
 import { SavedGame } from "../database/types";
 
 export interface GRBMatchResult {
-  matchedGRB: GradualRepertoire;
+  gameID: string;
+  matchedGRBName: string;
+  matchedGRBID: string;
   beforeFEN: string;
   afterFEN: string;
   /** SAN moves from GRB startingFEN to the position just before the uncovered move */
@@ -14,7 +16,10 @@ export interface GRBMatchResult {
   /** Repertoire SAN moves available before the uncovered move */
   expectedSANs: string[];
   userColor: "white" | "black";
+  userWon: "yes" | "no" | "draw";
+  userDiverged: boolean;
   opponent: string;
+  headers: Record<string, string>;
 }
 
 /**
@@ -41,7 +46,14 @@ function findBestGRB(
     const sm = grb.startingMoves;
     if (sm.length > gameSANs.length) continue;
 
-    const isPrefix = sm.every((san, i) => gameSANs[i] === san);
+    // we want every starting move to be in the set of starting moves
+    // but not necessarily in the same order
+    // Looking at you Colle System
+
+    const isPrefix = sm.every(
+      (san, i) =>
+        gameSANs.indexOf(san) < sm.length && gameSANs.indexOf(san) !== -1,
+    );
     if (isPrefix && sm.length > bestMatchLength) {
       bestMatchLength = sm.length;
       bestGRB = grb;
@@ -69,7 +81,7 @@ function buildRepertoirePositions(grb: GradualRepertoire): RepertoirePositions {
     for (const san of line) {
       try {
         const beforeFEN = normalizePosition(lineChess.fen());
-        const repertoireMove = lineChess.move(san);
+        const repertoireMove = lineChess.move(san, { strict: false });
         const moves = movesByFEN.get(beforeFEN) ?? new Set<string>();
         moves.add(repertoireMove.san);
         movesByFEN.set(beforeFEN, moves);
@@ -90,6 +102,7 @@ interface Divergence {
   movesToAfter: string[];
   uncoveredSAN: string;
   expectedSANs: string[];
+  userDiverged: boolean;
 }
 
 /**
@@ -99,6 +112,7 @@ interface Divergence {
 function findDivergence(
   grb: GradualRepertoire,
   history: VerboseMove[],
+  userColor: Color,
 ): Divergence | null {
   const { coveredFENs, movesByFEN } = buildRepertoirePositions(grb);
   const movesFromStart: string[] = [];
@@ -113,7 +127,10 @@ function findDivergence(
         movesToBefore: [...movesFromStart],
         movesToAfter: [...movesFromStart, move.san],
         uncoveredSAN: move.san,
-        expectedSANs: [...(movesByFEN.get(normalizePosition(move.before)) ?? [])],
+        expectedSANs: [
+          ...(movesByFEN.get(normalizePosition(move.before)) ?? []),
+        ],
+        userDiverged: move.color === userColor,
       };
     }
 
@@ -145,7 +162,7 @@ export function matchGameToGRB(
 ): GRBMatchResult | null {
   const chess = new Chess();
   try {
-    chess.loadPgn(game.pgn);
+    chess.loadPgn(game.pgn, { strict: false });
   } catch {
     return null;
   }
@@ -154,6 +171,8 @@ export function matchGameToGRB(
   const headers = chess.header();
   const whitePlayer = headers["White"] || "";
   const blackPlayer = headers["Black"] || "";
+
+  const result = headers["Result"];
 
   // Determine which side the user played
   const normalizedUsernames = usernames
@@ -188,14 +207,33 @@ export function matchGameToGRB(
   const bestGRB = findBestGRB(gameSANs, colorMatched);
   if (!bestGRB) return null;
 
-  const divergence = findDivergence(bestGRB, history);
+  const divergence = findDivergence(
+    bestGRB,
+    history,
+    userColor === "black" ? "b" : "w",
+  );
   if (!divergence) return null;
 
+  let userWon: "yes" | "no" | "draw";
+  if (result === "1-0" && userColor === "white") {
+    userWon = "yes";
+  } else if (result === "0-1" && userColor === "black") {
+    userWon = "yes";
+  } else if (result === "0-1" || result === "1-0") {
+    userWon = "no";
+  } else {
+    userWon = "draw";
+  }
+
   return {
-    matchedGRB: bestGRB,
+    gameID: game.id,
+    matchedGRBName: bestGRB.name,
+    matchedGRBID: bestGRB.id,
     ...divergence,
     userColor,
     opponent,
+    userWon,
+    headers,
   };
 }
 
@@ -221,7 +259,7 @@ export function matchGamePGNToGRB(
 ): GRBMatchResult | null {
   const chess = new Chess();
   try {
-    chess.loadPgn(pgn);
+    chess.loadPgn(pgn, { strict: false });
   } catch {
     return null;
   }
@@ -232,7 +270,7 @@ export function matchGamePGNToGRB(
   const bestGRB = findBestGRB(gameSANs, grbs);
   if (!bestGRB) return null;
 
-  const divergence = findDivergence(bestGRB, history);
+  const divergence = findDivergence(bestGRB, history, "w");
   if (!divergence) return null;
 
   const headers = chess.header();
@@ -240,6 +278,7 @@ export function matchGamePGNToGRB(
   const black = headers["Black"] || "Black";
 
   return {
+    gameID: "pgn",
     matchedGRB: bestGRB,
     ...divergence,
     userColor: bestGRB.color,
