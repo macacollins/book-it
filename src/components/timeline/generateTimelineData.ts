@@ -1,20 +1,15 @@
 import { matchGameToGRB } from "../../analysis/matchGameToGRB";
 import { GradualRepertoire, SavedGame } from "../../database";
-
-export interface TimelineDay {
-  name: string;
-  results: SavedGame[];
-}
+import { TimelineDay } from "./types";
 
 export default function generateTimelineData(
   games: SavedGame[],
-  repertoires: GradualRepertoire[],
 ): TimelineDay[] {
-  console.log(
-    "[" +
-      games.map((game) => JSON.stringify(game, undefined, 2)).join(",") +
-      "]",
-  );
+  // console.log(
+  //   "[" +
+  //     games.map((game) => JSON.stringify(game, undefined, 2)).join(",") +
+  //     "]",
+  // );
   let timelineDays: Record<string, TimelineDay> = {};
 
   for (let game of games) {

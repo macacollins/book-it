@@ -1,3 +1,4 @@
+import { GRBMatchResult } from "../analysis/matchGameToGRB";
 import AnalysisResult from "../types/AnalysisResult";
 import { MoveTree } from "../types/MoveTree";
 
@@ -36,7 +37,7 @@ export interface UploadedPGN {
 export interface GameAnalysis {
   gameID: string;
   repertoireID: string; // UploadedPGN ID
-  analysisData: AnalysisResult;
+  analysisData: GRBMatchResult;
 }
 
 // How the user did on a specific fen drill
@@ -127,14 +128,14 @@ export interface GradualRepertoire {
 // - insertion
 // - updating completionStatus and coverage
 export interface PositionUpdateTask {
-  id: string;              // uuid
-  gameId: string;          // FK → SavedGame.id (indexed)
-  grbId: string;           // FK → GradualRepertoire.id (indexed)
-  latestFEN: string;       // normalised FEN of the matched position
+  id: string; // uuid
+  gameId: string; // FK → SavedGame.id (indexed)
+  grbId: string; // FK → GradualRepertoire.id (indexed)
+  latestFEN: string; // normalised FEN of the matched position
   coverage: number | null; // last-computed coverage rate 0–100, or null if not yet checked
   completionStatus: boolean; // true once coverage >= 90%
-  createdAt: number;       // Unix ms timestamp
-  updatedAt: number;       // Unix ms timestamp
+  createdAt: number; // Unix ms timestamp
+  updatedAt: number; // Unix ms timestamp
 }
 
 export interface GRBDiffCacheEntry {

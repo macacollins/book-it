@@ -1,6 +1,7 @@
 import { Chess, Color, Move } from "chess.js";
-import { GradualRepertoire } from "../database/types";
+import { GameAnalysis, GradualRepertoire } from "../database/types";
 import { SavedGame } from "../database/types";
+import { GameAnalysisClient } from "../database";
 
 export interface GRBMatchResult {
   gameID: string;
@@ -141,6 +142,31 @@ function findDivergence(
   return null;
 }
 
+// let cache: Record<string, GRBMatchResult> = {};
+// const localStorageCache = window.localStorage.getItem("cachedGRBAnalysis");
+// if (localStorageCache) {
+//   try {
+//     cache = JSON.parse(localStorageCache);
+//   } catch (e) {
+//     console.log("Unable to load cache.", e);
+//   }
+// }
+
+async function writeNewItemToDisk(
+  gameID: string,
+  repertoireID: string,
+  analysisData: GRBMatchResult,
+) {
+  const analysis: GameAnalysis = {
+    gameID,
+    repertoireID,
+    analysisData,
+  };
+
+  await GameAnalysisClient.upsert(analysis);
+  // window.localStorage.setItem("cachedGRBAnalysis", JSON.stringify(cache));
+}
+
 /**
  * Given a saved game and the full list of GradualRepertoires, find the
  * best-matching GRB (longest startingMoves prefix that is also a prefix of the
@@ -155,11 +181,16 @@ function findDivergence(
  *                    which side the user played so that colour-filtered GRBs
  *                    can be selected correctly
  */
-export function matchGameToGRB(
+export async function matchGameToGRB(
   game: SavedGame,
   grbs: GradualRepertoire[],
   usernames: string[],
-): GRBMatchResult | null {
+): Promise<GRBMatchResult | null> {
+  const cachedResult = await GameAnalysisClient.getByGameID(game.id);
+  if (cachedResult?.length) {
+    return cachedResult[0].analysisData;
+  }
+
   const chess = new Chess();
   try {
     chess.loadPgn(game.pgn, { strict: false });
@@ -225,7 +256,7 @@ export function matchGameToGRB(
     userWon = "draw";
   }
 
-  return {
+  const finalResult = {
     gameID: game.id,
     matchedGRBName: bestGRB.name,
     matchedGRBID: bestGRB.id,
@@ -235,6 +266,9 @@ export function matchGameToGRB(
     userWon,
     headers,
   };
+
+  writeNewItemToDisk(game.id, bestGRB.id, finalResult);
+  return finalResult;
 }
 
 /**

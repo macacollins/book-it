@@ -72,7 +72,7 @@ ctx.onmessage = async (event: MessageEvent<GameTaskTrackingWorkerInbound>) => {
         const newTask = {
           id: crypto.randomUUID(),
           gameId: game.id,
-          grbId: match.matchedGRB.id,
+          grbId: "3", //match.matchedGRB.id,
           latestFEN: match.afterFEN,
           coverage: null,
           completionStatus: false,

@@ -1,5 +1,5 @@
 import { Column } from "primereact/column";
-import type { TimelineDay } from "./generateTimelineData";
+
 import { DataTable, DataTableRowMouseEvent } from "primereact/datatable";
 import { useTimelineStore } from "./useTimelineStore";
 import { GRBGameRow } from "../../workers/grbDiffTypes";
@@ -7,6 +7,7 @@ import { SavedGame } from "../../database";
 import { useState } from "react";
 import { TinyFENDisplay } from "../../pages/TinyFENDisplay";
 import GameViewer from "./GameViewer";
+import { TimelineDay } from "./types";
 
 interface TimelineDayComponentProps {
   day: TimelineDay;

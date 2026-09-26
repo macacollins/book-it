@@ -1,15 +1,20 @@
 import { useEffect, useState } from "react";
 import { SavedGameClient } from "../../database/SavedGameClient";
 import { GradualRepertoireClient, SavedGame } from "../../database";
-import generateTimelineData, { TimelineDay } from "./generateTimelineData";
+import generateTimelineData from "./generateTimelineData";
 import { GRBWorkerProvider, useGRBWorkers } from "../GRBWorkerContext";
 import TimelineDayComponent from "./TimelineDayComponent";
+import OpeningAnalysis from "./OpeningAnalysis";
+import { TimelineDay } from "./types";
+
+type ViewMode = "Timeline" | "Analysis";
 
 export default function () {
   const [cachedGames, setCachedGames] = useState<SavedGame[]>([]);
   const [timelineData, setTimelineData] = useState<TimelineDay[]>([]);
 
   const [processedDays, setProcessedDays] = useState<string[]>([]);
+  const [currentViewMode, setCurrentViewMode] = useState<ViewMode>("Timeline");
 
   const { requestGRBDiff } = useGRBWorkers();
   function updateGames() {
@@ -22,18 +27,15 @@ export default function () {
         // const slice = games.slice(offset);
 
         GradualRepertoireClient.getAll().then((repertoires) => {
-          const newTimeline = generateTimelineData(games, repertoires).slice(
-            0,
-            10,
-          );
+          const newTimeline = generateTimelineData(games);
           setTimelineData(newTimeline);
 
           if (newTimeline.length > 1 && newTimeline[0]) {
-            requestGRBDiff(
-              [...newTimeline[0].results, ...newTimeline[1].results],
-              repertoires,
-              ["MCTodd", "LeosEmporiumTV", "agneaux"],
-            );
+            requestGRBDiff(games, repertoires, [
+              "MCTodd",
+              "LeosEmporiumTV",
+              "agneaux",
+            ]);
             console.log("Requested GRB Diff");
           }
         });
@@ -48,16 +50,42 @@ export default function () {
   }, []);
 
   const days: React.ReactElement[] = [];
-  timelineData.forEach((day) => {
+  timelineData.slice(0, 10).forEach((day) => {
     const singleDay = <TimelineDayComponent day={day} />;
 
     days.push(singleDay);
   });
 
-  return (
-    <div className="cc-timeline">
+  const timelineContent = (
+    <>
       <h2>Timeline</h2>
+      <button
+        onClick={() => {
+          setCurrentViewMode("Analysis");
+        }}
+      >
+        Analysis
+      </button>
       {days}
-    </div>
+    </>
   );
+
+  const openingAnalysisContent = (
+    <>
+      <h2>Opening Analysis</h2>
+      <button
+        onClick={() => {
+          setCurrentViewMode("Timeline");
+        }}
+      >
+        Timeline
+      </button>
+      <OpeningAnalysis />
+    </>
+  );
+
+  const innerComponent =
+    currentViewMode === "Timeline" ? timelineContent : openingAnalysisContent;
+
+  return <div className="cc-timeline">{innerComponent}</div>;
 }
