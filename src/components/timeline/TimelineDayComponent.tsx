@@ -119,11 +119,11 @@ export default function ({ day }: TimelineDayComponentProps) {
             filter
             sortable
           />
-          <Column
+          {/* <Column
             header="Uncovered SAN"
             field="grbGameRow.match.uncoveredSAN"
           />
-          <Column header="User Color" field={"grbGameRow.match.expectedSANs"} />
+          <Column header="User Color" field={"grbGameRow.match.expectedSANs"} /> */}
         </DataTable>
       </div>
     );

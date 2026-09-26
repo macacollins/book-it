@@ -10,7 +10,12 @@ import { useSinglePositionBuilderStore } from "./useSinglePositionBuilderStore";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { useEffect, useState } from "react";
 import pgnParser from "pgn-parser";
-import { GameAnalysis, GameAnalysisClient, SavedGameClient } from "../database";
+import {
+  GameAnalysis,
+  GameAnalysisClient,
+  SavedGame,
+  SavedGameClient,
+} from "../database";
 
 function displayFEN(fen: string): string {
   return `${fen} 0 1`;
@@ -29,7 +34,8 @@ export function GradualGamesTable() {
     [],
   );
 
-  const notGotEnoughData = !localAnalysisCache;
+  const notGotEnoughData =
+    !localAnalysisCache || localAnalysisCache.length == 0;
 
   useEffect(() => {
     (async function () {
@@ -39,6 +45,9 @@ export function GradualGamesTable() {
           repertoire.id,
         );
 
+        games2.sort((a: GameAnalysis, b: GameAnalysis) => {
+          return a.analysisData.timestamp > b.analysisData.timestamp ? -1 : 1;
+        });
         setLocalAnalysisCache(games2);
       }
     })();
@@ -69,10 +78,13 @@ export function GradualGamesTable() {
       <Column
         header="Position"
         body={(match: GameAnalysis) => (
-          <TinyFENDisplay
-            fen={displayFEN(match.analysisData.beforeFEN)}
-            invert={repertoire?.color === "black"}
-          />
+          <>
+            <TinyFENDisplay
+              fen={match.analysisData.beforeFEN}
+              invert={repertoire?.color === "black"}
+              extraText={match.analysisData.gameID}
+            />
+          </>
         )}
       />
       <Column

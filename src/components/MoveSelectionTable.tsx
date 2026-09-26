@@ -12,6 +12,7 @@ import {
 } from "./useSinglePositionBuilderStore";
 import { useGradualRepertoireBuilderStore } from "./useGradualRepertoireBuilderStore";
 import { useSourceMovesStore } from "./useSourceMovesStore";
+import { GradualRepertoireClient } from "../database";
 
 export type { PositionAnalysisCacheEntry };
 
@@ -58,6 +59,8 @@ export const MoveSelectionTable: React.FC = () => {
     const allExtra = new Set([...grbExtra, ...sourceExtra]);
     if (allExtra.size === 0) return base;
 
+    // const gradualaRepertoires = await GradualRepertoireClient.getAll();
+
     const extraRows: MoveFrequencyResult[] = [];
     for (const san of allExtra) {
       try {
@@ -65,6 +68,10 @@ export const MoveSelectionTable: React.FC = () => {
         const played = chess.move(san);
         if (!played) continue;
         const uci = played.from + played.to + (played.promotion ?? "");
+
+        if (!grbExtra.has(san)) {
+        }
+
         extraRows.push({
           san,
           uci,
@@ -134,7 +141,8 @@ export const MoveSelectionTable: React.FC = () => {
       <Column
         header="Cov."
         body={(row: MoveFrequencyResult) => {
-          const cached = positionAnalysisCache[getPositionCacheKey(row.resultingFen)];
+          const cached =
+            positionAnalysisCache[getPositionCacheKey(row.resultingFen)];
           const fallback = cached
             ? `${cached.coveragePercentage.toFixed(1)}%`
             : undefined;

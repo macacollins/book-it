@@ -40,12 +40,12 @@ export default function ({ viewModel }: GameAnalysisRowProps) {
   ];
 
   const valuesDivergence = [
-    { label: "User Diverged", color: "red", value: viewModel.userDiverged },
     {
       label: "Opponent Diverged",
       color: "#34d399",
       value: viewModel.opponentDiverged,
     },
+    { label: "User Diverged", color: "red", value: viewModel.userDiverged },
   ];
 
   let level = 0;
@@ -54,7 +54,7 @@ export default function ({ viewModel }: GameAnalysisRowProps) {
 
   for (let singleLevel of levels) {
     if (
-      viewModel.totalXP > singleLevel.totalXPBeforeMe &&
+      viewModel.totalXP >= singleLevel.totalXPBeforeMe &&
       viewModel.totalXP <
         singleLevel.totalXPBeforeMe + singleLevel.xpNeededForLevel
     ) {
@@ -67,16 +67,14 @@ export default function ({ viewModel }: GameAnalysisRowProps) {
 
   return (
     <Card title={viewModel.name}>
-      <div className="card flex justify-content-center align-items-center">
+      <div className="card flex gap-4 justify-content-center align-items-center">
         <div className="flex flex-column align-items-center">
           <Knob
             value={xpProgressTowardsNextLevel}
             max={xpProgressTotalForNextLevel}
-            valueTemplate="{value}%"
+            valueTemplate={`${level}`}
           ></Knob>
-          <span>
-            Level {level}, total XP {viewModel.totalXP}
-          </span>
+          <span></span>
         </div>
 
         <div className="flex flex-column gap-2">

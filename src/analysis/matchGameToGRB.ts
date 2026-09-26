@@ -21,6 +21,7 @@ export interface GRBMatchResult {
   userDiverged: boolean;
   opponent: string;
   headers: Record<string, string>;
+  timestamp: number;
 }
 
 /**
@@ -265,6 +266,7 @@ export async function matchGameToGRB(
     opponent,
     userWon,
     headers,
+    timestamp: game.timestamp,
   };
 
   writeNewItemToDisk(game.id, bestGRB.id, finalResult);

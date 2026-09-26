@@ -6,5 +6,5 @@ interface GameViewerProps {
 }
 
 export default function ({ game, startingMove }: GameViewerProps) {
-  return <pre>{game.pgn}</pre>;
+  return <>{game.pgn}</>;
 }
