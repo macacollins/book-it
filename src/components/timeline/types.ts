@@ -13,4 +13,5 @@ export interface PerOpeningViewModel {
   userDiverged: number;
   opponentDiverged: number;
   totalXP: number;
+  color: "white" | "black";
 }

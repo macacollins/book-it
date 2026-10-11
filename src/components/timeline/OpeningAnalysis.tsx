@@ -2,11 +2,15 @@ import { useEffect, useState } from "react";
 import { GameAnalysis, GameAnalysisClient } from "../../database";
 import { PerOpeningViewModel } from "./types";
 import GameAnalysisRow from "./GameAnalysisRow";
+import { Button } from "primereact/button";
 
 export default function () {
   const [currentAnalysis, setCurrentAnalysis] = useState<GameAnalysis[]>([]);
 
   const [viewModel, setViewModel] = useState<PerOpeningViewModel[]>([]);
+  const [filterViewModel, setFilterViewModel] = useState<PerOpeningViewModel[]>(
+    [],
+  );
 
   async function updateAnalysis() {
     const dbAnalysis = await GameAnalysisClient.getAll();
@@ -34,6 +38,8 @@ export default function () {
           opponentDiverged: analysisItem.analysisData.userDiverged
             ? opponentDiverged + 0
             : opponentDiverged + 1,
+          color: analysisItem.analysisData.userColor,
+
           totalXP: totalXP + 1,
         };
       } else {
@@ -44,6 +50,7 @@ export default function () {
           draw: result === "draw" ? 1 : 0,
           userDiverged: analysisItem.analysisData.userDiverged ? 1 : 0,
           opponentDiverged: analysisItem.analysisData.userDiverged ? 0 : 1,
+          color: analysisItem.analysisData.userColor,
           totalXP: 1,
         };
 
@@ -64,13 +71,33 @@ export default function () {
     updateAnalysis();
   }, []);
 
+  const [filterColor, setFilterColor] = useState<"white" | "black" | "either">(
+    "either",
+  );
+
+  useEffect(() => {
+    if (filterColor === "either") {
+      setFilterViewModel(viewModel);
+    } else {
+      setFilterViewModel(
+        viewModel.filter((viewModel) => viewModel.color === filterColor),
+      );
+    }
+  }, [filterColor, viewModel]);
+
+  // const [showGamesIndex, setShowGamesIndex] = useState<boolean>(false);
+
   return (
     <>
       {currentAnalysis?.length} Items Analyzed
-      {viewModel.map((model) => {
+      <Button onClick={() => setFilterColor("black")} label="black" />
+      <Button onClick={() => setFilterColor("white")} label="white" />
+      <Button onClick={() => setFilterColor("either")} label="either" />
+      {filterViewModel.map((model, index) => {
         return (
           <>
             <GameAnalysisRow viewModel={model} />
+            {/* <Button onClick={setShowGames */}
           </>
         );
       })}
